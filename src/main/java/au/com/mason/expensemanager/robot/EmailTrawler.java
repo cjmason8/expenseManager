@@ -1,8 +1,13 @@
 package au.com.mason.expensemanager.robot;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
+import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -12,12 +17,17 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.search.FlagTerm;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.sun.mail.util.BASE64DecoderStream;
+
+import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.processor.EmailProcessor;
@@ -106,14 +116,45 @@ public class EmailTrawler {
 		}
 	}
 
-	private boolean refDataMatch(Message message, RefData refData) throws MessagingException {
+	private boolean refDataMatch(Message message, RefData refData) throws MessagingException, IOException {
 		if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP.name())) {
 			String fromAddress = ((InternetAddress) message.getFrom()[0]).getAddress();
 			
 			return message.getSubject().startsWith(refData.getEmailKey()) && fromAddress.startsWith("racvrenewal_noreply");
 		}
+		else if (refData.getEmailKey().equals("Your Renewal RACV Comprehensive")) {
+			if (refData.getEmailProcessor().equals(EmailProcessor.CAMRY_INSURANCE)) {
+				return bodyContains(message, "TOYOTA CAMRY");
+			}
+			else {
+				return bodyContains(message, "MAZDA TRIBUTE");
+			}
+		}
+		else if (refData.getEmailKey().equals("Your Renewal RACV Home Buildings Ins")) {
+			if (refData.getEmailProcessor().equals(EmailProcessor.WODONGA_INSURANCE)) {
+				return bodyContains(message, "WODONGA");
+			}
+			else {
+				return bodyContains(message, "SOUTH KINGSVILLE");
+			}
+		}
 
 		return message.getSubject().startsWith(refData.getEmailKey());
+	}
+	
+	private boolean bodyContains(Message message, String phrase) throws MessagingException, IOException {
+		if (message.isMimeType("multipart/*")) {
+	        MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+	        int count = mimeMultipart.getCount();
+		    for (int i = 0; i < count; i++) {
+		        BodyPart bodyPart = mimeMultipart.getBodyPart(i);
+		        if (bodyPart.isMimeType("text/html")) {
+		            return ((String) bodyPart.getContent()).contains(phrase);
+		        }
+		    }
+	    }
+		
+		return false;
 	}
 	
 	public Message[] fetchMessages(String host, String user, String password, boolean read) throws Exception {
