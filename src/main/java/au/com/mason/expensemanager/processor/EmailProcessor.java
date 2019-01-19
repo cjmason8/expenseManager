@@ -10,6 +10,7 @@ public enum EmailProcessor {
 	DINGLEY_INSURANCE(DingleyInsuranceProccesor.class),
 	SOUTH_KINGSVILLE_RATES(SouthKingsvilleRatesProccesor.class),
 	SOUTH_KINGSVILLE_WATER(SouthKingsvilleWaterProccesor.class),
+	SOUTH_KINGSVILLE_INSURANCE(SouthKingsvilleInsuranceProccesor.class),
 	RACV_MEMBERSHIP(RACVMembershipProccesor.class),
 	CAMRY_INSURANCE(CamryInsuranceProccesor.class),
 	MAZDA_INSURANCE(MazdaInsuranceProccesor.class),
