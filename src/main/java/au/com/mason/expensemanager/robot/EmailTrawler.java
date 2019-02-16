@@ -1,10 +1,7 @@
 package au.com.mason.expensemanager.robot;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 import javax.mail.BodyPart;
@@ -20,14 +17,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.search.FlagTerm;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.sun.mail.util.BASE64DecoderStream;
-
-import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.processor.EmailProcessor;

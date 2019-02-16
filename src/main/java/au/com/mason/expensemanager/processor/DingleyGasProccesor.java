@@ -8,7 +8,6 @@ import javax.mail.Message;
 
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 
 @Component
