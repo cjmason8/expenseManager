@@ -80,6 +80,7 @@ public class EmailTrawler {
 					if (refDataMatch(message, refData)) {
 						refData.getEmailProcessor().getProcessor().execute(message, refData);
 						foundIt = true;
+						break;
 					}
 				}
 				
