@@ -75,9 +75,11 @@ public class EmailTrawler {
 			List<RefData> refDatas = refDataService.getAllWithEmailKey(); 
 
 			for (Message message : messages) {
+				System.out.println("Handling Subject: " + message.getSubject());
 				boolean foundIt = false;
 				for (RefData refData : refDatas) {
 					if (refDataMatch(message, refData)) {
+						System.out.println("Found Processor: " + refData.getEmailProcessor().getProcessor().getClass());
 						refData.getEmailProcessor().getProcessor().execute(message, refData);
 						foundIt = true;
 						break;
@@ -94,7 +96,6 @@ public class EmailTrawler {
 				message.getContent();
 				MimeMessage source = (MimeMessage) message;
 				MimeMessage copy = new MimeMessage(source);
-				System.out.println("Subject: " + message.getSubject());
 			}
 
 			// close the store and folder objects
