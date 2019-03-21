@@ -112,25 +112,27 @@ public class EmailTrawler {
 	}
 
 	private boolean refDataMatch(Message message, RefData refData) throws MessagingException, IOException {
-		if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP.name())) {
-			String fromAddress = ((InternetAddress) message.getFrom()[0]).getAddress();
-			
-			return message.getSubject().startsWith(refData.getEmailKey()) && fromAddress.startsWith("racvrenewal_noreply");
-		}
-		else if (refData.getEmailKey().equals("Your Renewal RACV Comprehensive")) {
-			if (refData.getEmailProcessor().equals(EmailProcessor.CAMRY_INSURANCE)) {
-				return bodyContains(message, "TOYOTA CAMRY");
+		if (bodyContains(message, "RACV")) {
+			if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP.name())) {
+				String fromAddress = ((InternetAddress) message.getFrom()[0]).getAddress();
+				
+				return message.getSubject().startsWith(refData.getEmailKey()) && fromAddress.startsWith("racvrenewal_noreply");
 			}
-			else {
-				return bodyContains(message, "MAZDA TRIBUTE");
+			else if (refData.getEmailKey().equals("Your Renewal RACV Comprehensive")) {
+				if (refData.getEmailProcessor().equals(EmailProcessor.CAMRY_INSURANCE)) {
+					return bodyContains(message, "TOYOTA CAMRY");
+				}
+				else {
+					return bodyContains(message, "MAZDA TRIBUTE");
+				}
 			}
-		}
-		else if (refData.getEmailKey().equals("Your Renewal RACV Home Buildings Ins")) {
-			if (refData.getEmailProcessor().equals(EmailProcessor.WODONGA_INSURANCE)) {
-				return bodyContains(message, "WODONGA");
-			}
-			else {
-				return bodyContains(message, "SOUTH KINGSVILLE");
+			else if (refData.getEmailKey().equals("Your Renewal RACV Home Buildings Ins")) {
+				if (refData.getEmailProcessor().equals(EmailProcessor.WODONGA_INSURANCE)) {
+					return bodyContains(message, "WODONGA");
+				}
+				else {
+					return bodyContains(message, "SOUTH KINGSVILLE");
+				}
 			}
 		}
 
