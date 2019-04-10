@@ -35,7 +35,7 @@ public class TelstraProccesor extends Processor {
 			        amount = body.substring(body.indexOf("&#36;") + 5, body.indexOf("&#160;", body.indexOf("&#36;"))).trim();
 			        int startIndex = body.indexOf("Debit on") + 9;
 		            String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex)).trim();
-		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy").localizedBy(Locale.ENGLISH);
+		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
 		            dueDate = LocalDate.parse(dueDateString, formatter);
 		        } else if (bodyPart.getContentType().startsWith("APPLICATION/PDF")) {
 		        	BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();

@@ -35,7 +35,7 @@ public class SouthKingsvilleWaterProccesor extends Processor {
 					amount = body.substring(body.indexOf(">$") + 2, body.indexOf("<", body.indexOf(">$"))).trim();
 					int startIndex = body.indexOf(">By") + 4;
 		            String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex)).trim().toLowerCase();
-		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy").localizedBy(Locale.ENGLISH);
+		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
 		            String newDueDateString = dueDateString.substring(0, dueDateString.indexOf(" "))
 		            		+ " " + dueDateString.substring(dueDateString.indexOf(" ") + 1, dueDateString.indexOf(" ") + 2).toUpperCase()
 		            		+ dueDateString.substring(dueDateString.indexOf(" ") + 2); 

@@ -27,7 +27,7 @@ public class DingleyGasProccesor extends Processor {
 	        
 	        int startIndex = body.indexOf("<strong>", body.indexOf("Due date by Direct Debit")) + 8;
 	        String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex)).trim();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy").localizedBy(Locale.ENGLISH);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
             dueDate = LocalDate.parse(dueDateString, formatter);
             
             startIndex = body.indexOf("$", body.indexOf("Total amount if paid")) + 1;

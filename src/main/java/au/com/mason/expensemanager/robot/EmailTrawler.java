@@ -39,9 +39,6 @@ public class EmailTrawler {
 	private RefDataService refDataService;
 	
 	@Autowired
-	private ProcessorFactory processorFactory;
-	
-	@Autowired
 	protected NotificationService notificationService;
 	
 	@Value("${required.info}")
