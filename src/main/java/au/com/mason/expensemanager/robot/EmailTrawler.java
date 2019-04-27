@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.processor.EmailProcessor;
-import au.com.mason.expensemanager.processor.ProcessorFactory;
 import au.com.mason.expensemanager.service.EncryptionService;
 import au.com.mason.expensemanager.service.NotificationService;
 import au.com.mason.expensemanager.service.RefDataService;
