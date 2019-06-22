@@ -130,6 +130,8 @@ public class EmailTrawler {
 					return bodyContains(message, "SOUTH KINGSVILLE");
 				}
 			}
+			
+			return false;
 		}
 
 		return message.getSubject().startsWith(refData.getEmailKey());
