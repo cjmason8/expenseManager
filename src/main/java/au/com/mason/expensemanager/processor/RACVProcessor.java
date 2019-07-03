@@ -40,7 +40,7 @@ public abstract class RACVProcessor extends Processor {
 		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").localizedBy(Locale.ENGLISH);
 		            dueDate = LocalDate.parse(dueDateString, formatter);
 		            
-		        } else if (bodyPart.isMimeType("application/octet-stream")) {
+		        } else {
 		        	pdfBodyPart = bodyPart;
 		        }
 		    }

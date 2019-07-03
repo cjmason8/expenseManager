@@ -109,7 +109,7 @@ public class EmailTrawler {
 
 	private boolean refDataMatch(Message message, RefData refData) throws MessagingException, IOException {
 		if (bodyContains(message, "RACV")) {
-			if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP.name())) {
+			if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP)) {
 				String fromAddress = ((InternetAddress) message.getFrom()[0]).getAddress();
 				
 				return message.getSubject().startsWith(refData.getEmailKey()) && fromAddress.startsWith("racvrenewal_noreply");
@@ -129,6 +129,9 @@ public class EmailTrawler {
 				else {
 					return bodyContains(message, "SOUTH KINGSVILLE");
 				}
+			}
+			else if (refData.getEmailProcessor().equals(EmailProcessor.DINGLEY_INSURANCE)) {
+				return message.getSubject().startsWith(refData.getEmailKey());
 			}
 			
 			return false;
