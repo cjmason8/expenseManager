@@ -40,7 +40,7 @@ public class DingleyElectricityProccesor extends Processor {
 		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
 		            dueDate = LocalDate.parse(dueDateString, formatter);
 		            
-		        } else if (bodyPart.isMimeType("application/octet-stream")) {
+		        } else {
 		        	BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
 		        	byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 		        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
