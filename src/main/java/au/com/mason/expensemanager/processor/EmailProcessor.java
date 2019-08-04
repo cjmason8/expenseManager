@@ -17,7 +17,8 @@ public enum EmailProcessor {
 	MAZDA_INSURANCE(MazdaInsuranceProccesor.class),
 	TELSTRA(TelstraProccesor.class),
 	CAMRY_REGO(CamryRegoProcessor.class),
-	MAZDA_REGO(MazdaRegoProcessor.class);
+	MAZDA_REGO(MazdaRegoProcessor.class),
+	WODONGA_RENT_STATEMENT(WodongaRentalStatementProccesor.class);
 	
 	private Class processor;
 	

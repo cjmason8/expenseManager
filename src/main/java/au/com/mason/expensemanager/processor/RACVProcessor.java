@@ -50,7 +50,7 @@ public abstract class RACVProcessor extends Processor {
 		    byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 		    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
         	String fileName = pdfName + formatter.format(dueDate) + ".pdf";
-			document = documentService.createDocumentFromEmail(byteArray, fileName);
+			document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 		    
             updateExpense(refData, dueDate, amount, document);
 	    }

@@ -137,7 +137,7 @@ public class EmailTrawler {
 			return false;
 		}
 
-		return message.getSubject().startsWith(refData.getEmailKey());
+		return message.getSubject().indexOf(refData.getEmailKey()) != -1;
 	}
 	
 	private boolean bodyContains(Message message, String phrase) throws MessagingException, IOException {

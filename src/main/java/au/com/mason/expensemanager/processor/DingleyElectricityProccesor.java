@@ -45,7 +45,7 @@ public class DingleyElectricityProccesor extends Processor {
 		        	byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 		        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		        	String fileName = "DingleyElec-" + formatter.format(dueDate) + ".pdf";
-					document = documentService.createDocumentFromEmail(byteArray, fileName);
+					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 		        }
 		    }
 		    

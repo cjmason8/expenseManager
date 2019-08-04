@@ -44,7 +44,7 @@ public abstract class VicRoadsProcessor extends Processor {
 		        	byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 		        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		        	String fileName = filePrefix + "-" + formatter.format(dueDate) + ".pdf";
-					document = documentService.createDocumentFromEmail(byteArray, fileName);
+					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 		        }
 		    }
 		    

@@ -71,7 +71,7 @@ public class DocumentService {
 		return documentMapperWrapper.documentToDocumentDto(documentDao.create(document));
 	}
 	
-	public Document createDocumentFromEmail(byte[] file, String fileName) throws Exception {
+	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
 		String folderPathString = "/docs/expenseManager/expenses";
 		String filePathString = folderPathString + "/" + fileName;
 		Path folderPath = Paths.get(folderPathString);
@@ -82,6 +82,24 @@ public class DocumentService {
 		Files.write(filePath, file);
 		
 		Document document = new Document();
+		document.setFileName(fileName);
+		document.setFolderPath(folderPathString);
+		
+		return documentDao.create(document);
+	}
+	
+	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath, Map<String, Object> metaData) throws Exception {
+		String folderPathString = "/docs/expenseManager/filofax/IPs" + folderPath;
+		String filePathString = folderPathString + "/" + fileName;
+		Path reqFolderPath = Paths.get(folderPathString);
+		Path filePath = Paths.get(filePathString);
+		if (!Files.exists(reqFolderPath)) {
+			Files.createDirectory(reqFolderPath);
+		}
+		Files.write(filePath, file);
+		
+		Document document = new Document();
+		document.setMetaData(metaData);
 		document.setFileName(fileName);
 		document.setFolderPath(folderPathString);
 		

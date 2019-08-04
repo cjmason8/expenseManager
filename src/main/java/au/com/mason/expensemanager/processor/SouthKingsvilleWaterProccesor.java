@@ -48,7 +48,7 @@ public class SouthKingsvilleWaterProccesor extends Processor {
 					
 		        	DateTimeFormatter fileDateFormatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		        	String fileName = "SouthKingsvilleWater-" + fileDateFormatter.format(dueDate) + ".pdf";
-					document = documentService.createDocumentFromEmail(in.readAllBytes(), fileName);
+					document = documentService.createDocumentFromEmailForExpense(in.readAllBytes(), fileName);
 					
 					updateExpense(refData, dueDate, amount, document);
 				}

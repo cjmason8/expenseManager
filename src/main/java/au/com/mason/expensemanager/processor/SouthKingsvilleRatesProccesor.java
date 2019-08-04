@@ -58,7 +58,7 @@ public class SouthKingsvilleRatesProccesor extends Processor {
 		        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		        	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 		        	String fileName = "SouthKingsvilleRates-" + formatter.format(LocalDate.parse(dates[0], dateFormatter)) + ".pdf";
-					Document document = documentService.createDocumentFromEmail(byteArray, fileName);
+					Document document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 					
 					updateExpense(refData, LocalDate.parse(dates[0], dateFormatter), firstInstalment, document);
 					updateExpense(refData, LocalDate.parse(dates[1], dateFormatter), instalments[0], null);
