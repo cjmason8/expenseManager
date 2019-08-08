@@ -10,14 +10,24 @@ import javax.mail.Message;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.sun.mail.util.BASE64DecoderStream;
 
+import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.service.NotificationService;
 
 @Component
 public class WodongaRentalStatementProccesor extends Processor {
+	
+	private static Logger LOGGER = LogManager.getLogger(WodongaRentalStatementProccesor.class);
+	
+	@Autowired
+	protected NotificationService notificationService;
 
 	@Override
 	public void execute(Message message, RefData refData) throws Exception {
@@ -52,6 +62,12 @@ public class WodongaRentalStatementProccesor extends Processor {
 					metaData.put("year", folder);
 					documentService.createDocumentForRentalStatement(byteArray, fileName,
 							"/Wodonga/" + folder + "/Statements", metaData);
+					
+					Notification notification = new Notification();
+					notification.setMessage("Uploaded Wodonga rental statement - " + fileName);
+					LOGGER.info("Uploaded Wodonga rental statement - " + fileName);
+					
+					notificationService.create(notification);
 				}
 			}
 		}
