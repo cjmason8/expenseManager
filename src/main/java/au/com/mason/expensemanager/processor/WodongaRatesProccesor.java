@@ -49,8 +49,8 @@ public class WodongaRatesProccesor extends Processor {
 					Instalment[] instalments = new Instalment[4];
 					instalments[0] = new Instalment(LocalDate.of(year, 9, 30));
 					instalments[1] = new Instalment(LocalDate.of(year, 11, 30));
-					instalments[2] = new Instalment(LocalDate.of(year, 2, 28));
-					instalments[3] = new Instalment(LocalDate.of(year, 5, 31));
+					instalments[2] = new Instalment(LocalDate.of(year+1, 2, 28));
+					instalments[3] = new Instalment(LocalDate.of(year+1, 5, 31));
 
 					instalments[0].setAmount(instalmentAmounts[0].substring(1));
 					instalments[0].setNotes(1);

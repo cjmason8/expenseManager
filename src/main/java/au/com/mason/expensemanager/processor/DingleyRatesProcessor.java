@@ -64,10 +64,11 @@ public class DingleyRatesProcessor extends Processor {
 					Instalment[] instalments = new Instalment[4];
 					instalments[0] = new Instalment(LocalDate.of(year, 9, 30));
 					instalments[1] = new Instalment(LocalDate.of(year, 11, 30));
-					instalments[2] = new Instalment(LocalDate.of(year, 2, 28));
-					instalments[3] = new Instalment(LocalDate.of(year, 5, 31));
+					instalments[2] = new Instalment(LocalDate.of(year+1, 2, 28));
+					instalments[3] = new Instalment(LocalDate.of(year+1, 5, 31));
 
 					instalments[0].setAmount(firstInstalment);
+					instalments[0].setNotes(1);
 					
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 					String fileName = "DingleyRates-" + formatter.format(instalments[0].getDueDate()) + ".pdf";
@@ -80,6 +81,7 @@ public class DingleyRatesProcessor extends Processor {
 						}
 						else if (foundFirst[0] && counter[0] <= 3) {
 							instalments[counter[0]++].setAmount(line.replace("$", ""));
+							instalments[counter[0]++].setNotes(counter[0]++ + 1);
 						}
 					});
 					Arrays.asList(instalments).stream().forEach(item -> {
