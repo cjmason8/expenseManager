@@ -7,6 +7,7 @@ public enum EmailProcessor {
 	DINGLEY_GAS(DingleyGasProccesor.class),
 	DINGLEY_WATER(DingleyWaterProccesor.class),
 	WODONGA_WATER(WodongaWaterProccesor.class),
+	WODONGA_RATES(WodongaRatesProccesor.class),
 	WODONGA_INSURANCE(WodongaInsuranceProccesor.class),
 	DINGLEY_INSURANCE(DingleyInsuranceProccesor.class),
 	SOUTH_KINGSVILLE_RATES(SouthKingsvilleRatesProccesor.class),
@@ -18,7 +19,8 @@ public enum EmailProcessor {
 	TELSTRA(TelstraProccesor.class),
 	CAMRY_REGO(CamryRegoProcessor.class),
 	MAZDA_REGO(MazdaRegoProcessor.class),
-	WODONGA_RENT_STATEMENT(WodongaRentalStatementProccesor.class);
+	WODONGA_RENT_STATEMENT(WodongaRentalStatementProccesor.class),
+	DINGLEY_RATES(DingleyRatesProcessor.class);
 	
 	private Class processor;
 	

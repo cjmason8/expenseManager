@@ -69,28 +69,33 @@ public abstract class Processor {
 		}
 		BigDecimal reqAmount = new BigDecimal(amount.replace("$", ""));
 		if (expenses.size() == 0 || reqExpense == null) {
-			Expense newExpense = new Expense();
-			newExpense.setDueDate(dueDate);
-			newExpense.setAmount(reqAmount);
-			if (document != null) {
-				newExpense.setDocument(document);
-			}
-			newExpense.setEntryType(refData);
-			newExpense.setNotes(notes);
-			expenseService.create(newExpense);
-			
-			Notification notification = new Notification();
-			notification.setExpense(newExpense);
-			notification.setMessage("Created new expense");
-			
-			LOGGER.info("created new expense for " + newExpense.getEntryType().getDescription() + " and due date" + newExpense.getDueDate() +" and id " + newExpense.getId());
-			
-			notificationService.create(notification);
+			createExpense(refData, dueDate, document, notes, reqAmount);
 		}
 		else {
 			reqExpense.setNotes(notes);
 			addExpense(dueDate, reqAmount, document, reqExpense);
 		}		
+	}
+
+	protected void createExpense(RefData refData, LocalDate dueDate, Document document, String notes,
+			BigDecimal reqAmount) {
+		Expense newExpense = new Expense();
+		newExpense.setDueDate(dueDate);
+		newExpense.setAmount(reqAmount);
+		if (document != null) {
+			newExpense.setDocument(document);
+		}
+		newExpense.setEntryType(refData);
+		newExpense.setNotes(notes);
+		expenseService.create(newExpense);
+		
+		Notification notification = new Notification();
+		notification.setExpense(newExpense);
+		notification.setMessage("Created new expense");
+		
+		LOGGER.info("created new expense for " + newExpense.getEntryType().getDescription() + " and due date" + newExpense.getDueDate() +" and id " + newExpense.getId());
+		
+		notificationService.create(notification);
 	}
 	
 	protected void updateExpense(RefData refData, LocalDate dueDate, String amount, Document document) throws Exception {
