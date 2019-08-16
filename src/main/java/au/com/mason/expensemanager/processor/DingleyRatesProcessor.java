@@ -80,8 +80,9 @@ public class DingleyRatesProcessor extends Processor {
 							foundFirst[0] = true;
 						}
 						else if (foundFirst[0] && counter[0] <= 3) {
-							instalments[counter[0]++].setAmount(line.replace("$", ""));
-							instalments[counter[0]++].setNotes(counter[0]++ + 1);
+							instalments[counter[0]].setAmount(line.replace("$", ""));
+							instalments[counter[0]].setNotes(counter[0] + 1);
+							counter[0]++;
 						}
 					});
 					Arrays.asList(instalments).stream().forEach(item -> {
