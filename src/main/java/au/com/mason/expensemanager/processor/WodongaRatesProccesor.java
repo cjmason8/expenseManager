@@ -16,6 +16,7 @@ import com.sun.mail.util.BASE64DecoderStream;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.pdf.PdfReader;
+import au.com.mason.expensemanager.util.CollectionUtil;
 
 @Component
 public class WodongaRatesProccesor extends Processor {
@@ -42,7 +43,7 @@ public class WodongaRatesProccesor extends Processor {
 
 					String content = PdfReader.extract(byteArray);
 					final String reqParam = firstInstalmentAmount;
-					String reqLine = Arrays.asList(content.split("\n")).stream()
+					String reqLine = CollectionUtil.splitAndConvert(content, "\n").stream()
 							.filter(line -> line.startsWith("$" + reqParam)).findFirst().get();
 					String[] instalmentAmounts = reqLine.split(" ");
 

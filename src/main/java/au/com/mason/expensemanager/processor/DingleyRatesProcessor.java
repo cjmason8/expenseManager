@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.pdf.PdfReader;
+import au.com.mason.expensemanager.util.CollectionUtil;
 
 @Component
 public class DingleyRatesProcessor extends Processor {
@@ -53,8 +54,6 @@ public class DingleyRatesProcessor extends Processor {
 							.GET().build();
 
 					HttpResponse<byte[]> response = client.send(request, BodyHandlers.ofByteArray());
-					System.out.println(response.statusCode());
-					System.out.println(response.body());
 					
 					String content = PdfReader.extract(response.body());
 					Boolean[] foundFirst = new Boolean[1];
@@ -75,7 +74,7 @@ public class DingleyRatesProcessor extends Processor {
 					Document document = documentService.createDocumentFromEmailForExpense(response.body(), fileName);
 					instalments[0].setDocument(document);
 					
-					Arrays.asList(content.split("\n")).stream().filter(line -> line.startsWith("$")).forEach(line -> {
+					CollectionUtil.splitAndConvert(content, "\n").stream().filter(line -> line.startsWith("$")).forEach(line -> {
 						if (line.indexOf(firstInstalment) != -1) {
 							foundFirst[0] = true;
 						}
