@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.sun.mail.util.BASE64DecoderStream;
 
+import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RentalPayment;
@@ -76,30 +77,46 @@ public class WodongaRentalStatementProccesor extends Processor {
 					Map<String, Object> metaData = new HashMap<>();
 					metaData.put("property", "Wodonga");
 					metaData.put("year", folder);
-//					documentService.createDocumentForRentalStatement(byteArray, fileName,
-//							"/Wodonga/" + folder + "/Statements", metaData);
+					Document document = documentService.createDocumentForRentalStatement(byteArray, fileName,
+							"/Wodonga/" + folder + "/Statements", metaData);
 					
 					Notification notification = new Notification();
 					notification.setMessage("Uploaded Wodonga rental statement - " + fileName);
 					LOGGER.info("Uploaded Wodonga rental statement - " + fileName);
 					
 					RentalPayment rentalPayment = new RentalPayment();
+					rentalPayment.setDocument(document);
+					rentalPayment.setProperty("WODONGA");
 					
 					String content = PdfReader.extract(byteArray);
+					System.out.println(content);
 					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> {
 						if (line.indexOf("Rent") != -1) {
 							rentalPayment.setTotalRent(new BigDecimal(line.substring(1, line.indexOf(" "))));
 							String dateString = line.substring(line.indexOf("Rent") + 5);
-							String[] dates = dateString.split(" ");
-				        	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
+							String[] dates = dateString.split(" to ");
+				        	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy");
 				        	rentalPayment.setStatementFrom(LocalDate.parse(dates[0], dateFormatter));
 				        	rentalPayment.setStatementTo(LocalDate.parse(dates[1], dateFormatter));
 						}
+						else if (line.indexOf("Management Fee") != -1) {
+							rentalPayment.setManagementFee(new BigDecimal(line.substring(1, line.indexOf(".") + 3)));
+						}
+						else if (line.indexOf("Administration Fee") != -1) {
+							rentalPayment.setAdminFee(new BigDecimal(line.substring(1, line.indexOf(".") + 3)));
+						}
+						else if (line.indexOf("Payment to Owner") != -1) {
+							BigDecimal paymentToOwner = new BigDecimal(line.substring(1, line.indexOf(".") + 3));
+							if (paymentToOwner.compareTo(rentalPayment.getPaymentToOwner()) != 0) {
+								Notification unbalancedRemtalNotification = new Notification();
+								notification.setMessage("There was an unbalanced Rental Payment for Wodonga " + rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
+								notificationService.create(unbalancedRemtalNotification);	
+							}
+						}
 					});
 					
-//					rentalPaymentService.createDonation(rentalPayment);
-//					
-//					notificationService.create(notification);
+					rentalPaymentService.createRentalPayment(rentalPayment);
+					notificationService.create(notification);
 				}
 			}
 		}

@@ -1,7 +1,10 @@
 package au.com.mason.expensemanager.dao;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Repository;
@@ -38,6 +41,13 @@ public class RentalPaymentDao {
 	
 	public RentalPayment update(RentalPayment rentalPayment) {
 		return entityManager.merge(rentalPayment);
+	}
+	
+	public List<RentalPayment> getAll(String property) {
+		Query query = entityManager.createQuery("FROM RentalPayment WHERE property = :property ORDER BY statementFrom DESC");
+		query.setParameter("property", property);
+
+		return query.getResultList();
 	}
 
 	// Private fields

@@ -27,6 +27,7 @@ public class RentalPayment {
 	private BigDecimal totalRent;
 	private LocalDate statementFrom;
 	private LocalDate statementTo;
+	private String property;
 
 	@OneToOne
 	@JoinColumn(name = "documentId")
@@ -94,6 +95,18 @@ public class RentalPayment {
 
 	public void setStatementTo(LocalDate statementTo) {
 		this.statementTo = statementTo;
+	}
+	
+	public BigDecimal getPaymentToOwner() {
+		return totalRent.subtract(adminFee).subtract(managementFee);
+	}
+
+	public String getProperty() {
+		return property;
+	}
+
+	public void setProperty(String property) {
+		this.property = property;
 	}
 
 }
