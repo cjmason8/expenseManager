@@ -34,24 +34,12 @@ public class WodongaRentalStatementProccesor extends Processor {
 	
 	private static Logger LOGGER = LogManager.getLogger(WodongaRentalStatementProccesor.class);
 	
-	private static List<String> FIRST_SIX_MONTHS;
-	
 	@Autowired
 	protected NotificationService notificationService;
 	
 	@Autowired
 	private RentalPaymentService rentalPaymentService;
 	
-	static {
-		FIRST_SIX_MONTHS = new ArrayList<>();
-		FIRST_SIX_MONTHS.add("Jan");
-		FIRST_SIX_MONTHS.add("Feb");
-		FIRST_SIX_MONTHS.add("Mar");
-		FIRST_SIX_MONTHS.add("Apr");
-		FIRST_SIX_MONTHS.add("May");
-		FIRST_SIX_MONTHS.add("Jun");
-	}
-
 	@Override
 	public void execute(Message message, RefData refData) throws Exception {
 		
@@ -68,7 +56,7 @@ public class WodongaRentalStatementProccesor extends Processor {
 					String folder = fileName.substring(fileName.indexOf(" to ") + 4).replace(".pdf", "");
 					String month = folder.substring(folder.indexOf(" "), folder.lastIndexOf(" "));
 					String year = folder.substring(folder.lastIndexOf(" ") + 1);
-					if (FIRST_SIX_MONTHS.contains(month)) {
+					if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
 						folder = (Integer.valueOf(year) - 1) + "-" + year; 
 					}
 					else {
