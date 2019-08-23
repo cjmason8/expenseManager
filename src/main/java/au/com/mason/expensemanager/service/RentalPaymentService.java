@@ -1,6 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,10 +11,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
-import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
+import au.com.mason.expensemanager.mapper.DocumentMapperWrapper;
 import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
 
 @Component
@@ -23,6 +25,8 @@ public class RentalPaymentService {
 	
 	public static List<String> FIRST_SIX_MONTHS;
 	public static Map<String, String> PROPERTIES;
+	
+	private Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	@Autowired
 	private RentalPaymentMapperWrapper rentalPaymentMapperWrapper;
@@ -60,15 +64,12 @@ public class RentalPaymentService {
 			rentalPaymentDto.setDocumentDto(null);
 		}
 		
-		Document document = null;
 		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getOriginalFileName() != null) {
-			document = getDocument(rentalPaymentDto);
+			updateDocument(rentalPaymentDto);
 		}
-		rentalPaymentDto.setDocumentDto(null);
 		
 		RentalPayment updatedRentalPayment = rentalPaymentDao.getById(rentalPaymentDto.getId());
 		updatedRentalPayment = rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto, updatedRentalPayment);
-		updatedRentalPayment.setDocument(document);
 		
 		rentalPaymentDao.update(updatedRentalPayment);
 		
@@ -77,21 +78,18 @@ public class RentalPaymentService {
 	
 	public RentalPaymentDto createRentalPayment(RentalPaymentDto rentalPaymentDto) throws Exception {
 		
-		Document document = null;
 		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getOriginalFileName() != null) {
-			document = getDocument(rentalPaymentDto);
+			updateDocument(rentalPaymentDto);
 		}
-		rentalPaymentDto.setDocumentDto(null);
 		
 		RentalPayment rentalPayment = rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
-		rentalPayment.setDocument(document);
-		
 		rentalPaymentDao.create(rentalPayment);
 		
 		return rentalPaymentDto;
 	}
 	
-	private Document getDocument(RentalPaymentDto rentalPaymentDto) throws IOException, Exception {
+	private void updateDocument(RentalPaymentDto rentalPaymentDto) throws IOException, Exception {
+		
 		String fileName = rentalPaymentDto.getDocumentDto().getFileName();
 		int indexOf = fileName.indexOf(" (");
 		if (indexOf == -1) {
@@ -106,13 +104,16 @@ public class RentalPaymentService {
 		else {
 			folder = year + "-" + (Integer.valueOf(year) + 1);
 		}
-		Map<String, Object> metaData = new HashMap<>();
+		Map<String, String> metaData = new HashMap<>();
 		metaData.put("property", PROPERTIES.get(rentalPaymentDto.getProperty()));
 		metaData.put("year", folder);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		Files.copy(Paths.get(rentalPaymentDto.getDocumentDto().getFilePath()), baos);
-		return documentService.createDocumentForRentalStatement(baos.toByteArray(), fileName,
-				"/" + PROPERTIES.get(rentalPaymentDto.getProperty())+ "/" + folder + "/Statements", metaData);
+		
+		String folderPath = DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPaymentDto.getProperty())+ "/" + folder + "/Statements";
+		Files.move(Paths.get(rentalPaymentDto.getDocumentDto().getFilePath()), Paths.get(folderPath + "/" + fileName));
+		rentalPaymentDto.getDocumentDto().setFolderPath(folderPath);
+		rentalPaymentDto.getDocumentDto().setMetaDataChunk(gson.toJson(metaData));
+		
+		documentService.updateDocument(rentalPaymentDto.getDocumentDto());
 	}
 	
 	public void deleteRentalPayment(Long id) {

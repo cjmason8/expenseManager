@@ -26,6 +26,8 @@ import au.com.mason.expensemanager.mapper.DocumentMapperWrapper;
 @Component
 public class DocumentService {
 	
+	public static final String IP_FOLDER_PATH = "/docs/expenseManager/filofax/IPs";
+	
 	private Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	@Autowired
@@ -37,7 +39,6 @@ public class DocumentService {
 	public DocumentDto updateDocument(DocumentDto documentDto) throws Exception {
 		Document updatedDocument = documentDao.getById(documentDto.getId());
 		updatedDocument = documentMapperWrapper.documentDtoToDocument(documentDto, updatedDocument);
-		
 		documentDao.update(updatedDocument);
 		
 		if (updatedDocument.isFolder() && !documentDto.getOriginalFileName().equals(documentDto.getFileName())) {
@@ -89,7 +90,7 @@ public class DocumentService {
 	}
 	
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath, Map<String, Object> metaData) throws Exception {
-		String folderPathString = "/docs/expenseManager/filofax/IPs" + folderPath;
+		String folderPathString = IP_FOLDER_PATH + folderPath;
 		String filePathString = folderPathString + "/" + fileName;
 		Path reqFolderPath = Paths.get(folderPathString);
 		Path filePath = Paths.get(filePathString);
