@@ -35,7 +35,13 @@ public class RentalPaymentService {
 	
 	public RentalPaymentDto updateRentalPayment(RentalPaymentDto rentalPaymentDto) throws Exception {
 		
-		updateDocument(rentalPaymentDto);
+		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getFileName() == null) {
+			rentalPaymentDto.setDocumentDto(null);
+		}
+		
+		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getOriginalFileName() != null) {
+			updateDocument(rentalPaymentDto);
+		}
 		
 		RentalPayment updatedRentalPayment = rentalPaymentDao.getById(rentalPaymentDto.getId());
 		updatedRentalPayment = rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto, updatedRentalPayment);

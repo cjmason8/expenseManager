@@ -21,10 +21,10 @@ public class RentalPayment {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
-	private BigDecimal managementFee;
-	private BigDecimal adminFee;
-	private BigDecimal otherFee;
-	private BigDecimal totalRent;
+	private BigDecimal managementFee = new BigDecimal(0);
+	private BigDecimal adminFee = new BigDecimal(0);
+	private BigDecimal otherFee = new BigDecimal(0);
+	private BigDecimal totalRent = new BigDecimal(0);
 	private LocalDate statementFrom;
 	private LocalDate statementTo;
 	private String property;
