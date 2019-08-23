@@ -87,17 +87,16 @@ public class WodongaRentalStatementProccesor extends Processor {
 					RentalPayment rentalPayment = new RentalPayment();
 					rentalPayment.setDocument(document);
 					rentalPayment.setProperty("WODONGA");
+					String dateString = message.getSubject().substring(message.getSubject().indexOf("-") + 2, message.getSubject().indexOf("(") - 1);
+					String[] dates = dateString.split(" to ");
+		        	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy");
+		        	rentalPayment.setStatementFrom(LocalDate.parse(dates[0], dateFormatter));
+		        	rentalPayment.setStatementTo(LocalDate.parse(dates[1], dateFormatter));
 					
 					String content = PdfReader.extract(byteArray);
-					System.out.println(content);
 					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> {
 						if (line.indexOf("Rent") != -1) {
 							rentalPayment.setTotalRent(new BigDecimal(line.substring(1, line.indexOf(" "))));
-							String dateString = line.substring(line.indexOf("Rent") + 5);
-							String[] dates = dateString.split(" to ");
-				        	DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy");
-				        	rentalPayment.setStatementFrom(LocalDate.parse(dates[0], dateFormatter));
-				        	rentalPayment.setStatementTo(LocalDate.parse(dates[1], dateFormatter));
 						}
 						else if (line.indexOf("Management Fee") != -1) {
 							rentalPayment.setManagementFee(new BigDecimal(line.substring(1, line.indexOf(".") + 3)));
