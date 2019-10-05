@@ -35,7 +35,7 @@ public class DingleyElectricityProccesor extends Processor {
 		        if (bodyPart.isMimeType("text/html")) {
 		            body = (String) bodyPart.getContent();
 		            amount = body.substring(body.indexOf(">$") + 2, body.indexOf("<", body.indexOf(">$"))).trim();
-		            int startIndex = body.indexOf("width=\"170\">", body.indexOf("Direct Debit date")) + 12;
+		            int startIndex = body.indexOf("strong", body.indexOf("Direct Debit date")) + 7;
 		            String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex)).trim();
 		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
 		            dueDate = LocalDate.parse(dueDateString, formatter);
