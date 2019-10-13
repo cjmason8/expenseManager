@@ -156,7 +156,7 @@ public class DocumentController {
 		
 		LOGGER.info("leaving DocumentController deleteDocument - " + id);
 		
-		return "{\"filePath\":\"" + parentFolder + "\"}";
+		return "{\"folderPath\":\"" + parentFolder + "\"}";
     }
 
 	@RequestMapping(value = "/documents/get/{type}/{id}", method = RequestMethod.GET)
