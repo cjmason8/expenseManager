@@ -120,7 +120,7 @@ public class DocumentController {
 		
 		LOGGER.info("leaving DocumentController createDirectory - " + directory.getFileName());
 
-		return "{\"filePath\":\"" + directory.getFilePath() + "\"}";
+		return "{\"folderPath\":\"" + directory.getFilePath() + "\"}";
 	}
 	
 	@RequestMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json", method = RequestMethod.PUT)
