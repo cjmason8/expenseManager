@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import au.com.mason.expensemanager.dto.DirectoryDto;
 import au.com.mason.expensemanager.dto.DocumentDto;
 import au.com.mason.expensemanager.dto.DonationDto;
 import au.com.mason.expensemanager.dto.ExpenseDto;
@@ -124,17 +125,17 @@ public class DocumentController {
 	}
 	
 	@RequestMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json", method = RequestMethod.PUT)
-	String updateDocument(@RequestBody DocumentDto directory) throws Exception {
+	String updateDirectory(@RequestBody DocumentDto directory) throws Exception {
 		LOGGER.info("entering DocumentController updateDocument - " + directory.getFileName());
 		
 		Files.move(Paths.get(directory.getFolderPath() + "/" + directory.getOriginalFileName()),
 				Paths.get(directory.getFolderPath() + "/" + directory.getFileName()));
 		
-		documentService.updateDocument(directory);
+		DocumentDto newDirectory = documentService.updateDocument(directory);
 		
-		LOGGER.info("leaving DocumentController updateDocument - " + directory.getFileName());
+		LOGGER.info("leaving DocumentController updateDocument - " + newDirectory.getFileName());
 		
-		return "{\"filePath\":\"" + directory.getFolderPath() + "\"}";
+		return "{\"folderPath\":\"" + newDirectory.getFilePath() + "\"}";
 	}
 	
 	@RequestMapping(value = "/documents/{id}", method = RequestMethod.DELETE, produces = "application/json",
