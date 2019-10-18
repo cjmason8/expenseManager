@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 public class EncryptionService {
 	
 	@Value("${beta.key}")
-	private String betaKey = "CL0112JY1406ESSa";
+	private String betaKey;
 	
 	@Value("${alpha.vec}")
-	private String alphaKey = "E66YYu84iW50GE66";
+	private String alphaKey;
 	
     public String encrypt(String value) {
         try {
