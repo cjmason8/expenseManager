@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,8 +18,8 @@ import com.google.gson.GsonBuilder;
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
-import au.com.mason.expensemanager.mapper.DocumentMapperWrapper;
 import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
+import au.com.mason.expensemanager.util.DateUtil;
 
 @Component
 public class RentalPaymentService {
@@ -48,7 +49,7 @@ public class RentalPaymentService {
 		
 		PROPERTIES = new HashMap<>();
 		PROPERTIES.put("WODONGA", "Wodonga");
-		PROPERTIES.put("STH_KINGSVILLE", "Sth Kingsville");
+		PROPERTIES.put("STH_KINGSVILLE", "South Kingsville");
 	}
 	
 	public RentalPayment createRentalPayment(RentalPayment rentalPayment) throws Exception {
@@ -90,15 +91,11 @@ public class RentalPaymentService {
 	
 	private void updateDocument(RentalPaymentDto rentalPaymentDto) throws IOException, Exception {
 		
-		String fileName = rentalPaymentDto.getDocumentDto().getFileName();
-		int indexOf = fileName.indexOf(" (");
-		if (indexOf == -1) {
-			indexOf = fileName.indexOf(" [");
-		}
-		String folder = fileName.substring(fileName.indexOf(" to ") + 4, indexOf);
-		String month = folder.substring(folder.indexOf(" "), folder.lastIndexOf(" "));
-		String year = folder.substring(folder.lastIndexOf(" ") + 1);
-		if (FIRST_SIX_MONTHS.contains(month)) {
+		LocalDate statementFrom = DateUtil.getFormattedDate(rentalPaymentDto.getStatementFromString());
+		String month = String.valueOf(statementFrom.getMonth());
+		String year = String.valueOf(statementFrom.getYear());
+		String folder = "";
+		if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
 			folder = (Integer.valueOf(year) - 1) + "-" + year; 
 		}
 		else {
@@ -109,7 +106,7 @@ public class RentalPaymentService {
 		metaData.put("year", folder);
 		
 		String folderPath = DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPaymentDto.getProperty())+ "/" + folder + "/Statements";
-		Files.move(Paths.get(rentalPaymentDto.getDocumentDto().getFilePath()), Paths.get(folderPath + "/" + fileName));
+		Files.move(Paths.get(rentalPaymentDto.getDocumentDto().getFilePath()), Paths.get(folderPath + "/" + rentalPaymentDto.getDocumentDto().getFileName()));
 		rentalPaymentDto.getDocumentDto().setFolderPath(folderPath);
 		rentalPaymentDto.getDocumentDto().setMetaDataChunk(gson.toJson(metaData));
 		

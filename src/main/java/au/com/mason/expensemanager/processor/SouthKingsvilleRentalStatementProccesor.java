@@ -68,6 +68,8 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 					RentalPayment rentalPayment = new RentalPayment();
 					//rentalPayment.setDocument(document);
 					rentalPayment.setProperty("STH_KINGSVILLE");
+					
+					BigDecimal[] paymentToOwner = new BigDecimal[1];
 
 					String content = PdfReader.extract(byteArray);
 					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> { 
@@ -90,14 +92,16 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 				        	rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
 						}
 						else if (line.indexOf("You Received") != -1) { 
-							BigDecimal paymentToOwner = new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", ""));
-							if (paymentToOwner.compareTo(rentalPayment.getPaymentToOwner()) != 0) {
-								Notification unbalancedRemtalNotification = new Notification();
-								unbalancedRemtalNotification.setMessage("There was an unbalanced Rental Payment for South Kingsville " + rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
-								notificationService.create(unbalancedRemtalNotification); 
-							} 
+							paymentToOwner[0] = new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", ""));
 						} 
 					});
+					
+					System.out.println("*** " + paymentToOwner[0] + ", " + rentalPayment.getPaymentToOwner());
+					if (paymentToOwner[0].compareTo(rentalPayment.getPaymentToOwner()) != 0) {
+						Notification unbalancedRemtalNotification = new Notification();
+						unbalancedRemtalNotification.setMessage("There was an unbalanced Rental Payment for South Kingsville " + rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
+						notificationService.create(unbalancedRemtalNotification); 
+					}
 					
 					String fileName = message.getSubject().substring(0, message.getSubject().indexOf("from") - 1) + ".pdf";
 					String month = String.valueOf(rentalPayment.getStatementTo().getMonth());
