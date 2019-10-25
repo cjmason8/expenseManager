@@ -96,7 +96,6 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 						} 
 					});
 					
-					System.out.println("*** " + paymentToOwner[0] + ", " + rentalPayment.getPaymentToOwner());
 					if (paymentToOwner[0].compareTo(rentalPayment.getPaymentToOwner()) != 0) {
 						Notification unbalancedRemtalNotification = new Notification();
 						unbalancedRemtalNotification.setMessage("There was an unbalanced Rental Payment for South Kingsville " + rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
