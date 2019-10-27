@@ -1,11 +1,13 @@
 package au.com.mason.expensemanager.processor;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
@@ -23,6 +25,46 @@ public class WodongaRatesProccesor extends Processor {
 
 	@Override
 	public void execute(Message message, RefData refData) throws Exception {
+		if (message.getSubject().indexOf("Instalment") != -1) {
+			handleInstalments(message, refData);
+		}
+		else {
+			handleFirst(message, refData);
+		}
+	}
+	
+	private void handleInstalments(Message message, RefData refData) throws Exception {
+		if (message.isMimeType("multipart/*")) {
+			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+			int count = mimeMultipart.getCount();
+			LocalDate dueDate = null;
+			String amount = null;
+			for (int i = 0; i < count; i++) {
+				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
+				if (bodyPart.isMimeType("text/html")) {
+					String body = bodyPart.getContent().toString();
+					int startIndex = body.indexOf("\">", body.indexOf("Due Date") + 10) + 2;
+					String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex));
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+					dueDate = LocalDate.parse(dueDateString, formatter);
+					startIndex = body.indexOf("\">", body.indexOf("Amount Due") + 12) + 2;
+					amount = body.substring(startIndex, body.indexOf("<", startIndex));
+				} else if (bodyPart.getContentType().startsWith("APPLICATION/PDF")) {
+					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
+					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
+
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+					String fileName = "WodongaRates-" + formatter.format(dueDate) + ".pdf";
+					 Document document =
+					 documentService.createDocumentFromEmailForExpense(byteArray, fileName);
+
+					 updateExpense(refData, dueDate, amount, document, null);
+				}
+			}
+		}		
+	}
+
+	private void handleFirst(Message message, RefData refData) throws MessagingException, IOException, Exception {
 		if (message.isMimeType("multipart/*")) {
 			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
 			int count = mimeMultipart.getCount();
@@ -63,7 +105,7 @@ public class WodongaRatesProccesor extends Processor {
 					instalments[3].setNotes(4);
 
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-					String fileName = "DingleyRates-" + formatter.format(instalments[0].getDueDate()) + ".pdf";
+					String fileName = "WodongaRates-" + formatter.format(instalments[0].getDueDate()) + ".pdf";
 					Document document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 					instalments[0].setDocument(document);
 

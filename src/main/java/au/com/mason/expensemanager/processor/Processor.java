@@ -72,7 +72,9 @@ public abstract class Processor {
 			createExpense(refData, dueDate, document, notes, reqAmount);
 		}
 		else {
-			reqExpense.setNotes(notes);
+			if (notes != null) {
+				reqExpense.setNotes(notes);
+			}
 			addExpense(dueDate, reqAmount, document, reqExpense);
 		}		
 	}
