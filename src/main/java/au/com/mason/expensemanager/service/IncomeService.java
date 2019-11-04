@@ -8,10 +8,9 @@ import org.springframework.stereotype.Component;
 import au.com.mason.expensemanager.dao.IncomeDao;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.domain.Transaction;
-import au.com.mason.expensemanager.dto.IncomeDto;
 
 @Component
-public class IncomeService extends TransactionService<IncomeDto, Income, IncomeDao> {
+public class IncomeService extends TransactionService<Income, IncomeDao> {
 	
 	@Autowired
 	private ExpenseService expenseService;

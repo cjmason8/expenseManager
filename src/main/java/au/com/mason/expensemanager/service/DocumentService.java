@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,40 +14,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import au.com.mason.expensemanager.dao.DocumentDao;
 import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.dto.DocumentDto;
-import au.com.mason.expensemanager.mapper.DocumentMapperWrapper;
 
 @Component
 public class DocumentService {
 	
 	public static final String IP_FOLDER_PATH = "/docs/expenseManager/filofax/IPs";
 	
-	private Gson gson = new GsonBuilder().serializeNulls().create();
-	
-	@Autowired
-	private DocumentMapperWrapper documentMapperWrapper;
-	
 	@Autowired
 	private DocumentDao documentDao;
 	
-	public DocumentDto updateDocument(DocumentDto documentDto) throws Exception {
-		Document updatedDocument = documentDao.getById(documentDto.getId());
-		updatedDocument = documentMapperWrapper.documentDtoToDocument(documentDto, updatedDocument);
-		documentDao.update(updatedDocument);
+	public Document updateDocument(Document document) throws Exception {
+		documentDao.update(document);
 		
-		if (updatedDocument.isFolder() && !documentDto.getOriginalFileName().equals(documentDto.getFileName())) {
-			documentDao.updateDirectoryPaths(documentDto.getFolderPath() + "/" + documentDto.getOriginalFileName(), documentDto.getFolderPath() + "/" + documentDto.getFileName());
+		if (document.isFolder() && !document.getOriginalFileName().equals(document.getFileName())) {
+			documentDao.updateDirectoryPaths(document.getFolderPath() + "/" + document.getOriginalFileName(), document.getFolderPath() + "/" + document.getFileName());
 		}
 		
-		return documentMapperWrapper.documentToDocumentDto(updatedDocument);
+		return document;
 	}
 	
-	public DocumentDto createDocument(String path, String type, MultipartFile file) throws Exception {
+	public Document createDocument(String path, String type, MultipartFile file) throws Exception {
 		byte[] bytes = file.getBytes();
 		String folderPathString = "/docs/expenseManager/" + type;
 		if (path != null) {
@@ -69,7 +56,7 @@ public class DocumentService {
 			setMetadata(path, document);
 		}
 		
-		return documentMapperWrapper.documentToDocumentDto(documentDao.create(document));
+		return document;
 	}
 	
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
@@ -115,15 +102,15 @@ public class DocumentService {
 		document.setMetaData(parent.getMetaData());
 	}
 	
-	public DocumentDto createDirectory(DocumentDto directoryDto) throws Exception {
+	public Document createDirectory(Document directory) throws Exception {
 		String folderPathString = "";
-		if (directoryDto.getFolderPath().indexOf("root") != -1) {
-			folderPathString = "/docs/expenseManager/filofax/" + directoryDto.getFolderPath().replace("root", "") + "/";
+		if (directory.getFolderPath().indexOf("root") != -1) {
+			folderPathString = "/docs/expenseManager/filofax/" + directory.getFolderPath().replace("root", "") + "/";
 		} else {
-			folderPathString = directoryDto.getFolderPath();
+			folderPathString = directory.getFolderPath();
 		}
 
-		File folder = new File(folderPathString + "/" + directoryDto.getFileName());
+		File folder = new File(folderPathString + "/" + directory.getFileName());
 		folder.mkdir();
 		
 		String parentFolderPath = folder.getParent().substring(0, folder.getParent().lastIndexOf("/"));
@@ -132,18 +119,15 @@ public class DocumentService {
 		Document document = new Document();
 		document.setFileName(folder.getName());
 		document.setFolderPath(folder.getParent());
-		setMetaData(directoryDto, parentFolderPath, parentFolderName, document);
+		setMetaData(directory, parentFolderPath, parentFolderName, document);
 		document.setFolder(true);
 		
-		return documentMapperWrapper.documentToDocumentDto(documentDao.create(document));
+		return document;
 	}
 
-	private void setMetaData(DocumentDto directoryDto, String parentFolderPath, String parentFolderName,
+	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName,
 			Document document) {
 		Map<String, Object> metaData = new HashMap<>();
-		if (directoryDto.getMetaDataChunk() != null) {
-			metaData.putAll(gson.fromJson(directoryDto.getMetaDataChunk(), Map.class));
-		}
 		if (!parentFolderName.equals("filofax")) {
 			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
 			metaData.putAll(parent.getMetaData());
@@ -151,26 +135,19 @@ public class DocumentService {
 		document.setMetaData(metaData);
 	}
 	
-	public void deleteDocument(DocumentDto documentDto) {
-		if (documentDto.getIsFolder()) {
-			documentDao.deleteDirectory(documentDto.getFolderPath() + "/" + documentDto.getFileName());
+	public void deleteDocument(Document document) {
+		if (document.isFolder()) {
+			documentDao.deleteDirectory(document.getFolderPath() + "/" + document.getFileName());
 		}
-		documentDao.deleteById(documentDto.getId());
+		documentDao.deleteById(document.getId());
 	}
 	
-	public DocumentDto getById(Long id) throws Exception {
-		Document document = documentDao.getById(id);
-		
-		return documentMapperWrapper.documentToDocumentDto(document);
+	public Document getById(Long id) throws Exception {
+		return documentDao.getById(id);
 	}
 	
-	public List<DocumentDto> getAll(String folder) throws Exception {
-		List<DocumentDto> documentDtos = new ArrayList<>();
-		for(Document document : documentDao.getAll(folder)) {
-			documentDtos.add(documentMapperWrapper.documentToDocumentDto(document));
-		};
-		
-		return documentDtos;
+	public List<Document> getAll(String folder) throws Exception {
+		return documentDao.getAll(folder);
 	}
 	
 	public void moveFiles(String fullFolderPath, Long[] files) {

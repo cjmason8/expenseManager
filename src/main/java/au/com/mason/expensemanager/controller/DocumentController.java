@@ -25,16 +25,17 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import au.com.mason.expensemanager.dto.DirectoryDto;
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.DocumentDto;
-import au.com.mason.expensemanager.dto.DonationDto;
-import au.com.mason.expensemanager.dto.ExpenseDto;
-import au.com.mason.expensemanager.dto.IncomeDto;
 import au.com.mason.expensemanager.dto.MoveFilesDto;
 import au.com.mason.expensemanager.service.DocumentService;
 import au.com.mason.expensemanager.service.DonationService;
 import au.com.mason.expensemanager.service.ExpenseService;
 import au.com.mason.expensemanager.service.IncomeService;
+import au.com.mason.expensemanager.util.DocumentUtil;
 
 @RestController
 public class DocumentController {
@@ -70,11 +71,11 @@ public class DocumentController {
 		
 		LOGGER.info("entering DocumentController uploadFile");
 
-		DocumentDto document = documentService.createDocument(path, type, file);
+		Document document = documentService.createDocument(path, type, file);
 		
 		LOGGER.info("leaving DocumentController uploadFile");
 		
-		return document;
+		return DocumentUtil.convertToDto(document);
 	}
 
 	@PostMapping(value = "/documents", produces = "application/json", consumes = "application/json")
@@ -89,7 +90,7 @@ public class DocumentController {
 		
 		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
 
-		documentService.updateDocument(document);
+		documentService.updateDocument(DocumentUtil.convertToEntity(document));
 
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
@@ -102,10 +103,10 @@ public class DocumentController {
 
 		if (!document.getOriginalFileName().equals(document.getFileName())) {
 			Files.move(Paths.get(document.getFolderPath() + "/" + document.getOriginalFileName()),
-					Paths.get(document.getFolderPath() + "/" + document.getFileName()));
+					Paths.get(document.getFilePath()));
 		}
 
-		documentService.updateDocument(document);
+		documentService.updateDocument(DocumentUtil.convertToEntity(document));
 		
 		LOGGER.info("leaving DocumentController updateFile - " + id);
 
@@ -117,7 +118,7 @@ public class DocumentController {
 
 		LOGGER.info("entering DocumentController createDirectory - " + directory.getFileName());
 		
-		documentService.createDirectory(directory);
+		documentService.createDirectory(DocumentUtil.convertToEntity(directory));
 		
 		LOGGER.info("leaving DocumentController createDirectory - " + directory.getFileName());
 
@@ -131,11 +132,11 @@ public class DocumentController {
 		Files.move(Paths.get(directory.getFolderPath() + "/" + directory.getOriginalFileName()),
 				Paths.get(directory.getFolderPath() + "/" + directory.getFileName()));
 		
-		DocumentDto newDirectory = documentService.updateDocument(directory);
+		Document newDirectory = documentService.updateDocument(DocumentUtil.convertToEntity(directory));
 		
 		LOGGER.info("leaving DocumentController updateDocument - " + newDirectory.getFileName());
 		
-		return "{\"folderPath\":\"" + newDirectory.getFilePath() + "\"}";
+		return "{\"folderPath\":\"" + newDirectory.getFolderPath() + "/" + newDirectory.getFileName() + "\"}";
 	}
 	
 	@RequestMapping(value = "/documents/{id}", method = RequestMethod.DELETE, produces = "application/json",
@@ -144,13 +145,13 @@ public class DocumentController {
 		
 		LOGGER.info("entering DocumentController deleteDocument - " + id);
 		
-		DocumentDto document = documentService.getById(id);
+		Document document = documentService.getById(id);
 		String parentFolder = document.getFolderPath();
-		if (document.getIsFolder()) {
-			FileUtils.deleteDirectory(new File(document.getFolderPath() + "/" + document.getFileName()));
+		if (document.isFolder()) {
+			FileUtils.deleteDirectory(new File(document.getFileName()));
 		}
 		else {
-			Files.delete(Paths.get(document.getFolderPath() + "/" + document.getFileName()));
+			Files.delete(Paths.get(document.getFileName()));
 		}
 		
 		documentService.deleteDocument(document);
@@ -184,7 +185,7 @@ public class DocumentController {
 		
 		LOGGER.info("enterting DocumentController getFileById - " + id);
 		
-		DocumentDto document = documentService.getById(id);
+		Document document = documentService.getById(id);
 		
 		HttpHeaders headers = new HttpHeaders();
 		String mediaType = getContentType(document.getFileName());
@@ -201,7 +202,7 @@ public class DocumentController {
 	@RequestMapping(value = "/documents/list", method = RequestMethod.POST)
 	public List<DocumentDto> getFiles(@RequestBody String folder) throws Exception {
 		LOGGER.info("entering DocumentController getFiles - " + folder);		
-		List<DocumentDto> documents = documentService.getAll(folder);
+		List<DocumentDto> documents = DocumentUtil.convertList(documentService.getAll(folder));
 
 		Collections.sort(documents);
 
@@ -225,17 +226,17 @@ public class DocumentController {
 
 	private String getPath(Long id, String type) throws Exception {
 		if (type.equals("donations")) {
-			DonationDto donation = donationService.getById(id);
+			Donation donation = donationService.getById(id);
 
-			return donation.getDocumentDto().getFilePath();
+			return donation.getDocument().getFilePath();
 		} else if (type.equals("expenses")) {
-			ExpenseDto expense = expenseService.getById(id);
+			Expense expense = expenseService.getById(id);
 
-			return expense.getDocumentDto().getFilePath();
+			return expense.getDocument().getFilePath();
 		} else if (type.equals("incomes")) {
-			IncomeDto income = incomeService.getById(id);
+			Income income = incomeService.getById(id);
 
-			return income.getDocumentDto().getFilePath();
+			return income.getDocument().getFilePath();
 		}
 
 		return null;

@@ -1,9 +1,11 @@
 package au.com.mason.expensemanager.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,57 +13,69 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.dto.RefDataDto;
 import au.com.mason.expensemanager.service.RefDataService;
 
 @RestController
-public class RefDataController {
+public class RefDataController extends BaseController<RefDataDto, RefData> {
 	
 	@Autowired
 	private RefDataService refDataService;
 	
+	@Autowired
+	private ModelMapper modelMapper;
+	
 	private static Logger LOGGER = LogManager.getLogger(RefDataController.class);
+	private Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	@RequestMapping(value = "/refDatas/type/{type}", method = RequestMethod.GET, produces = "application/json")
 	List<RefDataDto> getRefDatasByType(@PathVariable String type) throws Exception {
 		LOGGER.info("entering RefDataController getRefDatasByType - " + type);
-		List<RefDataDto> refDatas = refDataService.getRefData(type);
+		List<RefData> refDatas = refDataService.getRefData(type);
 		LOGGER.info("leaving RefDataController getRefDatasByType - " + type);
-		return refDatas;
+		return convertList(refDatas);
     }
 	
 	@RequestMapping(value = "/refDatas", method = RequestMethod.GET, produces = "application/json")
 	List<RefDataDto> getRefDatas() throws Exception {
 		LOGGER.info("entering RefDataController getRefDatas");
-		List<RefDataDto> refDatas = refDataService.getAll();
+		List<RefData> refDatas = refDataService.getAll();
 		LOGGER.info("leaving RefDataController getRefDatas");
-		return refDatas;
+		return convertList(refDatas);
     }
-	
+
 	@RequestMapping(value = "/refDatas", method = RequestMethod.POST, produces = "application/json", 
 			consumes = "application/json", headers = "Accept=application/json")
 	RefDataDto addRefData(@RequestBody RefDataDto refDataDto) throws Exception {
 		LOGGER.info("entering RefDataController addRefData - " + refDataDto.getDescription());
-		RefDataDto refData = refDataService.createRefData(refDataDto);
+		RefData refData = refDataService.createRefData(convertToEntity(refDataDto));
 		LOGGER.info("leaving RefDataController addRefData - " + refData.getDescription());
-		return refData;
+		
+		return convertToDto(refData);
     }
 	
 	@RequestMapping(value = "/refDatas/{id}", method = RequestMethod.PUT, produces = "application/json", 
 			consumes = "application/json", headers = "Accept=application/json")
 	RefDataDto updateRefData(@RequestBody RefDataDto refDataDto, Long id) throws Exception {
 		LOGGER.info("entering RefDataController updateRefData - " + refDataDto.getDescription());
-		RefDataDto refData = refDataService.updateRefData(refDataDto);
+		RefData refData = refDataService.updateRefData(convertToEntity(refDataDto));
+		
 		LOGGER.info("entering RefDataController updateRefData - " + refDataDto.getDescription());
-		return refData;
+		
+		return convertToDto(refData);
     }
 	
 	@RequestMapping(value = "/refDatas/{id}", method = RequestMethod.GET, produces = "application/json")
 	RefDataDto getRefData(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering RefDataController getRefData - " + id);
-		RefDataDto refData = refDataService.getById(id);
+		RefData refData = refDataService.getById(id);
 		LOGGER.info("leaving RefDataController getRefData - " + id);
-		return refData;
+		
+		return convertToDto(refData);
         
     }
 	
@@ -79,9 +93,26 @@ public class RefDataController {
 			consumes = "application/json", headers = "Accept=application/json")
 	List<RefDataDto> findRefDatas(@RequestBody RefDataDto refDataDto) throws Exception {
 		LOGGER.info("entering RefDataController findRefDatas - " + refDataDto.getDescription());
-		List<RefDataDto> findRefDatas = refDataService.findRefDatas(refDataDto);
+		List<RefData> findRefDatas = refDataService.findRefDatas(convertToEntity(refDataDto));
 		LOGGER.info("leaving RefDataController findRefDatas - " + refDataDto.getDescription());
-		return findRefDatas;
+		
+		return convertList(findRefDatas);
     }
+	
+	public RefDataDto convertToDto(RefData refData) {
+		RefDataDto refDataDto = modelMapper.map(refData, RefDataDto.class);
+		refDataDto.setValue(String.valueOf(refData.getId()));
+    	refDataDto.setTypeDescription(refData.getType().getDescription());
+    	refDataDto.setMetaDataChunk(gson.toJson(refData.getMetaData(), Map.class));
+    	
+	    return refDataDto;
+	}
+	
+	public RefData convertToEntity(RefDataDto refDataDto) {
+		RefData refData = modelMapper.map(refDataDto, RefData.class);
+		refData.setMetaData((Map<String, String>) gson.fromJson(refDataDto.getMetaDataChunk(), Map.class));
+    	
+	    return refData;
+	}
 	
 }

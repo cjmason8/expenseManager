@@ -1,7 +1,6 @@
 package au.com.mason.expensemanager.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +11,9 @@ import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Transaction;
-import au.com.mason.expensemanager.dto.ExpenseDto;
 
 @Component
-public class ExpenseService extends TransactionService<ExpenseDto, Expense, ExpenseDao> {
+public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 	
 	@Autowired
 	private IncomeService incomeService;
@@ -41,16 +39,8 @@ public class ExpenseService extends TransactionService<ExpenseDto, Expense, Expe
 		return getPastDateList(startOfWeek).size() + incomeService.getPastDateList(startOfWeek).size();
 	}
 	
-	public List<ExpenseDto> getUnpaidBeforeWeek(LocalDate startOfWeek) throws Exception {
-		List<Expense> expenses = expenseDao.getUnpaidBeforeWeek(startOfWeek);
-		
-		List<ExpenseDto> expenseDtos = new ArrayList<>();
-		
-		for (Expense expense : expenses) {
-			expenseDtos.add(transactionMapperWrapper.transactionToTransactionDto(expense));
-		}
-		
-		return expenseDtos;
+	public List<Expense> getUnpaidBeforeWeek(LocalDate startOfWeek) throws Exception {
+		return expenseDao.getUnpaidBeforeWeek(startOfWeek);
 	}
 
 	@Override
@@ -58,34 +48,26 @@ public class ExpenseService extends TransactionService<ExpenseDto, Expense, Expe
 		return countForWeek(startOfWeek) + incomeService.countForWeek(startOfWeek);
 	}
 	
-	public ExpenseDto payExpense(Long id) throws Exception {
+	public Expense payExpense(Long id) throws Exception {
 		Expense expense = expenseDao.getById(id);
 		expense.setPaid(true);
 		
 		expenseDao.update(expense);
 		
-		return transactionMapperWrapper.transactionToTransactionDto(expense);
+		return expense;
 	}
 	
-	public ExpenseDto unPayExpense(Long id) throws Exception {
+	public Expense unPayExpense(Long id) throws Exception {
 		Expense expense = expenseDao.getById(id);
 		expense.setPaid(false);
 		
 		expenseDao.update(expense);
 		
-		return transactionMapperWrapper.transactionToTransactionDto(expense);
+		return expense;
 	}
 	
-	public List<ExpenseDto> getAll() throws Exception {
-		List<Expense> expenses = expenseDao.getAll();
-		
-		List<ExpenseDto> expenseDtos = new ArrayList<>();
-		
-		for (Expense expense : expenses) {
-			expenseDtos.add(transactionMapperWrapper.transactionToTransactionDto(expense));
-		}
-		
-		return expenseDtos;
+	public List<Expense> getAll() throws Exception {
+		return expenseDao.getAll();
 	}
 	
 	public List<Expense> findExpense(RefData entryType) {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,15 +12,10 @@ import org.springframework.stereotype.Component;
 import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.RecurringUnit;
 import au.com.mason.expensemanager.domain.Transaction;
-import au.com.mason.expensemanager.dto.TransactionDto;
-import au.com.mason.expensemanager.mapper.TransactionMapperWrapper;
 import au.com.mason.expensemanager.util.DateUtil;
 
 @Component
-public abstract class TransactionService<T extends TransactionDto, V extends Transaction, D extends TransactionDao<V>> {
-	
-	@Autowired
-	protected TransactionMapperWrapper<V, T> transactionMapperWrapper;
+public abstract class TransactionService<V extends Transaction, D extends TransactionDao<V>> {
 	
 	@Autowired
 	protected D transactionDao;
@@ -29,58 +23,39 @@ public abstract class TransactionService<T extends TransactionDto, V extends Tra
 	@Autowired
 	protected DocumentService documentService;
 	
-	public List<T> getAllRecurring() throws Exception {
-		List<V> expenses = transactionDao.getAllRecurring();
-		List<T> expenseDtos = new ArrayList<>();
-		
-		for (V expense : expenses) {
-			expenseDtos.add(transactionMapperWrapper.transactionToTransactionDto(expense));
-		}
-		
-		return expenseDtos;
+	public List<V> getAllRecurring() throws Exception {
+		return transactionDao.getAllRecurring();
 	}
 	
-	public List<T> getForWeek(LocalDate startOfWeek) throws Exception {
-		List<V> expenses = transactionDao.getForWeek(startOfWeek);
-		
-		List<T> expenseDtos = new ArrayList<>();
-		
-		for (V expense : expenses) {
-			expenseDtos.add(transactionMapperWrapper.transactionToTransactionDto(expense));
-		}
-		
-		return expenseDtos;
+	public List<V> getForWeek(LocalDate startOfWeek) throws Exception {
+		return transactionDao.getForWeek(startOfWeek);
 	}
 	
-	public T getById(Long id) throws Exception {
-		V expense = transactionDao.getById(id);
-
-		return transactionMapperWrapper.transactionToTransactionDto(expense);
+	public V getById(Long id) throws Exception {
+		return transactionDao.getById(id);
 	}
 	
-	public T addTransaction(T expenseDto) throws Exception {
+	public V addTransaction(V expense) throws Exception {
 		
-		if (expenseDto.getDocumentDto() != null && expenseDto.getDocumentDto().getOriginalFileName() != null) {
-			updateDocument(expenseDto);
+		if (expense.getDocument() != null && expense.getDocument().getOriginalFileName() != null) {
+			updateDocument(expense);
 		}
 		else {
-			expenseDto.setDocumentDto(null);
+			expense.setDocument(null);
 		}
-		
-		V expense = transactionMapperWrapper.transactionDtoToTransaction(expenseDto);
 		
 		createTransaction(expense);
 		handleRecurring(expense);
 		
-		return transactionMapperWrapper.transactionToTransactionDto(expense);
+		return expense;
 	}
 
-	private void updateDocument(T expenseDto) throws IOException, Exception {
-		if (!expenseDto.getDocumentDto().getOriginalFileName().equals(expenseDto.getDocumentDto().getFileName())) {
-			Files.move(Paths.get(expenseDto.getDocumentDto().getFolderPath() + "/" + expenseDto.getDocumentDto().getOriginalFileName()),
-					Paths.get(expenseDto.getDocumentDto().getFolderPath() + "/" + expenseDto.getDocumentDto().getFileName()));
+	private void updateDocument(V expense) throws IOException, Exception {
+		if (!expense.getDocument().getOriginalFileName().equals(expense.getDocument().getFileName())) {
+			Files.move(Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getOriginalFileName()),
+					Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getFileName()));
 			
-			documentService.updateDocument(expenseDto.getDocumentDto());
+			expense.getDocument();
 		}
 	}
 
@@ -142,19 +117,17 @@ public abstract class TransactionService<T extends TransactionDto, V extends Tra
 		return transactionDao.create(transaction);
 	}
 	
-	public T updateTransaction(T expenseDto) throws Exception {
+	public V updateTransaction(V expense) throws Exception {
 		
-		if (expenseDto.getDocumentDto() != null && expenseDto.getDocumentDto().getOriginalFileName() != null) {
-			updateDocument(expenseDto);
+		if (expense.getDocument() != null && expense.getDocument().getOriginalFileName() != null) {
+			updateDocument(expense);
 		}
 
-		V updatedExpense = transactionDao.getById(expenseDto.getId());
-		updatedExpense = transactionMapperWrapper.transactionDtoToTransaction(expenseDto, updatedExpense);
-		transactionDao.update(updatedExpense);
+		transactionDao.update(expense);
 		
-		handleRecurringForUpdate(updatedExpense);
+		handleRecurringForUpdate(expense);
 		
-		return transactionMapperWrapper.transactionToTransactionDto(updatedExpense);
+		return expense;
 	}
 
 	private void handleRecurringForUpdate(V updatedExpense) {

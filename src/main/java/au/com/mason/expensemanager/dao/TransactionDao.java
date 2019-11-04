@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import au.com.mason.expensemanager.domain.Expense;
-import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 

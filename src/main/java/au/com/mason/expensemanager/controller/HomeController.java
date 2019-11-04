@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import au.com.mason.expensemanager.dto.ExpenseDto;
-import au.com.mason.expensemanager.dto.IncomeDto;
+import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.TransactionsDto;
 import au.com.mason.expensemanager.dto.TransactionsForWeekDto;
 import au.com.mason.expensemanager.service.ExpenseService;
@@ -32,6 +32,12 @@ public class HomeController {
 	
 	@Autowired
 	private IncomeService incomeService;
+	
+	@Autowired
+	private ExpenseController expenseController;
+	
+	@Autowired
+	private IncomeController incomeController;
 	
 	private static Logger LOGGER = LogManager.getLogger(HomeController.class);
 	
@@ -66,23 +72,23 @@ public class HomeController {
 	TransactionsDto getRecurring() throws Exception {
 		LOGGER.info("entering HomeController getRecurring");
 		
-		List<IncomeDto> allRecurringIncome = incomeService.getAllRecurring();
-		List<ExpenseDto> allRecurringExpenses = expenseService.getAllRecurring();
+		List<Income> allRecurringIncome = incomeService.getAllRecurring();
+		List<Expense> allRecurringExpenses = expenseService.getAllRecurring();
 		
 		LOGGER.info("leaving HomeController getRecurring");
 		
-		return new TransactionsDto(allRecurringIncome, allRecurringExpenses);
+		return new TransactionsDto(incomeController.convertList(allRecurringIncome), expenseController.convertList(allRecurringExpenses));
     }
 	
 	private TransactionsForWeekDto getTransactionsForWeekDto(LocalDate localDate) throws Exception {
 		TransactionsForWeekDto transactionsForWeekDto = new TransactionsForWeekDto();
-		transactionsForWeekDto.setIncomes(incomeService.getForWeek(localDate)); 
-		transactionsForWeekDto.setExpenses(expenseService.getForWeek(localDate));
+		transactionsForWeekDto.setIncomes(incomeController.convertList(incomeService.getForWeek(localDate))); 
+		transactionsForWeekDto.setExpenses(expenseController.convertList(expenseService.getForWeek(localDate)));
 		transactionsForWeekDto.setPreviousWeek(localDate.minusDays(7).format(FORMATTER));
 		transactionsForWeekDto.setNextWeek(localDate.plusDays(7).format(FORMATTER));
 		transactionsForWeekDto.setThisWeek(localDate.format(FORMATTER));
 		if (localDate.isEqual(DateUtil.getMonday(LocalDate.now()))) {
-			transactionsForWeekDto.setUnpaidExpenses(expenseService.getUnpaidBeforeWeek(localDate));
+			transactionsForWeekDto.setUnpaidExpenses(expenseController.convertList(expenseService.getUnpaidBeforeWeek(localDate)));
 		}
 		transactionsForWeekDto.setTotals();
 		

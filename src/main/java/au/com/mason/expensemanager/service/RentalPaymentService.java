@@ -3,7 +3,6 @@ package au.com.mason.expensemanager.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,20 +16,14 @@ import com.google.gson.GsonBuilder;
 
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
-import au.com.mason.expensemanager.dto.RentalPaymentDto;
-import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
-import au.com.mason.expensemanager.util.DateUtil;
 
 @Component
 public class RentalPaymentService {
 	
+	private static Gson gson = new GsonBuilder().serializeNulls().create();
+	
 	public static List<String> FIRST_SIX_MONTHS;
 	public static Map<String, String> PROPERTIES;
-	
-	private Gson gson = new GsonBuilder().serializeNulls().create();
-	
-	@Autowired
-	private RentalPaymentMapperWrapper rentalPaymentMapperWrapper;
 	
 	@Autowired
 	private RentalPaymentDao rentalPaymentDao;
@@ -52,48 +45,36 @@ public class RentalPaymentService {
 		PROPERTIES.put("STH_KINGSVILLE", "South Kingsville");
 	}
 	
+	public RentalPayment updateRentalPayment(RentalPayment rentalPayment) throws Exception {
+		
+		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getFileName() == null) {
+			rentalPayment.setDocument(null);
+		}
+		
+		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null) {
+			updateDocument(rentalPayment);
+		}
+		
+		rentalPaymentDao.update(rentalPayment);
+		
+		return rentalPayment;
+	}
+	
 	public RentalPayment createRentalPayment(RentalPayment rentalPayment) throws Exception {
+		
+		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null) {
+			updateDocument(rentalPayment);
+		}
 		
 		rentalPaymentDao.create(rentalPayment);
 		
 		return rentalPayment;
 	}
 	
-	public RentalPaymentDto updateRentalPayment(RentalPaymentDto rentalPaymentDto) throws Exception {
+	private void updateDocument(RentalPayment rentalPayment) throws IOException, Exception {
 		
-		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getFileName() == null) {
-			rentalPaymentDto.setDocumentDto(null);
-		}
-		
-		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getOriginalFileName() != null) {
-			updateDocument(rentalPaymentDto);
-		}
-		
-		RentalPayment updatedRentalPayment = rentalPaymentDao.getById(rentalPaymentDto.getId());
-		updatedRentalPayment = rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto, updatedRentalPayment);
-		
-		rentalPaymentDao.update(updatedRentalPayment);
-		
-		return rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(updatedRentalPayment);
-	}
-	
-	public RentalPaymentDto createRentalPayment(RentalPaymentDto rentalPaymentDto) throws Exception {
-		
-		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getOriginalFileName() != null) {
-			updateDocument(rentalPaymentDto);
-		}
-		
-		RentalPayment rentalPayment = rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
-		rentalPaymentDao.create(rentalPayment);
-		
-		return rentalPaymentDto;
-	}
-	
-	private void updateDocument(RentalPaymentDto rentalPaymentDto) throws IOException, Exception {
-		
-		LocalDate statementFrom = DateUtil.getFormattedDate(rentalPaymentDto.getStatementFromString());
-		String month = String.valueOf(statementFrom.getMonth());
-		String year = String.valueOf(statementFrom.getYear());
+		String month = String.valueOf(rentalPayment.getStatementFrom().getMonth());
+		String year = String.valueOf(rentalPayment.getStatementFrom().getYear());
 		String folder = "";
 		if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
 			folder = (Integer.valueOf(year) - 1) + "-" + year; 
@@ -101,35 +82,28 @@ public class RentalPaymentService {
 		else {
 			folder = year + "-" + (Integer.valueOf(year) + 1);
 		}
-		Map<String, String> metaData = new HashMap<>();
-		metaData.put("property", PROPERTIES.get(rentalPaymentDto.getProperty()));
+		Map<String, Object> metaData = new HashMap<>();
+		metaData.put("property", PROPERTIES.get(rentalPayment.getProperty()));
 		metaData.put("year", folder);
 		
-		String folderPath = DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPaymentDto.getProperty())+ "/" + folder + "/Statements";
-		Files.move(Paths.get(rentalPaymentDto.getDocumentDto().getFilePath()), Paths.get(folderPath + "/" + rentalPaymentDto.getDocumentDto().getFileName()));
-		rentalPaymentDto.getDocumentDto().setFolderPath(folderPath);
-		rentalPaymentDto.getDocumentDto().setMetaDataChunk(gson.toJson(metaData));
+		String folderPath = DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPayment.getProperty())+ "/" + folder + "/Statements";
+		Files.move(Paths.get(rentalPayment.getDocument().getFilePath()), Paths.get(folderPath + "/" + rentalPayment.getDocument().getFileName()));
+		rentalPayment.getDocument().setFolderPath(folderPath);
+		rentalPayment.getDocument().setMetaData(metaData);
 		
-		documentService.updateDocument(rentalPaymentDto.getDocumentDto());
+		documentService.updateDocument(rentalPayment.getDocument());
 	}
 	
 	public void deleteRentalPayment(Long id) {
 		rentalPaymentDao.deleteById(id);
 	}
 	
-	public RentalPaymentDto getRentalPayment(Long id) throws Exception {
-		RentalPayment rentalPayment = rentalPaymentDao.getById(id);
-		
-		return rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(rentalPayment);
+	public RentalPayment getRentalPayment(Long id) throws Exception {
+		return rentalPaymentDao.getById(id);
 	}
 	
-	public List<RentalPaymentDto> getAll(String property) throws Exception {
-		List<RentalPaymentDto> rentalPaymentDtos = new ArrayList<>();
-		for(RentalPayment rentalPayment : rentalPaymentDao.getAll(property)) {
-			rentalPaymentDtos.add(rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(rentalPayment));
-		};
-		
-		return rentalPaymentDtos;
+	public List<RentalPayment> getAll(String property) throws Exception {
+		return rentalPaymentDao.getAll(property);
 	}
 	
 }

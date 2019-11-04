@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -30,6 +31,9 @@ public class Document implements Metadata {
     @Column
 	@Type(type = "MyJsonType")
     private Map<String, Object> metaData;
+    
+    @Transient
+    private String originalFileName;
 
 	public long getId() {
 		return id;
@@ -69,6 +73,19 @@ public class Document implements Metadata {
 
 	public void setFolderPath(String folderPath) {
 		this.folderPath = folderPath;
+	}
+
+	public String getOriginalFileName() {
+		return originalFileName;
+	}
+
+	public void setOriginalFileName(String originalFileName) {
+		this.originalFileName = originalFileName;
+	}
+	
+	@Transient
+	public String getFilePath() {
+		return folderPath + "/" + fileName;
 	}
 
 }
