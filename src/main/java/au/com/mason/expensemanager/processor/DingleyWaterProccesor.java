@@ -28,40 +28,6 @@ public class DingleyWaterProccesor extends Processor {
 			LocalDate dueDate = LocalDate.parse(dueDateString, formatter);
 			
 			updateExpense(refData, dueDate, amount, null, "PDF requires uploading");
-			
-			/*CloseableHttpClient httpclient = HttpClients.custom().setRedirectStrategy(new LaxRedirectStrategy())
-					.build();
-
-			try {
-				HttpClientContext context = HttpClientContext.create();
-				HttpGet httpGet = new HttpGet("https://onlinebilling.energyaustralia.com.au/drsclient/EA_SME.html");
-				System.out.println("Executing request " + httpGet.getRequestLine());
-				System.out.println("----------------------------------------");
-
-				httpclient.execute(httpGet, context);
-				HttpHost target = context.getTargetHost();
-				List<URI> redirectLocations = context.getRedirectLocations();
-				URI location = URIUtils.resolve(httpGet.getURI(), target, redirectLocations);
-				System.out.println("Final HTTP location: " + location.toASCIIString());
-
-			} finally {
-				httpclient.close();
-			}*/
-
-/*			HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS)
-					.build();
-
-			HttpRequest request = HttpRequest.newBuilder()
-					.uri(URI.create("https://analytics.linkre.direct/clickthrough?id=1BE5F1089D48455EBE0758C9C756D7E8&amp;issuer=sewaterp&amp;template=SEW0001&amp;url=https%3A%2F%2Fsoutheastwater.secure.force.com%2Fpublic%2FBillView%3Fcnum%3D15pA3jtv2hnB8AAMHyK3dA__%26bnum%3D66"))
-					.timeout(Duration.ofMinutes(1)).header("Content-Type", "application/json").GET().build();
-
-			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-			System.out.println(response.statusCode());
-			System.out.println(response.body());*/
-
-/*			updateExpense(refData, dueDate, amount, null,
-					"PDF requires uploading, discounted amount is $" + discountAmount);*/
-
 		}
 	}
 

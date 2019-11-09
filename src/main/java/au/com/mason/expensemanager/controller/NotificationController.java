@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,12 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import au.com.mason.expensemanager.config.SpringContext;
 import au.com.mason.expensemanager.domain.Notification;
-import au.com.mason.expensemanager.dto.ExpenseDto;
 import au.com.mason.expensemanager.dto.NotificationDto;
+import au.com.mason.expensemanager.mapper.NotificationMapperWrapper;
 import au.com.mason.expensemanager.service.NotificationService;
-import au.com.mason.expensemanager.util.DateUtil;
 
 @RestController
 @CrossOrigin
@@ -25,6 +22,9 @@ public class NotificationController extends BaseController<NotificationDto, Noti
 	
 	@Autowired
 	private NotificationService notificationService;
+	
+	@Autowired
+	private NotificationMapperWrapper notificationMapperWrapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(NotificationController.class);
 	
@@ -57,24 +57,12 @@ public class NotificationController extends BaseController<NotificationDto, Noti
 		return convertToDto(result);
     }
 	
-	public NotificationDto convertToDto(Notification notification) {
-		NotificationDto notificationDto = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(notification, NotificationDto.class);
-    	notificationDto.setCreatedDateString(DateUtil.getFormattedDateString(notification.getCreated()));
-    	if (notification.getExpense() != null) {
-    		notificationDto.getExpense().setDueDateString(DateUtil.getFormattedDateString(notification.getExpense().getDueDate()));
-    	}
-    	else {
-    		notificationDto.setExpense(new ExpenseDto());
-    	}
-    	
-	    return notificationDto;
+	public NotificationDto convertToDto(Notification notification) throws Exception {
+		return notificationMapperWrapper.notificationToNotificationDto(notification);
 	}
 	
-	public Notification convertToEntity(NotificationDto notificationDto) {
-		Notification notification = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(notificationDto, Notification.class);
-		notification.setCreated(DateUtil.getFormattedDate(notificationDto.getCreatedDateString()));
-    	
-	    return notification;
+	public Notification convertToEntity(NotificationDto notificationDto) throws Exception {
+		return notificationMapperWrapper.notificationDtoToNotification(notificationDto);
 	}
 	
 }

@@ -1,11 +1,9 @@
 package au.com.mason.expensemanager.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +16,7 @@ import com.google.gson.GsonBuilder;
 
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.dto.RefDataDto;
+import au.com.mason.expensemanager.mapper.RefDataMapperWrapper;
 import au.com.mason.expensemanager.service.RefDataService;
 
 @RestController
@@ -27,7 +26,7 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 	private RefDataService refDataService;
 	
 	@Autowired
-	private ModelMapper modelMapper;
+	private RefDataMapperWrapper refDataMapperWrapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(RefDataController.class);
 	private Gson gson = new GsonBuilder().serializeNulls().create();
@@ -99,20 +98,12 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 		return convertList(findRefDatas);
     }
 	
-	public RefDataDto convertToDto(RefData refData) {
-		RefDataDto refDataDto = modelMapper.map(refData, RefDataDto.class);
-		refDataDto.setValue(String.valueOf(refData.getId()));
-    	refDataDto.setTypeDescription(refData.getType().getDescription());
-    	refDataDto.setMetaDataChunk(gson.toJson(refData.getMetaData(), Map.class));
-    	
-	    return refDataDto;
+	public RefDataDto convertToDto(RefData refData) throws Exception {
+		return refDataMapperWrapper.refDataToRefDataDto(refData);
 	}
 	
-	public RefData convertToEntity(RefDataDto refDataDto) {
-		RefData refData = modelMapper.map(refDataDto, RefData.class);
-		refData.setMetaData((Map<String, String>) gson.fromJson(refDataDto.getMetaDataChunk(), Map.class));
-    	
-	    return refData;
+	public RefData convertToEntity(RefDataDto refDataDto) throws Exception {
+		return refDataMapperWrapper.refDataDtoToRefData(refDataDto);
 	}
 	
 }

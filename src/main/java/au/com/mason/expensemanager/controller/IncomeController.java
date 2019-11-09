@@ -1,11 +1,7 @@
 package au.com.mason.expensemanager.controller;
 
-import java.time.DayOfWeek;
-import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,15 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import au.com.mason.expensemanager.config.SpringContext;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.IncomeDto;
+import au.com.mason.expensemanager.mapper.IncomeMapperWrapper;
 import au.com.mason.expensemanager.service.IncomeService;
-import au.com.mason.expensemanager.util.DateUtil;
-import au.com.mason.expensemanager.util.DocumentUtil;
 
 @RestController
 public class IncomeController extends BaseController<IncomeDto, Income> {
@@ -29,8 +20,10 @@ public class IncomeController extends BaseController<IncomeDto, Income> {
 	@Autowired
 	private IncomeService incomeService;
 	
+	@Autowired
+	private IncomeMapperWrapper incomeMapperWrapper;
+	
 	private static Logger LOGGER = LogManager.getLogger(IncomeController.class);
-	private static Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	@RequestMapping(value = "/incomes/{id}", method = RequestMethod.GET, produces = "application/json")
 	IncomeDto getIncome(@PathVariable Long id) throws Exception {
@@ -71,45 +64,11 @@ public class IncomeController extends BaseController<IncomeDto, Income> {
 		return "{\"status\":\"success\"}";
     }
 	
-	public IncomeDto convertToDto(Income income) {
-		IncomeDto incomeDto = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(income, IncomeDto.class);
-		if (income.getDueDate() != null) {
-    		incomeDto.setDueDateString(DateUtil.getFormattedDateString(income.getDueDate()));
-    		incomeDto.setWeek(DateUtil.getFormattedDateString(income.getDueDate().with(DayOfWeek.MONDAY)));
-    	}
-    	
-    	if (income.getStartDate() != null) {
-    		incomeDto.setStartDateString(DateUtil.getFormattedDateString(income.getStartDate()));
-    		incomeDto.setWeek(DateUtil.getFormattedDateString(income.getStartDate().with(DayOfWeek.MONDAY)));
-    	}
-    	if (income.getEndDate() != null) {
-    		incomeDto.setEndDateString(DateUtil.getFormattedDateString(income.getEndDate()));
-    	}
-    	incomeDto.setMetaDataChunk(gson.toJson(income.getMetaData(), Map.class));
-    	if (income.getDocument() != null) {
-    		incomeDto.setDocumentDto(DocumentUtil.convertToDto(income.getDocument()));
-    	}
-    	
-	    return incomeDto;
+	public IncomeDto convertToDto(Income income) throws Exception {
+		return incomeMapperWrapper.transactionToTransactionDto(income);
 	}
 	
-	public Income convertToEntity(IncomeDto incomeDto) {
-		Income income = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(incomeDto, Income.class);
-    	if (incomeDto.getDueDateString() != null) {
-    		income.setDueDate(DateUtil.getFormattedDate(incomeDto.getDueDateString()));
-    	}
-    	
-		if (incomeDto.getStartDateString() != null) {
-			income.setStartDate(DateUtil.getFormattedDate(incomeDto.getStartDateString()));
-		}
-		if (incomeDto.getEndDateString() != null) {
-			income.setEndDate(DateUtil.getFormattedDate(incomeDto.getEndDateString()));
-		}
-		income.setMetaData((Map<String, Object>) gson.fromJson(incomeDto.getMetaDataChunk(), Map.class));
-		if (incomeDto.getDocumentDto() != null) {
-			income.setDocument(DocumentUtil.convertToEntity(incomeDto.getDocumentDto()));
-		}
-    	
-	    return income;
+	public Income convertToEntity(IncomeDto incomeDto) throws Exception {
+		return incomeMapperWrapper.transactionDtoToTransaction(incomeDto);
 	}
 }

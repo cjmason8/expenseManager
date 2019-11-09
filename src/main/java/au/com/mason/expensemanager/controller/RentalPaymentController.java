@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,18 +12,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import au.com.mason.expensemanager.config.SpringContext;
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
+import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
-import au.com.mason.expensemanager.util.DateUtil;
-import au.com.mason.expensemanager.util.DocumentUtil;
 
 @RestController
 public class RentalPaymentController extends BaseController<RentalPaymentDto, RentalPayment> {
 	
 	@Autowired
 	private RentalPaymentService rentalPaymentService;
+	
+	@Autowired
+	private RentalPaymentMapperWrapper rentalPaymentMapperWrapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
 	
@@ -76,26 +76,12 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 		return convertToDto(rentalPayment);
     }
 	
-	public RentalPaymentDto convertToDto(RentalPayment rentalPayment) {
-		RentalPaymentDto rentalPaymentDto = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(rentalPayment, RentalPaymentDto.class);
-		rentalPaymentDto.setStatementFromString(DateUtil.getFormattedDateString(rentalPayment.getStatementFrom()));
-    	rentalPaymentDto.setStatementToString(DateUtil.getFormattedDateString(rentalPayment.getStatementTo()));
-		if (rentalPayment.getDocument() != null) {
-			rentalPaymentDto.setDocumentDto(DocumentUtil.convertToDto(rentalPayment.getDocument()));
-		}
-
-		return rentalPaymentDto;
+	public RentalPaymentDto convertToDto(RentalPayment rentalPayment) throws Exception {
+		return rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(rentalPayment);
 	}
 	
-	public RentalPayment convertToEntity(RentalPaymentDto rentalPaymentDto) {
-		RentalPayment rentalPayment = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(rentalPaymentDto, RentalPayment.class);
-		rentalPayment.setStatementFrom(DateUtil.getFormattedDate(rentalPaymentDto.getStatementFromString()));
-		rentalPayment.setStatementTo(DateUtil.getFormattedDate(rentalPaymentDto.getStatementToString()));
-		if (rentalPaymentDto.getDocumentDto() != null) {
-			rentalPayment.setDocument(DocumentUtil.convertToEntity(rentalPaymentDto.getDocumentDto()));
-		}
-		
-		return rentalPayment;
+	public RentalPayment convertToEntity(RentalPaymentDto rentalPaymentDto) throws Exception {
+		return rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
 	}
 	
 }

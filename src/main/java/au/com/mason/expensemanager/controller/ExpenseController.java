@@ -1,38 +1,31 @@
 package au.com.mason.expensemanager.controller;
 
-import java.time.DayOfWeek;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import au.com.mason.expensemanager.config.SpringContext;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.dto.ExpenseDto;
+import au.com.mason.expensemanager.mapper.ExpenseMapperWrapper;
 import au.com.mason.expensemanager.service.ExpenseService;
-import au.com.mason.expensemanager.util.DateUtil;
-import au.com.mason.expensemanager.util.DocumentUtil;
 
 @RestController
 public class ExpenseController extends BaseController<ExpenseDto, Expense> {
 	
 	private static Logger LOGGER = LogManager.getLogger(ExpenseController.class);
-	private static Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	@Autowired
 	private ExpenseService expenseService;
+	
+	@Autowired
+	private ExpenseMapperWrapper expenseMapperWrapper;
 	
 	@RequestMapping(value = "/expenses", method = RequestMethod.GET, produces = "application/json")
 	List<ExpenseDto> getExpenses() throws Exception {
@@ -107,45 +100,11 @@ public class ExpenseController extends BaseController<ExpenseDto, Expense> {
 		return "{\"status\":\"success\"}";
     }
 	
-	public ExpenseDto convertToDto(Expense expense) {
-		ExpenseDto expenseDto = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(expense, ExpenseDto.class);
-    	if (expense.getDueDate() != null) {
-    		expenseDto.setDueDateString(DateUtil.getFormattedDateString(expense.getDueDate()));
-    		expenseDto.setWeek(DateUtil.getFormattedDateString(expense.getDueDate().with(DayOfWeek.MONDAY)));
-    	}
-    	
-    	if (expense.getStartDate() != null) {
-    		expenseDto.setStartDateString(DateUtil.getFormattedDateString(expense.getStartDate()));
-    		expenseDto.setWeek(DateUtil.getFormattedDateString(expense.getStartDate().with(DayOfWeek.MONDAY)));
-    	}
-    	if (expense.getEndDate() != null) {
-    		expenseDto.setEndDateString(DateUtil.getFormattedDateString(expense.getEndDate()));
-    	}
-    	expenseDto.setMetaDataChunk(gson.toJson(expense.getMetaData(), Map.class));
-    	if (expense.getDocument() != null) {
-    		expenseDto.setDocumentDto(DocumentUtil.convertToDto(expense.getDocument()));
-    	}
-    	
-    	return expenseDto;
+	public ExpenseDto convertToDto(Expense expense) throws Exception {
+		return expenseMapperWrapper.transactionToTransactionDto(expense);
 	}
 	
-	public Expense convertToEntity(ExpenseDto expenseDto) {
-		Expense expense = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(expenseDto, Expense.class);
-		if (!StringUtils.isEmpty(expenseDto.getDueDateString())) {
-			expense.setDueDate(DateUtil.getFormattedDate(expenseDto.getDueDateString()));
-		}
-		
-		if (!StringUtils.isEmpty(expenseDto.getStartDateString())) {
-			expense.setStartDate(DateUtil.getFormattedDate(expenseDto.getStartDateString()));
-		}
-		if (!StringUtils.isEmpty(expenseDto.getEndDateString())) {
-			expense.setEndDate(DateUtil.getFormattedDate(expenseDto.getEndDateString()));
-		}
-		expense.setMetaData((Map<String, Object>) gson.fromJson(expenseDto.getMetaDataChunk(), Map.class));
-		if (expenseDto.getDocumentDto() != null) {
-			expense.setDocument(DocumentUtil.convertToEntity(expenseDto.getDocumentDto()));
-		}
-    	
-	    return expense;
+	public Expense convertToEntity(ExpenseDto expenseDto) throws Exception {
+		return expenseMapperWrapper.transactionDtoToTransaction(expenseDto);
 	}
 }

@@ -1,11 +1,9 @@
 package au.com.mason.expensemanager.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,19 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import au.com.mason.expensemanager.config.SpringContext;
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.dto.DonationDto;
 import au.com.mason.expensemanager.dto.DonationSearchDto;
+import au.com.mason.expensemanager.mapper.DonationMapperWrapper;
 import au.com.mason.expensemanager.service.DonationService;
-import au.com.mason.expensemanager.util.DateUtil;
-import au.com.mason.expensemanager.util.DocumentUtil;
 
 @RestController
 public class DonationController extends BaseController<DonationDto, Donation> {
 	
 	@Autowired
 	private DonationService donationService;
+	
+	@Autowired
+	private DonationMapperWrapper donationMapperWrapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(DonationController.class);
 	private static Gson gson = new GsonBuilder().serializeNulls().create();
@@ -92,26 +91,12 @@ public class DonationController extends BaseController<DonationDto, Donation> {
 		return convertList(donations);
     }
 	
-	public DonationDto convertToDto(Donation donation) {
-		DonationDto donationDto = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(donation, DonationDto.class);
-		donationDto.setDueDateString(DateUtil.getFormattedDateString(donation.getDueDate()));
-    	donationDto.setMetaDataChunk(gson.toJson(donation.getMetaData(), Map.class));
-		if (donation.getDocument() != null) {
-			donationDto.setDocumentDto(DocumentUtil.convertToDto(donation.getDocument()));
-		}
-    	
-	    return donationDto;
+	public DonationDto convertToDto(Donation donation) throws Exception {
+	    return donationMapperWrapper.donationToDonationDto(donation);
 	}
 	
-	public Donation convertToEntity(DonationDto donationDto) {
-		Donation donation = SpringContext.getApplicationContext().getBean(ModelMapper.class).map(donationDto, Donation.class);
-		donation.setDueDate(DateUtil.getFormattedDate(donationDto.getDueDateString()));
-    	donation.setMetaData((Map<String, String>) gson.fromJson(donationDto.getMetaDataChunk(), Map.class));
-		if (donationDto.getDocumentDto() != null) {
-			donation.setDocument(DocumentUtil.convertToEntity(donationDto.getDocumentDto()));
-		}
-    	
-	    return donation;
+	public Donation convertToEntity(DonationDto donationDto) throws Exception {
+		return donationMapperWrapper.donationDtoToDonation(donationDto);
 	}
 	
 }
