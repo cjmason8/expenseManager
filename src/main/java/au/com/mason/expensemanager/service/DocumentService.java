@@ -56,7 +56,7 @@ public class DocumentService {
 			setMetadata(path, document);
 		}
 		
-		return document;
+		return documentDao.create(document);
 	}
 	
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
@@ -122,7 +122,7 @@ public class DocumentService {
 		setMetaData(directory, parentFolderPath, parentFolderName, document);
 		document.setFolder(true);
 		
-		return document;
+		return documentDao.create(document);
 	}
 
 	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName,
