@@ -66,7 +66,6 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 					byte[] byteArray = response.body();
 					
 					RentalPayment rentalPayment = new RentalPayment();
-					//rentalPayment.setDocument(document);
 					rentalPayment.setProperty("STH_KINGSVILLE");
 					
 					BigDecimal[] paymentToOwner = new BigDecimal[1];
@@ -86,7 +85,7 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 						else if (line.indexOf("Rent paid to") != -1) 
 						{ 
 							String endDate = line.substring(13, line.indexOf("(") - 1);
-							String startDate = line.substring(line.indexOf("(") + 20, line.indexOf(")"));
+							String startDate = line.substring(line.indexOf("(") + 10, line.indexOf(")"));
 							DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 				        	rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
 				        	rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
