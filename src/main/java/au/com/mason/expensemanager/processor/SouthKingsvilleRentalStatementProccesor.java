@@ -85,7 +85,11 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 						else if (line.indexOf("Rent paid to") != -1) 
 						{ 
 							String endDate = line.substring(13, line.indexOf("(") - 1);
-							String startDate = line.substring(line.indexOf("(") + 10, line.indexOf(")"));
+							int index = 20;
+							if (line.indexOf("moved in") != -1) {
+								index = 10;
+							}
+							String startDate = line.substring(line.indexOf("(") + index, line.indexOf(")"));
 							DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 				        	rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
 				        	rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
