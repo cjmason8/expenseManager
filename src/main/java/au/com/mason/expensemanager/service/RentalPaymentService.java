@@ -11,16 +11,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
 
 @Component
 public class RentalPaymentService {
-	
-	private static Gson gson = new GsonBuilder().serializeNulls().create();
 	
 	public static List<String> FIRST_SIX_MONTHS;
 	public static Map<String, String> PROPERTIES;
@@ -73,10 +68,10 @@ public class RentalPaymentService {
 	
 	private void updateDocument(RentalPayment rentalPayment) throws IOException, Exception {
 		
-		String month = String.valueOf(rentalPayment.getStatementFrom().getMonth());
+		int month = rentalPayment.getStatementFrom().getMonth().getValue();
 		String year = String.valueOf(rentalPayment.getStatementFrom().getYear());
 		String folder = "";
-		if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
+		if (month <= 6) {
 			folder = (Integer.valueOf(year) - 1) + "-" + year; 
 		}
 		else {

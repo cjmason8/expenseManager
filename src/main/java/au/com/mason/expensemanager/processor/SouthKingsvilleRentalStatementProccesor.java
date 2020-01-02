@@ -106,10 +106,10 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 					}
 					
 					String fileName = message.getSubject().substring(0, message.getSubject().indexOf("from") - 1) + ".pdf";
-					String month = String.valueOf(rentalPayment.getStatementTo().getMonth());
+					int month = rentalPayment.getStatementTo().getMonth().getValue();
 					String year = String.valueOf(rentalPayment.getStatementTo().getYear());
 					String folder = "";
-					if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
+					if (month <= 6) {
 						folder = (Integer.valueOf(year) - 1) + "-" + year; 
 					}
 					else {
