@@ -52,7 +52,7 @@ public class WodongaRentalStatementProccesor extends Processor {
 					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 					String fileName = message.getSubject().substring(0, message.getSubject().indexOf("(") - 1) + ".pdf";
 					String folder = fileName.substring(fileName.indexOf(" to ") + 4).replace(".pdf", "");
-					String month = folder.substring(folder.indexOf(" "), folder.lastIndexOf(" "));
+					String month = folder.substring(folder.indexOf(" "), folder.lastIndexOf(" ")).trim();
 					String year = folder.substring(folder.lastIndexOf(" ") + 1);
 					if (RentalPaymentService.FIRST_SIX_MONTHS.contains(month)) {
 						folder = (Integer.valueOf(year) - 1) + "-" + year; 
