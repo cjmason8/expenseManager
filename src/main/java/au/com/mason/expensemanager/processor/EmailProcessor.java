@@ -16,6 +16,7 @@ public enum EmailProcessor {
 	RACV_MEMBERSHIP(RACVMembershipProccesor.class),
 	CAMRY_INSURANCE(CamryInsuranceProccesor.class),
 	MAZDA_INSURANCE(MazdaInsuranceProccesor.class),
+	FORD_INSURANCE(FordInsuranceProccesor.class),
 	TELSTRA(TelstraProccesor.class),
 	CAMRY_REGO(CamryRegoProcessor.class),
 	MAZDA_REGO(MazdaRegoProcessor.class),

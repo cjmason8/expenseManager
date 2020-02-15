@@ -118,6 +118,9 @@ public class EmailTrawler {
 				if (refData.getEmailProcessor().equals(EmailProcessor.CAMRY_INSURANCE)) {
 					return bodyContains(message, "TOYOTA CAMRY");
 				}
+				else if (refData.getEmailProcessor().equals(EmailProcessor.FORD_INSURANCE)) {
+					return bodyContains(message, "FORD FAIRMONT");
+				}
 				else {
 					return bodyContains(message, "MAZDA TRIBUTE");
 				}
