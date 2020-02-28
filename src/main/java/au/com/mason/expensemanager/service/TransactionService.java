@@ -179,6 +179,7 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 				newExpense.setDueDate(dueDate);
 				newExpense.setRecurringTransaction(recurringExpense);
 				newExpense.setMetaData(recurringExpense.getMetaData());
+				newExpense.setNotes(recurringExpense.getNotes());
 				
 				transactionDao.create(newExpense);
 			}
