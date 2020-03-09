@@ -132,7 +132,9 @@ public class DocumentService {
 			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
 			metaData.putAll(parent.getMetaData());
 		}
-		metaData.putAll(directory.getMetaData());
+		if (directory.getMetaData() != null) {
+			metaData.putAll(directory.getMetaData());
+		}
 		document.setMetaData(metaData);
 	}
 	
