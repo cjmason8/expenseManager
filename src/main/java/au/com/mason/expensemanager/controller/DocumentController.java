@@ -61,7 +61,7 @@ public class DocumentController {
 		documentService.moveFiles(fullFolderPath, moveFilesDto.getFileIds());
 		LOGGER.info("leaving DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
 		
-		return "{\"filePath\":\"" + fullFolderPath + "\"}";
+		return "{\"folderPath\":\"" + fullFolderPath + "\"}";
 	}
 			
 
