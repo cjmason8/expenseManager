@@ -9,7 +9,7 @@
                 <SizeBasedTriggeringPolicy size="10 MB" />
             </Policies>
         </RollingFile>
-        <GELF name="gelfAppender" server="172.17.0.1" port="12201" hostName="172.17.0.1" protocol="TCP">
+        <GELF name="gelfAppender" server="167.86.68.204" port="12201" hostName="167.86.68.204" protocol="TCP">
         	<PatternLayout>
                 <pattern>{\"application\":\"Expense Manager\",\"dateTime\":\"%d{yyyy-MM-dd HH:mm:ss}\", \"msg\":\"%-5p %c{1}:%L - %m\"}%n</pattern>
             </PatternLayout>
