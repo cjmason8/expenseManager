@@ -9,7 +9,6 @@ import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
@@ -17,6 +16,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.search.FlagTerm;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,8 @@ import au.com.mason.expensemanager.service.RefDataService;
 
 @Component
 public class EmailTrawler {
+	
+	private static final Logger LOGGER = LogManager.getLogger(EmailTrawler.class);
 	
 	@Autowired
 	private EncryptionService encryptionService;
@@ -99,11 +102,8 @@ public class EmailTrawler {
 			emailFolder.close(false);
 			store.close();
 
-		} catch (NoSuchProviderException e) {
-			e.printStackTrace();
-		} catch (MessagingException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
+			LOGGER.error(e);
 			e.printStackTrace();
 		}
 	}

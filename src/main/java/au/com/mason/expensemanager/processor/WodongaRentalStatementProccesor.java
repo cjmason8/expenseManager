@@ -63,17 +63,17 @@ public class WodongaRentalStatementProccesor extends Processor {
 					found[1] = false;
 					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> {
 						if (line.indexOf("Total\tincome") != -1) {
-							rentalPayment.setTotalRent(new BigDecimal(line.substring(line.indexOf("$") + 1)));
+							rentalPayment.setTotalRent(new BigDecimal(getNumber(line)));
 						}
 						else if (line.indexOf("Rent\tCommission") != -1) {
-							rentalPayment.setManagementFee(new BigDecimal(line.substring(line.indexOf("$") + 1)));
+							rentalPayment.setManagementFee(new BigDecimal(getNumber(line)));
 						}
 						else if (line.indexOf("Sundry\tFee") != -1) {
 							if (line.indexOf("$") == -1) {
 								found[1] = true;
 							}
 							else {
-								rentalPayment.setAdminFee(new BigDecimal(line.substring(line.indexOf("$") + 1)));
+								rentalPayment.setAdminFee(new BigDecimal(getNumber(line)));
 							}
 						}
 						else if (found[1]) {
@@ -91,7 +91,7 @@ public class WodongaRentalStatementProccesor extends Processor {
 						}
 						else if (found[0]) {
 							found[0] = false;
-							BigDecimal paymentToOwner = new BigDecimal(line.substring(line.indexOf("$") + 1));
+							BigDecimal paymentToOwner = new BigDecimal(getNumber(line));
 							if (paymentToOwner.compareTo(rentalPayment.getPaymentToOwner()) != 0) {
 								Notification unbalancedRemtalNotification = new Notification();
 								notification.setMessage("There was an unbalanced Rental Payment for Wodonga " + rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
@@ -126,6 +126,10 @@ public class WodongaRentalStatementProccesor extends Processor {
 				}
 			}
 		}
+	}
+
+	private String getNumber(String line) {
+		return line.substring(line.indexOf("$") + 1).replace(",", "");
 	}
 
 }
