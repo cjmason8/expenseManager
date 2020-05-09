@@ -55,6 +55,7 @@ public class EmailTrawler {
 			// create properties field
 			Properties properties = new Properties();
 			properties.put("mail.store.protocol", "imaps");
+			properties.put("mail.imaps.ssl.trust", host);
 
 			Session emailSession = Session.getDefaultInstance(properties);
 			Store store = emailSession.getStore();
