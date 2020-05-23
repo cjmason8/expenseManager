@@ -9,6 +9,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Repository;
 
+import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.Notification;
 
 @Repository
@@ -33,6 +34,15 @@ public class NotificationDao {
 	
 	public Notification update(Notification notification) {
 		return entityManager.merge(notification);
+	}
+	
+	public void deleteForExpense(Expense expense) {
+		Query query = entityManager.createQuery("FROM Notification where expense = :expense");
+		query.setParameter("expense", expense);
+
+		List<Notification> notifications = query.getResultList();
+		
+		notifications.forEach(notification -> entityManager.remove(notification));
 	}
 	
 	// Private fields

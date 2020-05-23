@@ -9,6 +9,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +23,9 @@ import au.com.mason.expensemanager.util.DateUtil;
 @Transactional
 public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expense> {
 	
+	@Autowired
+	private NotificationDao notificationDao;
+	
 	public Expense create(Expense expense) {
 		entityManager.persist(expense);
 
@@ -29,6 +33,8 @@ public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expen
 	}
 	
 	public void delete(Expense expense) {
+		notificationDao.deleteForExpense(expense);
+
 		if (entityManager.contains(expense))
 			entityManager.remove(expense);
 		else
