@@ -56,7 +56,7 @@ public class EncryptionService {
     }
     
     public static void main(String[] args) {
-		System.out.println(new EncryptionService().decrypt("fjFSVC3Pm+d0Miy0ry3EWQ=="));
+		System.out.println(new EncryptionService().decrypt("password"));
 	}
 
 }
