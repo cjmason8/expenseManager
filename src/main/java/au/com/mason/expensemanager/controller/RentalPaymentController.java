@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.controller;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
+import au.com.mason.expensemanager.dto.RentalPaymentInfoDto;
 import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
 
@@ -28,13 +31,37 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 	
 	private static Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
 	
-	@RequestMapping(value = "/rentalPayments/getByProperty/{property}", method = RequestMethod.GET, produces = "application/json")
-	List<RentalPaymentDto> getRentalPayments(@PathVariable String property) throws Exception {
+	@RequestMapping(value = {"/rentalPayments/getByProperty/{property}/{year}", "/rentalPayments/getByProperty/{property}"}, method = RequestMethod.GET, produces = "application/json")
+	RentalPaymentInfoDto getRentalPayments(@PathVariable String property, @PathVariable(required=false) Integer year) throws Exception {
 		LOGGER.info("entering RentalPaymentController getRentalPayment");
-		List<RentalPayment> results = rentalPaymentService.getAll(property);
+		LocalDate startDate = null;
+		LocalDate endDate = null;
+		if (year == null) {
+			year = (LocalDate.now().getMonth().getValue() <= 6) ? LocalDate.now().getYear() : LocalDate.now().getYear() + 1;
+		}
+
+		if (LocalDate.now().getMonth().getValue() <= 6) {
+			startDate = LocalDate.of(year, 7, 1);
+			endDate = LocalDate.of(year + 1, 6, 30);
+		}
+		else {
+			startDate = LocalDate.of(year - 1, 7, 1);
+			endDate = LocalDate.of(year, 6, 30);
+		}
+		
+		List<RentalPayment> results = rentalPaymentService.getAll(property, startDate, endDate);
+		
+		Integer prevYear = null;
+		Integer nextYear = null;
+		if (rentalPaymentService.getAll(property, startDate.minus(1, ChronoUnit.YEARS), endDate.minus(1, ChronoUnit.YEARS)).size() > 0) {
+			prevYear = endDate.getYear() - 1;
+		}
+		if (rentalPaymentService.getAll(property, startDate.plus(1, ChronoUnit.YEARS), endDate.plus(1, ChronoUnit.YEARS)).size() > 0) {
+			nextYear = endDate.getYear() + 1;
+		}
 		LOGGER.info("leaving RentalPaymentController getRentalPayments");
 
-		return convertList(results);
+		return new RentalPaymentInfoDto(convertList(results), prevYear, nextYear);
     }
 	
 	@PostMapping(value = "/rentalPayments", produces = "application/json", consumes = "application/json")

@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.dao;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -43,9 +44,11 @@ public class RentalPaymentDao {
 		return entityManager.merge(rentalPayment);
 	}
 	
-	public List<RentalPayment> getAll(String property) {
-		Query query = entityManager.createQuery("FROM RentalPayment WHERE property = :property ORDER BY statementFrom DESC");
+	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) {
+		Query query = entityManager.createQuery("FROM RentalPayment WHERE property = :property AND statementFrom >= :startDate AND statementTo <= :endDate ORDER BY statementFrom DESC");
 		query.setParameter("property", property);
+		query.setParameter("startDate", startDate);
+		query.setParameter("endDate", endDate);
 
 		return query.getResultList();
 	}

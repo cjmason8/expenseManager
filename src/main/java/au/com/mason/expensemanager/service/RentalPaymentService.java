@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,8 +98,8 @@ public class RentalPaymentService {
 		return rentalPaymentDao.getById(id);
 	}
 	
-	public List<RentalPayment> getAll(String property) throws Exception {
-		return rentalPaymentDao.getAll(property);
+	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) throws Exception {
+		return rentalPaymentDao.getAll(property, startDate, endDate);
 	}
 	
 }
