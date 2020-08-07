@@ -47,9 +47,9 @@ public class RentalPaymentDao {
 	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) {
 		int endDateYear = endDate.getYear();
 		int startDateYear = startDate.getYear();
-		String sql = "FROM RentalPayment WHERE property = :property AND (statementFrom >= :startDate AND statementTo <= :endDate) "
+		String sql = "FROM RentalPayment WHERE property = :property AND ((statementFrom >= :startDate AND statementTo <= :endDate) "
 				+ "OR (statementTo <= :endDate AND MONTH(statementFrom) = 6 AND YEAR(statementFrom) = :startDateYear) "
-				+ "OR (statementFrom >= :startDate AND MONTH(statementTo) = 7 AND YEAR(statementTo) = :endDateYear) ";
+				+ "OR (statementFrom >= :startDate AND MONTH(statementTo) = 7 AND YEAR(statementTo) = :endDateYear)) ";
 		sql += "ORDER BY statementFrom DESC";
 		Query query = entityManager.createQuery(sql);
 		query.setParameter("property", property);
