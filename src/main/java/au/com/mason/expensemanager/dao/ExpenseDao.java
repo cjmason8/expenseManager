@@ -43,10 +43,14 @@ public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expen
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<Expense> getAllRecurring() {
-		return entityManager.createQuery(
-				"from Expense where recurringType IS NOT NULL AND deleted = false"
-				+ " ORDER BY dueDate DESC,entryType").getResultList();
+	public List<Expense> getAllRecurring(boolean includeAll) {
+		String sql = "from Expense where recurringType IS NOT NULL AND deleted = false";
+		if (!includeAll) {
+			sql += " AND (endDate is NULL OR endDate >= to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd'))";
+		}
+		sql += " ORDER BY entryType.description";
+		
+		return entityManager.createQuery(sql).getResultList();
 	}	
 	
 	@SuppressWarnings("unchecked")

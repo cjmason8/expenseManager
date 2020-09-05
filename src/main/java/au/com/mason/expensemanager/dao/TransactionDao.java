@@ -11,7 +11,7 @@ public interface TransactionDao<T> {
 	
 	public T create(T transation);	
 	public void delete(T transation);
-	public List<T> getAllRecurring();
+	public List<T> getAllRecurring(boolean includeAll);
 	public T getById(long id);
 	public T update(T transation);
 	public List<T> getForWeek(LocalDate weekStartDate);

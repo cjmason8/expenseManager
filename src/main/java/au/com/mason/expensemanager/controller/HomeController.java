@@ -68,12 +68,13 @@ public class HomeController {
 		return getTransactionsForWeekDto(localDate);
     }
 	
-	@RequestMapping(value = "/recurring", method = RequestMethod.GET, produces = "application/json")
-	TransactionsDto getRecurring() throws Exception {
+	@RequestMapping(value = "/recurring/{activeOrAll}", method = RequestMethod.GET, produces = "application/json")
+	TransactionsDto getRecurring(@PathVariable String activeOrAll) throws Exception {
 		LOGGER.info("entering HomeController getRecurring");
 		
-		List<Income> allRecurringIncome = incomeService.getAllRecurring();
-		List<Expense> allRecurringExpenses = expenseService.getAllRecurring();
+		boolean includeAll = activeOrAll.equals("all");
+		List<Income> allRecurringIncome = incomeService.getAllRecurring(includeAll);
+		List<Expense> allRecurringExpenses = expenseService.getAllRecurring(includeAll);
 		
 		LOGGER.info("leaving HomeController getRecurring");
 		

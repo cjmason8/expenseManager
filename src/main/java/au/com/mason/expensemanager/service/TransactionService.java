@@ -23,8 +23,8 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	@Autowired
 	protected DocumentService documentService;
 	
-	public List<V> getAllRecurring() throws Exception {
-		return transactionDao.getAllRecurring();
+	public List<V> getAllRecurring(boolean includeAll) throws Exception {
+		return transactionDao.getAllRecurring(includeAll);
 	}
 	
 	public List<V> getForWeek(LocalDate startOfWeek) throws Exception {
@@ -158,7 +158,7 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	}
 	
 	public void createRecurringTransactions(LocalDate startOfWeek, Transaction currentRecurringExpense) {
-		List<V> recurringExpenses = transactionDao.getAllRecurring();
+		List<V> recurringExpenses = transactionDao.getAllRecurring(true);
 		
 		for (V recurringExpense : recurringExpenses) {
 			if (currentRecurringExpense != null && recurringExpense.getId() == currentRecurringExpense.getId()) {

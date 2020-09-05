@@ -41,11 +41,15 @@ public class IncomeDao implements TransactionDao<Income> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<Income> getAllRecurring() {
+	public List<Income> getAllRecurring(boolean includeAll) {
 		
-		return entityManager.createQuery(
-				"from Income where recurringType IS NOT NULL AND deleted = false"
-				+ " ORDER BY dueDate DESC,entryType").getResultList();
+		String sql = "from Income where recurringType IS NOT NULL AND deleted = false";
+		if (!includeAll) {
+			sql += " AND (endDate is NULL OR endDate >= to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd'))";
+		}
+		sql += " ORDER BY entryType.description";
+		
+		return entityManager.createQuery(sql).getResultList();
 	}	
 	
 	public Income getById(long id) {
