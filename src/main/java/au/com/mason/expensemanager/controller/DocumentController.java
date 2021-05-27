@@ -151,7 +151,7 @@ public class DocumentController {
 			FileUtils.deleteDirectory(new File(document.getFileName()));
 		}
 		else {
-			Files.delete(Paths.get(document.getFileName()));
+			Files.delete(Paths.get(parentFolder + "/" + document.getFileName()));
 		}
 		
 		documentService.deleteDocument(document);
