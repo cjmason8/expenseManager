@@ -48,8 +48,12 @@ public class EmailTrawler {
 	
 	@Value("${req.account}")
 	private String reqAccount;
-
+	
 	public void check() {
+		
+	}
+
+	public void check2() {
 		try {
 			String host = "pop.gmail.com";// change accordingly
 			String user = encryptionService.decrypt(reqAccount);
