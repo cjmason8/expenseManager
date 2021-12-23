@@ -34,9 +34,9 @@ public abstract class VicRoadsProcessor extends Processor {
 		        if (bodyPart.isMimeType("text/html")) {
 		            body = (String) bodyPart.getContent();
 		            amount = body.substring(body.indexOf(">$") + 2, body.indexOf("<", body.indexOf(">$"))).trim();
-		            int startIndex = body.indexOf("break-word", body.indexOf("Due date")) + 12;
+		            int startIndex = body.indexOf("em_black_link", body.indexOf("Due date")) + 15;
 		            String dueDateString = body.substring(startIndex, body.indexOf("<", startIndex)).trim();
-		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy").localizedBy(Locale.ENGLISH);
+		            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy").localizedBy(Locale.ENGLISH);
 		            dueDate = LocalDate.parse(dueDateString, formatter);
 		            
 		        } else if (bodyPart.isMimeType("application/octet-stream")) {

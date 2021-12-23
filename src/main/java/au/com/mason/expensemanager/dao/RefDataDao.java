@@ -38,7 +38,6 @@ public class RefDataDao {
 	
 	public List<RefData> getAllWithEmailKey() {
 		Query query = entityManager.createQuery("FROM RefData WHERE emailKey IS NOT NULL");
-		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 
 		return query.getResultList();
 	}

@@ -140,7 +140,7 @@ public class EmailTrawler {
 			
 			return false;
 		}
-
+		
 		return message.getSubject().indexOf(refData.getEmailKey()) != -1;
 	}
 	
