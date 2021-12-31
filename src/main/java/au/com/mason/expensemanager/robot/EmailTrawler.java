@@ -54,16 +54,17 @@ public class EmailTrawler {
 			String host = "pop.gmail.com";// change accordingly
 			String user = encryptionService.decrypt(reqAccount);
 			String password = encryptionService.decrypt(requiredKey);
-
+			
 			// create properties field
 			Properties properties = new Properties();
 			properties.put("mail.store.protocol", "imaps");
 			properties.put("mail.imaps.ssl.trust", host);
+			properties.put("mail.imaps.ssl.protocols", "TLSv1.2");
 
 			Session emailSession = Session.getDefaultInstance(properties);
 			Store store = emailSession.getStore();
 			store.connect(host, user, password);
-
+			
 			Folder emailFolder = store.getFolder("INBOX");
 			// use READ_ONLY if you don't wish the messages
 			// to be marked as read after retrieving its content
