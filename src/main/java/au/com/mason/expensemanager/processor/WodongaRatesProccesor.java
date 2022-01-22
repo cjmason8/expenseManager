@@ -27,18 +27,19 @@ public class WodongaRatesProccesor extends Processor {
 	public void execute(Message message, RefData refData) throws Exception {
 		if (message.getSubject().indexOf("Instalment") != -1) {
 			handleInstalments(message, refData);
-		}
-		else {
+		} else {
 			handleFirst(message, refData);
 		}
 	}
-	
+
 	private void handleInstalments(Message message, RefData refData) throws Exception {
 		if (message.isMimeType("multipart/*")) {
 			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
 			int count = mimeMultipart.getCount();
 			LocalDate dueDate = null;
 			String amount = null;
+			Document document = null;
+			byte[] byteArray = null;
 			for (int i = 0; i < count; i++) {
 				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
 				if (bodyPart.isMimeType("text/html")) {
@@ -49,19 +50,18 @@ public class WodongaRatesProccesor extends Processor {
 					dueDate = LocalDate.parse(dueDateString, formatter);
 					startIndex = body.indexOf("\">", body.indexOf("Amount Due") + 12) + 2;
 					amount = body.substring(startIndex, body.indexOf("<", startIndex));
-				} else if (bodyPart.getContentType().startsWith("APPLICATION/PDF")) {
+				} else if (bodyPart.getContentType().startsWith("APPLICATION/OCTET-STREAM")) {
 					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
-					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
-
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-					String fileName = "WodongaRates-" + formatter.format(dueDate) + ".pdf";
-					 Document document =
-					 documentService.createDocumentFromEmailForExpense(byteArray, fileName);
-
-					 updateExpense(refData, dueDate, amount, document, null);
+					byteArray = IOUtils.toByteArray(base64DecoderStream);
 				}
 			}
-		}		
+			
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+			String fileName = "WodongaRates-" + formatter.format(dueDate) + ".pdf";
+			document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
+
+			updateExpense(refData, dueDate, amount, document, null);
+		}
 	}
 
 	private void handleFirst(Message message, RefData refData) throws MessagingException, IOException, Exception {
@@ -92,8 +92,8 @@ public class WodongaRatesProccesor extends Processor {
 					Instalment[] instalments = new Instalment[4];
 					instalments[0] = new Instalment(LocalDate.of(year, 9, 30));
 					instalments[1] = new Instalment(LocalDate.of(year, 11, 30));
-					instalments[2] = new Instalment(LocalDate.of(year+1, 2, 28));
-					instalments[3] = new Instalment(LocalDate.of(year+1, 5, 31));
+					instalments[2] = new Instalment(LocalDate.of(year + 1, 2, 28));
+					instalments[3] = new Instalment(LocalDate.of(year + 1, 5, 31));
 
 					instalments[0].setAmount(instalmentAmounts[0].substring(1));
 					instalments[0].setNotes(1);
