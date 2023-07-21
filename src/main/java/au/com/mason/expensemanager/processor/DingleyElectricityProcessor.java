@@ -5,7 +5,7 @@ import javax.mail.Message;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DingleyElectricityProcessor extends LumoProccesor {
+public class DingleyElectricityProcessor extends LumoProcessor {
     @Override
     public void execute(Message message, RefData refData) throws Exception {
         process(message, refData, "DingleyElec-");

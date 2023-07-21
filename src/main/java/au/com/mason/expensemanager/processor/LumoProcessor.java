@@ -18,7 +18,7 @@ import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
 
 @Component
-public abstract class LumoProccesor extends Processor {
+public abstract class LumoProcessor extends Processor {
 	
 	public void process(Message message, RefData refData, String prefix) throws Exception {
 		String body;
