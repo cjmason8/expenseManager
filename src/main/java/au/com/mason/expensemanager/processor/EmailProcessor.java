@@ -4,7 +4,7 @@ import au.com.mason.expensemanager.config.SpringContext;
 
 public enum EmailProcessor {
 	DINGLEY_ELECTRICITY(DingleyElectricityProcessor.class),
-	DINGLEY_GAS(DingleyGasProccesor.class),
+	DINGLEY_GAS(DingleyGasProcessor.class),
 	DINGLEY_WATER(DingleyWaterProccesor.class),
 	WODONGA_WATER(WodongaWaterProccesor.class),
 	WODONGA_RATES(WodongaRatesProccesor.class),
