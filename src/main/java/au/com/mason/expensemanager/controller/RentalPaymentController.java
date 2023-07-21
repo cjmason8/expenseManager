@@ -40,12 +40,12 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 			year = (LocalDate.now().getMonth().getValue() <= 6) ? LocalDate.now().getYear() - 1 : LocalDate.now().getYear();
 			
 			if (LocalDate.now().getMonth().getValue() <= 6) {
-				startDate = LocalDate.of(year, 7, 1);
-				endDate = LocalDate.of(year + 1, 6, 30);
-			}
-			else {
 				startDate = LocalDate.of(year - 1, 7, 1);
 				endDate = LocalDate.of(year, 6, 30);
+			}
+			else {
+				startDate = LocalDate.of(year, 7, 1);
+				endDate = LocalDate.of(year + 1, 6, 30);
 			}
 		}
 		else {
