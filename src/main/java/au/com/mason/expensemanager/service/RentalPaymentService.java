@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
@@ -20,6 +21,9 @@ public class RentalPaymentService {
 	
 	public static List<String> FIRST_SIX_MONTHS;
 	public static Map<String, String> PROPERTIES;
+
+	@Value("${docs.location}")
+	private String docsFolder;
 	
 	@Autowired
 	private RentalPaymentDao rentalPaymentDao;
@@ -82,7 +86,7 @@ public class RentalPaymentService {
 		metaData.put("property", PROPERTIES.get(rentalPayment.getProperty()));
 		metaData.put("year", folder);
 		
-		String folderPath = DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPayment.getProperty())+ "/" + folder + "/Statements";
+		String folderPath = docsFolder + DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPayment.getProperty())+ "/" + folder + "/Statements";
 		Files.move(Paths.get(rentalPayment.getDocument().getFilePath()), Paths.get(folderPath + "/" + rentalPayment.getDocument().getFileName()));
 		rentalPayment.getDocument().setFolderPath(folderPath);
 		rentalPayment.getDocument().setMetaData(metaData);

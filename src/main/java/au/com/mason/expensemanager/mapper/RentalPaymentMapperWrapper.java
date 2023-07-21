@@ -21,7 +21,7 @@ public class RentalPaymentMapperWrapper {
 		RentalPayment rentalPayment = rentalPaymentMapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
 		rentalPayment.setStatementFrom(DateUtil.getFormattedDate(rentalPaymentDto.getStatementFromString()));
 		rentalPayment.setStatementTo(DateUtil.getFormattedDate(rentalPaymentDto.getStatementToString()));
-		if (rentalPaymentDto.getDocumentDto() != null) {
+		if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getFileName() != null) {
 			rentalPayment.setDocument(DocumentUtil.convertToEntity(rentalPaymentDto.getDocumentDto()));
 		}
 		

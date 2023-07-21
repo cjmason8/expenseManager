@@ -141,6 +141,14 @@ public class EmailTrawler {
 			
 			return false;
 		}
+		else if (bodyContains(message, "Lumo")) {
+			if (refData.getEmailProcessor().equals(EmailProcessor.DINGLEY_ELECTRICITY)) {
+				return bodyContains(message, "electricity bill");
+			}
+			else if (refData.getEmailProcessor().equals(EmailProcessor.DINGLEY_GAS)) {
+				return bodyContains(message, "gas bill");
+			}
+		}
 		
 		return message.getSubject().indexOf(refData.getEmailKey()) != -1;
 	}

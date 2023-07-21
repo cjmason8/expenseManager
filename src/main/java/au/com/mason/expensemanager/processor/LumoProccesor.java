@@ -18,10 +18,9 @@ import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
 
 @Component
-public class DingleyElectricityProccesor extends Processor {
+public abstract class LumoProccesor extends Processor {
 	
-	@Override
-	public void execute(Message message, RefData refData) throws Exception {
+	public void process(Message message, RefData refData, String prefix) throws Exception {
 		String body;
 		if (message.isMimeType("text/plain")) {
 	        body = message.getContent().toString();
@@ -47,7 +46,7 @@ public class DingleyElectricityProccesor extends Processor {
 		        	BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
 		        	byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 		        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-		        	String fileName = "DingleyElec-" + formatter.format(dueDate) + ".pdf";
+		        	String fileName = prefix + formatter.format(dueDate) + ".pdf";
 					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 		        }
 		    }

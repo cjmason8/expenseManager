@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +41,9 @@ import au.com.mason.expensemanager.util.DocumentUtil;
 @RestController
 public class DocumentController {
 
+	@Value("${docs.location}")
+	private String docsFolder;
+
 	@Autowired
 	private DonationService donationService;
 
@@ -57,7 +61,7 @@ public class DocumentController {
 	@PostMapping(value = "/documents/move", consumes = { "application/json" })
 	String moveFiles(@RequestBody MoveFilesDto moveFilesDto) {
 		LOGGER.info("entering DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
-		String fullFolderPath = "/docs/expenseManager/filofax" + moveFilesDto.getDirectoryTo();
+		String fullFolderPath = docsFolder + "/expenseManager/filofax" + moveFilesDto.getDirectoryTo();
 		documentService.moveFiles(fullFolderPath, moveFilesDto.getFileIds());
 		LOGGER.info("leaving DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
 		

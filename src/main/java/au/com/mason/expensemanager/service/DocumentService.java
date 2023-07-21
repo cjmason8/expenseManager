@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,8 +20,11 @@ import au.com.mason.expensemanager.domain.Document;
 
 @Component
 public class DocumentService {
+
+	@Value("${docs.location}")
+	private String docsFolder;
 	
-	public static final String IP_FOLDER_PATH = "/docs/expenseManager/filofax/IPs";
+	public static final String IP_FOLDER_PATH = "/expenseManager/filofax/IPs";
 	
 	@Autowired
 	private DocumentDao documentDao;
@@ -37,7 +41,7 @@ public class DocumentService {
 	
 	public Document createDocument(String path, String type, MultipartFile file) throws Exception {
 		byte[] bytes = file.getBytes();
-		String folderPathString = "/docs/expenseManager/" + type;
+		String folderPathString = docsFolder + "/expenseManager/" + type;
 		if (path != null) {
 			folderPathString = path;
 		}
@@ -60,7 +64,7 @@ public class DocumentService {
 	}
 	
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
-		String folderPathString = "/docs/expenseManager/expenses";
+		String folderPathString = docsFolder + "/expenseManager/expenses";
 		String filePathString = folderPathString + "/" + fileName;
 		Path folderPath = Paths.get(folderPathString);
 		Path filePath = Paths.get(filePathString);
@@ -77,7 +81,7 @@ public class DocumentService {
 	}
 	
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath, Map<String, Object> metaData) throws Exception {
-		String folderPathString = IP_FOLDER_PATH + folderPath;
+		String folderPathString = docsFolder + IP_FOLDER_PATH + folderPath;
 		String filePathString = folderPathString + "/" + fileName;
 		Path reqFolderPath = Paths.get(folderPathString);
 		Path filePath = Paths.get(filePathString);
@@ -105,7 +109,7 @@ public class DocumentService {
 	public Document createDirectory(Document directory) throws Exception {
 		String folderPathString = "";
 		if (directory.getFolderPath().indexOf("root") != -1) {
-			folderPathString = "/docs/expenseManager/filofax/" + directory.getFolderPath().replace("root", "") + "/";
+			folderPathString = docsFolder + "/expenseManager/filofax/" + directory.getFolderPath().replace("root", "") + "/";
 		} else {
 			folderPathString = directory.getFolderPath();
 		}
