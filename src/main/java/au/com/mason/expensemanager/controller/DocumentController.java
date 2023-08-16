@@ -82,6 +82,12 @@ public class DocumentController {
 		return DocumentUtil.convertToDto(document);
 	}
 
+	@PostMapping(value = "/documents/test", consumes = { "multipart/form-data" })
+	String testing(@RequestPart("uploadFile") MultipartFile file, @RequestParam String type) throws Exception {
+
+		return "{\"status\":\"success\"}";
+	}
+
 	@PostMapping(value = "/documents", produces = "application/json", consumes = "application/json")
 	String createFile(@RequestBody DocumentDto document) throws Exception {
 		
