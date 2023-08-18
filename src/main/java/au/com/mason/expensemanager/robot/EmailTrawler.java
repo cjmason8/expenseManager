@@ -1,6 +1,7 @@
 package au.com.mason.expensemanager.robot;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -76,6 +77,10 @@ public class EmailTrawler {
 			List<RefData> refDatas = refDataService.getAllWithEmailKey(); 
 
 			for (Message message : messages) {
+				if (Arrays.stream(message.getFrom()).filter(f -> matchEmail(f.toString())).count() > 0) {
+					continue;
+				}
+
 				System.out.println("Handling Subject: " + message.getSubject());
 				boolean foundIt = false;
 				for (RefData refData : refDatas) {
@@ -107,6 +112,12 @@ public class EmailTrawler {
 			LOGGER.error(e);
 			e.printStackTrace();
 		}
+	}
+
+	private boolean matchEmail(String email) {
+		List<String> blackListedEmails = List.of("tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com");
+
+		return blackListedEmails.stream().anyMatch(email::contains);
 	}
 
 	private boolean refDataMatch(Message message, RefData refData) throws MessagingException, IOException {
