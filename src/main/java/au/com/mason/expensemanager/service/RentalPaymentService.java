@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.dao.RentalPaymentDao;
+import au.com.mason.expensemanager.repository.RentalPaymentRepository;
 import au.com.mason.expensemanager.domain.RentalPayment;
 
 @Component
@@ -26,7 +26,7 @@ public class RentalPaymentService {
 	private String docsFolder;
 	
 	@Autowired
-	private RentalPaymentDao rentalPaymentDao;
+	private RentalPaymentRepository rentalPaymentRepository;
 	
 	@Autowired
 	protected DocumentService documentService;
@@ -55,7 +55,7 @@ public class RentalPaymentService {
 			updateDocument(rentalPayment);
 		}
 		
-		rentalPaymentDao.update(rentalPayment);
+		rentalPaymentRepository.update(rentalPayment);
 		
 		return rentalPayment;
 	}
@@ -66,7 +66,7 @@ public class RentalPaymentService {
 			updateDocument(rentalPayment);
 		}
 		
-		rentalPaymentDao.create(rentalPayment);
+		rentalPaymentRepository.create(rentalPayment);
 		
 		return rentalPayment;
 	}
@@ -95,15 +95,15 @@ public class RentalPaymentService {
 	}
 	
 	public void deleteRentalPayment(Long id) {
-		rentalPaymentDao.deleteById(id);
+		rentalPaymentRepository.deleteById(id);
 	}
 	
 	public RentalPayment getRentalPayment(Long id) throws Exception {
-		return rentalPaymentDao.getById(id);
+		return rentalPaymentRepository.getById(id);
 	}
 	
 	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) throws Exception {
-		return rentalPaymentDao.getAll(property, startDate, endDate);
+		return rentalPaymentRepository.getAll(property, startDate, endDate);
 	}
 	
 }

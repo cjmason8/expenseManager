@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.mapper.NotificationMapper;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.dto.NotificationDto;
-import au.com.mason.expensemanager.mapper.NotificationMapperWrapper;
 import au.com.mason.expensemanager.service.NotificationService;
 
 @RestController
@@ -24,7 +24,7 @@ public class NotificationController extends BaseController<NotificationDto, Noti
 	private NotificationService notificationService;
 	
 	@Autowired
-	private NotificationMapperWrapper notificationMapperWrapper;
+	private NotificationMapper notificationMapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(NotificationController.class);
 	
@@ -58,11 +58,11 @@ public class NotificationController extends BaseController<NotificationDto, Noti
     }
 	
 	public NotificationDto convertToDto(Notification notification) throws Exception {
-		return notificationMapperWrapper.notificationToNotificationDto(notification);
+		return notificationMapper.notificationToNotificationDto(notification);
 	}
 	
 	public Notification convertToEntity(NotificationDto notificationDto) throws Exception {
-		return notificationMapperWrapper.notificationDtoToNotification(notificationDto);
+		return notificationMapper.notificationDtoToNotification(notificationDto);
 	}
 	
 }

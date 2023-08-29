@@ -9,18 +9,28 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import au.com.mason.expensemanager.dao.MyJsonType;
+import au.com.mason.expensemanager.repository.MyJsonType;
 import au.com.mason.expensemanager.processor.EmailProcessor;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = RefData.FIND_ALL_BY_EMAIL_KEY,
+						query = "SELECT O FROM RefData O WHERE emailKey IS NOT NULL"),
+		})
 @Entity
 @Table(name="refdata")
 @TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
-public class RefData {
+public class RefData implements Metadata {
+
+	public static final String FIND_ALL_BY_EMAIL_KEY = "RefData.Repository.FindAllByEmailKey";
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,7 +42,7 @@ public class RefData {
 	
     @Column
 	@Type(type = "MyJsonType")
-    private Map<String, String> metaData;
+    private Map<String, Object> metaData;
     
 	private String emailKey;
 	
@@ -67,11 +77,11 @@ public class RefData {
 		return description.toUpperCase().replace(" ", "_");
 	}
 
-	public Map<String, String> getMetaData() {
+	public Map<String, Object> getMetaData() {
 		return metaData;
 	}
 
-	public void setMetaData(Map<String, String> metaData) {
+	public void setMetaData(Map<String, Object> metaData) {
 		this.metaData = metaData;
 	}
 

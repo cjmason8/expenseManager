@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.mapper.RentalPaymentMapper;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
 import au.com.mason.expensemanager.dto.RentalPaymentInfoDto;
-import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
 
 @RestController
@@ -27,7 +27,7 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 	private RentalPaymentService rentalPaymentService;
 	
 	@Autowired
-	private RentalPaymentMapperWrapper rentalPaymentMapperWrapper;
+	private RentalPaymentMapper rentalPaymentMapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
 	
@@ -108,11 +108,11 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
     }
 	
 	public RentalPaymentDto convertToDto(RentalPayment rentalPayment) throws Exception {
-		return rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(rentalPayment);
+		return rentalPaymentMapper.rentalPaymentToRentalPaymentDto(rentalPayment);
 	}
 	
 	public RentalPayment convertToEntity(RentalPaymentDto rentalPaymentDto) throws Exception {
-		return rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
+		return rentalPaymentMapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
 	}
 	
 }

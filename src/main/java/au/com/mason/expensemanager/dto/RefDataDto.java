@@ -1,5 +1,8 @@
 package au.com.mason.expensemanager.dto;
 
+import au.com.mason.expensemanager.domain.RefData;
+import java.util.Map;
+
 public class RefDataDto {
 
 	private Long id;
@@ -8,7 +11,7 @@ public class RefDataDto {
 	private String typeDescription;
 	private String description;
 	private String metaDataChunk;
-	
+
 	public Long getId() {
 		return id;
 	}

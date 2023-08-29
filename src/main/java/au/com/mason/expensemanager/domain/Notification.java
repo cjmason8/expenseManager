@@ -3,17 +3,33 @@ package au.com.mason.expensemanager.domain;
 import java.time.LocalDate;
 import java.util.Date;
 
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = Notification.GET_UNREAD,
+						query = "SELECT O FROM Notification O WHERE read = false"),
+				@NamedQuery(
+						name = Notification.GET_FOR_EXPENSE,
+						query = "SELECT O FROM Notification O WHERE expense = :expense"),
+		}
+)
 @Entity
 @Table(name="notifications")
-public class Notification {
+public class Notification implements Metadata {
+
+	public static final String GET_UNREAD = "Notification.Repository.GetUnread";
+	public static final String GET_FOR_EXPENSE = "Notification.Repository.GetForExpense";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -72,5 +88,5 @@ public class Notification {
 	public void setCreated(LocalDate created) {
 		this.created = java.sql.Date.valueOf(created);
 	}
-	
+
 }

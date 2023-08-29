@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.dao.RefDataDao;
+import au.com.mason.expensemanager.repository.RefDataRepository;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RefDataType;
 
@@ -14,13 +14,13 @@ import au.com.mason.expensemanager.domain.RefDataType;
 public class RefDataService {
 	
 	@Autowired
-	private RefDataDao refDataDao;
+	private RefDataRepository refDataRepository;
 	
 	public List<RefData> getAll() throws Exception {
-		return refDataDao.getAll();
+		return refDataRepository.getAll();
 	}	
 	
-	public List<RefData> getRefData(String type) throws Exception {
+	public List<RefData> getRefData(String type) {
 		String typeVal = "";
 		if (type.equals("expenseType")) {
 			typeVal = RefDataType.EXPENSE_TYPE.name();
@@ -38,31 +38,31 @@ public class RefDataService {
 			throw new InvalidParameterException("value " + type + " for parameter type not valid.");
 		}
 		
-		return refDataDao.getAll(typeVal);
+		return refDataRepository.getAll(typeVal);
 	}
 	
-	public RefData updateRefData(RefData refData) throws Exception {
-		return refDataDao.update(refData);
+	public RefData updateRefData(RefData refData) {
+		return refDataRepository.update(refData);
 	}
 	
-	public RefData createRefData(RefData refData) throws Exception {
-		return refDataDao.create(refData);
+	public RefData createRefData(RefData refData) {
+		return refDataRepository.create(refData);
 	}
 	
 	public void deleteRefData(Long id) {
-		refDataDao.deleteById(id);
+		refDataRepository.deleteById(id);
 	}
 	
 	public RefData getById(Long id) throws Exception {
-		return refDataDao.getById(id);
+		return refDataRepository.getById(id);
 	}
 	
 	public List<RefData> findRefDatas(RefData refData) throws Exception {
-		return refDataDao.findRefDatas(refData);
+		return refDataRepository.findRefDatas(refData);
 	}
 	
 	public List<RefData> getAllWithEmailKey() {
-		return refDataDao.getAllWithEmailKey();
+		return refDataRepository.getAllWithEmailKey();
 	}
 
 }

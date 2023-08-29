@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.mapper.DonationMapper;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +19,6 @@ import com.google.gson.GsonBuilder;
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.dto.DonationDto;
 import au.com.mason.expensemanager.dto.DonationSearchDto;
-import au.com.mason.expensemanager.mapper.DonationMapperWrapper;
 import au.com.mason.expensemanager.service.DonationService;
 
 @RestController
@@ -28,7 +28,7 @@ public class DonationController extends BaseController<DonationDto, Donation> {
 	private DonationService donationService;
 	
 	@Autowired
-	private DonationMapperWrapper donationMapperWrapper;
+	private DonationMapper donationMapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(DonationController.class);
 	private static Gson gson = new GsonBuilder().serializeNulls().create();
@@ -92,11 +92,11 @@ public class DonationController extends BaseController<DonationDto, Donation> {
     }
 	
 	public DonationDto convertToDto(Donation donation) throws Exception {
-	    return donationMapperWrapper.donationToDonationDto(donation);
+	    return donationMapper.donationToDonationDto(donation);
 	}
 	
 	public Donation convertToEntity(DonationDto donationDto) throws Exception {
-		return donationMapperWrapper.donationDtoToDonation(donationDto);
+		return donationMapper.donationDtoToDonation(donationDto);
 	}
 	
 }

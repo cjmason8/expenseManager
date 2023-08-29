@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import au.com.mason.expensemanager.dao.MyJsonType;
+import au.com.mason.expensemanager.repository.MyJsonType;
 
 @Entity
 @Table(name="transactions")

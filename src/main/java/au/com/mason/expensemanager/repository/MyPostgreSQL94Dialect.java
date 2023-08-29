@@ -1,4 +1,4 @@
-package au.com.mason.expensemanager.dao;
+package au.com.mason.expensemanager.repository;
 
 import java.sql.Types;
 

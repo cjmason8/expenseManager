@@ -16,12 +16,12 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import au.com.mason.expensemanager.dao.MyJsonType;
+import au.com.mason.expensemanager.repository.MyJsonType;
 
 @Entity
 @Table(name="donations")
 @TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
-public class Donation {
+public class Donation implements Metadata {
 	
 	public Donation() {}
 
@@ -42,7 +42,7 @@ public class Donation {
 	
     @Column
 	@Type(type = "MyJsonType")
-    private Map<String, String> metaData;
+    private Map<String, Object> metaData;
 	
 	public long getId() {
 		return id;
@@ -96,11 +96,11 @@ public class Donation {
 		this.document = document;
 	}
 
-	public Map<String, String> getMetaData() {
+	public Map<String, Object> getMetaData() {
 		return metaData;
 	}
 
-	public void setMetaData(Map<String, String> metaData) {
+	public void setMetaData(Map<String, Object> metaData) {
 		this.metaData = metaData;
 	}
 

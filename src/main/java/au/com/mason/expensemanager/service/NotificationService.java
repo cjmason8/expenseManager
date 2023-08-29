@@ -5,35 +5,35 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.dao.NotificationDao;
+import au.com.mason.expensemanager.repository.NotificationRepository;
 import au.com.mason.expensemanager.domain.Notification;
 
 @Component
 public class NotificationService {
 	
 	@Autowired
-	private NotificationDao notificationDao;
+	private NotificationRepository notificationRepository;
 	
 	public Notification create(Notification notification) {
-		return notificationDao.create(notification);
+		return notificationRepository.create(notification);
 	}
 	
 	public List<Notification> getAll() throws Exception {
-		return notificationDao.getUnread();
+		return notificationRepository.getUnread();
 	}
 	
-	public Notification markRead(Long id) throws Exception {
-		Notification notification = notificationDao.getById(id);
+	public Notification markRead(Long id) {
+		Notification notification = notificationRepository.getById(id);
 		notification.setRead(true);
 		
-		return notificationDao.update(notification);
+		return notificationRepository.update(notification);
 	}
 	
-	public Notification markUnRead(Long id) throws Exception {
-		Notification notification = notificationDao.getById(id);
+	public Notification markUnRead(Long id) {
+		Notification notification = notificationRepository.getById(id);
 		notification.setRead(false);
 		
-		return notificationDao.update(notification);
+		return notificationRepository.update(notification);
 	}
 
 }

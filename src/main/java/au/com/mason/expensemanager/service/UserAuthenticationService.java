@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.service;
 
+import au.com.mason.expensemanager.dto.AuthServiceResponseDto;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -42,14 +43,14 @@ public class UserAuthenticationService {
 
 	}
 	
-	public JSONObject authenticate(String token) throws Exception {
+	public AuthServiceResponseDto authenticate(String token) throws Exception {
 		HttpClient httpClient = HttpClientBuilder.create().build(); 
 
         HttpGet request = new HttpGet(authServiceEndPoint + "/authenticate/" + token);
         HttpResponse response = httpClient.execute(request);
         String responseString = new BasicResponseHandler().handleResponse(response);
         
-        return new JSONObject(responseString);
+        return new ObjectMapper().readValue(responseString, AuthServiceResponseDto.class);
 
 	}	
 	

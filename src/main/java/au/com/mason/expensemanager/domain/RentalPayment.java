@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,7 +14,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="rentalpayments")
-public class RentalPayment {
+public class RentalPayment implements Metadata {
 	
 	public RentalPayment() {}
 

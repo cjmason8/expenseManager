@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.mapper.RefDataMapper;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +17,6 @@ import com.google.gson.GsonBuilder;
 
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.dto.RefDataDto;
-import au.com.mason.expensemanager.mapper.RefDataMapperWrapper;
 import au.com.mason.expensemanager.service.RefDataService;
 
 @RestController
@@ -26,7 +26,7 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 	private RefDataService refDataService;
 	
 	@Autowired
-	private RefDataMapperWrapper refDataMapperWrapper;
+	private RefDataMapper refDataMapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(RefDataController.class);
 	private Gson gson = new GsonBuilder().serializeNulls().create();
@@ -98,12 +98,12 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 		return convertList(findRefDatas);
     }
 	
-	public RefDataDto convertToDto(RefData refData) throws Exception {
-		return refDataMapperWrapper.refDataToRefDataDto(refData);
+	public RefDataDto convertToDto(RefData refData) {
+		return refDataMapper.refDataToRefDataDto(refData);
 	}
 	
-	public RefData convertToEntity(RefDataDto refDataDto) throws Exception {
-		return refDataMapperWrapper.refDataDtoToRefData(refDataDto);
+	public RefData convertToEntity(RefDataDto refDataDto) {
+		return refDataMapper.refDataDtoToRefData(refDataDto);
 	}
 	
 }

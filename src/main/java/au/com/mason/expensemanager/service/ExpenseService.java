@@ -1,26 +1,33 @@
 package au.com.mason.expensemanager.service;
 
+import au.com.mason.expensemanager.domain.Statics;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.dao.ExpenseDao;
-import au.com.mason.expensemanager.dao.TransactionDao;
+import au.com.mason.expensemanager.repository.ExpenseRepository;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Transaction;
 
 @Component
-public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
-	
+public class ExpenseService extends TransactionService<Expense> {
+
 	@Autowired
 	private IncomeService incomeService;
 	
 	@Autowired
-	private TransactionDao<Expense> expenseDao;
-	
+	private ExpenseRepository expenseRepository;
+
+	protected ExpenseService() {
+		super(Expense.class, expenseRepository);
+	}
+
 	@Override
 	Expense createTransaction() {
 		return new Expense();
@@ -40,7 +47,7 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 	}
 	
 	public List<Expense> getUnpaidBeforeWeek(LocalDate startOfWeek) throws Exception {
-		return expenseDao.getUnpaidBeforeWeek(startOfWeek);
+		return expenseRepository.getUnpaidBeforeWeek(startOfWeek);
 	}
 
 	@Override
@@ -48,30 +55,34 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 		return countForWeek(startOfWeek) + incomeService.countForWeek(startOfWeek);
 	}
 	
-	public Expense payExpense(Long id) throws Exception {
-		Expense expense = expenseDao.getById(id);
+	public Expense payExpense(Long id) {
+		Expense expense = expenseRepository.findById(id);
 		expense.setPaid(true);
 		
-		expenseDao.update(expense);
+		expenseRepository.save(expense);
 		
 		return expense;
 	}
 	
 	public Expense unPayExpense(Long id) throws Exception {
-		Expense expense = expenseDao.getById(id);
+		Expense expense = expenseRepository.getById(id);
 		expense.setPaid(false);
 		
-		expenseDao.update(expense);
+		expenseRepository.save(expense);
 		
 		return expense;
 	}
 	
 	public List<Expense> getAll() throws Exception {
-		return expenseDao.getAll();
+		var results = new ArrayList<Expense>();
+		expenseRepository.findAll().forEach(results::add);
+		results.sort(Comparator.comparing(Expense::getDueDate).reversed().thenComparing(e -> e.getEntryType().getType()));
+
+		return results.stream().limit(Statics.MAX_RESULTS.getIntValue()).collect(Collectors.toList());
 	}
 	
 	public List<Expense> findExpense(RefData entryType) {
-		return expenseDao.findExpenses(entryType);
+		return expenseRepository.findExpenses(entryType);
 	}
 	
 }

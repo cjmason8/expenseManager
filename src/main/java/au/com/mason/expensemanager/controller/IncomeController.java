@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.dto.DeleteIncomeResponseDto;
+import au.com.mason.expensemanager.mapper.IncomeMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.IncomeDto;
-import au.com.mason.expensemanager.mapper.IncomeMapperWrapper;
 import au.com.mason.expensemanager.service.IncomeService;
 
 @RestController
@@ -21,7 +22,7 @@ public class IncomeController extends BaseController<IncomeDto, Income> {
 	private IncomeService incomeService;
 	
 	@Autowired
-	private IncomeMapperWrapper incomeMapperWrapper;
+	private IncomeMapper incomeMapper;
 	
 	private static Logger LOGGER = LogManager.getLogger(IncomeController.class);
 	
@@ -56,19 +57,19 @@ public class IncomeController extends BaseController<IncomeDto, Income> {
 	
 	@RequestMapping(value = "/incomes/{id}", method = RequestMethod.DELETE, produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String deleteIncome(@PathVariable Long id) throws Exception {
+	DeleteIncomeResponseDto deleteIncome(@PathVariable Long id) {
 		LOGGER.info("entering IncomeController deleteIncome - " + id);
 		incomeService.deleteTransaction(id);
 		LOGGER.info("leaving IncomeController deleteIncome - " + id);
 		
-		return "{\"status\":\"success\"}";
+		return new DeleteIncomeResponseDto("success");
     }
 	
-	public IncomeDto convertToDto(Income income) throws Exception {
-		return incomeMapperWrapper.transactionToTransactionDto(income);
+	public IncomeDto convertToDto(Income income) {
+		return incomeMapper.incomeToIncomeDto(income);
 	}
 	
-	public Income convertToEntity(IncomeDto incomeDto) throws Exception {
-		return incomeMapperWrapper.transactionDtoToTransaction(incomeDto);
+	public Income convertToEntity(IncomeDto incomeDto) {
+		return incomeMapper.incomeDtoToIncome(incomeDto);
 	}
 }

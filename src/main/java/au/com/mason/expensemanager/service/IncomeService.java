@@ -5,12 +5,12 @@ import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.dao.IncomeDao;
+import au.com.mason.expensemanager.repository.IncomeRepository;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.domain.Transaction;
 
 @Component
-public class IncomeService extends TransactionService<Income, IncomeDao> {
+public class IncomeService extends TransactionService<Income, IncomeRepository> {
 	
 	@Autowired
 	private ExpenseService expenseService;

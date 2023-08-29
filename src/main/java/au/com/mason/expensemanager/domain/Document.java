@@ -7,18 +7,32 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import au.com.mason.expensemanager.dao.MyJsonType;
+import au.com.mason.expensemanager.repository.MyJsonType;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = Document.FIND_ALL_BY_FOLDER_PATH,
+						query = "SELECT O FROM Document O WHERE folderPath = :folderPath"),
+				@NamedQuery(
+						name = Document.GET_FOLDER,
+						query = "SELECT O FROM Document O WHERE folderPath = :folderPath AND fileName = :fileName"),
+		})
 @Entity
 @Table(name="documents")
 @TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
 public class Document implements Metadata {
+
+	public static final String FIND_ALL_BY_FOLDER_PATH = "Document.Repository.FindAllByFolderPath";
+	public static final String GET_FOLDER = "Document.Repository.GetFolder";
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

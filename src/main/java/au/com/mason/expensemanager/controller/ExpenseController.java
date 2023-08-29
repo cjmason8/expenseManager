@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.mapper.ExpenseMapper;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.dto.ExpenseDto;
-import au.com.mason.expensemanager.mapper.ExpenseMapperWrapper;
 import au.com.mason.expensemanager.service.ExpenseService;
 
 @RestController
@@ -25,7 +25,7 @@ public class ExpenseController extends BaseController<ExpenseDto, Expense> {
 	private ExpenseService expenseService;
 	
 	@Autowired
-	private ExpenseMapperWrapper expenseMapperWrapper;
+	private ExpenseMapper expenseMapper;
 	
 	@RequestMapping(value = "/expenses", method = RequestMethod.GET, produces = "application/json")
 	List<ExpenseDto> getExpenses() throws Exception {
@@ -100,11 +100,11 @@ public class ExpenseController extends BaseController<ExpenseDto, Expense> {
 		return "{\"status\":\"success\"}";
     }
 	
-	public ExpenseDto convertToDto(Expense expense) throws Exception {
-		return expenseMapperWrapper.transactionToTransactionDto(expense);
+	public ExpenseDto convertToDto(Expense expense) {
+		return expenseMapper.expenseToExpenseDto(expense);
 	}
 	
-	public Expense convertToEntity(ExpenseDto expenseDto) throws Exception {
-		return expenseMapperWrapper.transactionDtoToTransaction(expenseDto);
+	public Expense convertToEntity(ExpenseDto expenseDto) {
+		return expenseMapper.expenseDtoToExpense(expenseDto);
 	}
 }

@@ -1,23 +1,38 @@
 package au.com.mason.expensemanager.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-import org.springframework.stereotype.Component;
-
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.dto.DocumentDto;
 
-@Component
-@Mapper
-public interface DocumentMapper {
-	
-	DocumentMapper INSTANCE = Mappers.getMapper( DocumentMapper.class );
-	 
-    Document documentDtoToDocument(DocumentDto documentDto) throws Exception;
-    
-    Document documentDtoToDocument(DocumentDto documentDto, @MappingTarget Document document) throws Exception;
-    
-    DocumentDto documentToDocumentDto(Document document) throws Exception;
+public class DocumentMapper {
+    public Document documentDtoToDocument(DocumentDto documentDto) {
+        if ( documentDto == null ) {
+            return null;
+        }
 
+        Document document = new Document();
+
+        if ( documentDto.getId() != null ) {
+            document.setId( documentDto.getId() );
+        }
+        document.setFileName( documentDto.getFileName() );
+        document.setFolderPath( documentDto.getFolderPath() );
+        document.setOriginalFileName( documentDto.getOriginalFileName() );
+
+        return document;
+    }
+
+    public DocumentDto documentToDocumentDto(Document document) {
+        if ( document == null ) {
+            return null;
+        }
+
+        DocumentDto documentDto = new DocumentDto();
+
+        documentDto.setId( document.getId() );
+        documentDto.setFileName( document.getFileName() );
+        documentDto.setFolderPath( document.getFolderPath() );
+        documentDto.setOriginalFileName( document.getOriginalFileName() );
+
+        return documentDto;
+    }
 }

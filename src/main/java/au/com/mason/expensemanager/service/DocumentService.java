@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.service;
 
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.repository.DocumentRepository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,17 +11,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import au.com.mason.expensemanager.dao.DocumentDao;
-import au.com.mason.expensemanager.domain.Document;
-
 @Component
-public class DocumentService {
+public class DocumentService extends BaseService<Document> {
 
 	@Value("${docs.location}")
 	private String docsFolder;
@@ -27,13 +25,17 @@ public class DocumentService {
 	public static final String IP_FOLDER_PATH = "/expenseManager/filofax/IPs";
 	
 	@Autowired
-	private DocumentDao documentDao;
-	
-	public Document updateDocument(Document document) throws Exception {
-		documentDao.update(document);
+	private DocumentRepository documentRepository;
+
+	protected DocumentService() {
+		super(Document.class);
+	}
+
+	public Document updateDocument(Document document) {
+		documentRepository.save(document);
 		
 		if (document.isFolder() && !document.getOriginalFileName().equals(document.getFileName())) {
-			documentDao.updateDirectoryPaths(document.getFolderPath() + "/" + document.getOriginalFileName(), document.getFolderPath() + "/" + document.getFileName());
+			documentRepository.updateDirectoryPaths(document.getFolderPath() + "/" + document.getOriginalFileName(), document.getFolderPath() + "/" + document.getFileName());
 		}
 		
 		return document;
@@ -60,7 +62,7 @@ public class DocumentService {
 			setMetadata(path, document);
 		}
 		
-		return documentDao.create(document);
+		return documentRepository.save(document);
 	}
 	
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
@@ -76,8 +78,8 @@ public class DocumentService {
 		Document document = new Document();
 		document.setFileName(fileName);
 		document.setFolderPath(folderPathString);
-		
-		return documentDao.create(document);
+
+		return documentRepository.save(document);
 	}
 	
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath, Map<String, Object> metaData) throws Exception {
@@ -94,15 +96,15 @@ public class DocumentService {
 		document.setMetaData(metaData);
 		document.setFileName(fileName);
 		document.setFolderPath(folderPathString);
-		
-		return documentDao.create(document);
+
+		return documentRepository.save(document);
 	}
 
 	private void setMetadata(String path, Document document) {
 		String parentFolderPath = path.substring(0, path.lastIndexOf("/"));
 		String parentFolderName = path.substring(path.lastIndexOf("/") + 1);
 		
-		Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
+		Document parent = documentRepository.getFolder(parentFolderPath, parentFolderName);
 		document.setMetaData(parent.getMetaData());
 	}
 	
@@ -126,14 +128,14 @@ public class DocumentService {
 		setMetaData(directory, parentFolderPath, parentFolderName, document);
 		document.setFolder(true);
 		
-		return documentDao.create(document);
+		return documentRepository.save(document);
 	}
 
 	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName,
 			Document document) {
 		Map<String, Object> metaData = new HashMap<>();
 		if (!parentFolderName.equals("filofax")) {
-			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
+			Document parent = documentRepository.getFolder(parentFolderPath, parentFolderName);
 			metaData.putAll(parent.getMetaData());
 		}
 		if (directory.getMetaData() != null) {
@@ -144,22 +146,25 @@ public class DocumentService {
 	
 	public void deleteDocument(Document document) {
 		if (document.isFolder()) {
-			documentDao.deleteDirectory(document.getFolderPath() + "/" + document.getFileName());
+			documentRepository.deleteDirectory(document.getFolderPath() + "/" + document.getFileName());
 		}
-		documentDao.deleteById(document.getId());
+		documentRepository.deleteById(document.getId());
 	}
 	
-	public Document getById(Long id) throws Exception {
-		return documentDao.getById(id);
+	public Document getById(Long id) {
+		return findById(documentRepository, id);
 	}
 	
 	public List<Document> getAll(String folder) throws Exception {
-		return documentDao.getAll(folder);
+		return documentRepository.findByFolderPath(folder);
 	}
 	
 	public void moveFiles(String fullFolderPath, Long[] files) {
 		Arrays.asList(files).forEach(fileId -> {
-			Document file = documentDao.getById(fileId);
+			Document file = getById(fileId);
+			if (file == null) {
+				throw new RuntimeException(String.format("File %s could not be found.", fileId));
+			}
 			
 			try {
 				Files.move(Paths.get(file.getFolderPath() + "/" + file.getFileName()),
@@ -170,7 +175,7 @@ public class DocumentService {
 			}
 			
 			file.setFolderPath(fullFolderPath);
-			documentDao.update(file);
+			documentRepository.save(file);
 		});
 		
 	}

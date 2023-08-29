@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.dto;
 
+import au.com.mason.expensemanager.domain.Donation;
+
 public class DonationDto {
 
 	private Long id;
@@ -9,7 +11,7 @@ public class DonationDto {
 	private String notes;
 	private DocumentDto documentDto;
 	private String metaDataChunk;
-	
+
 	public Long getId() {
 		return id;
 	}
