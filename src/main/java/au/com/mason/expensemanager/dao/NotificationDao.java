@@ -7,6 +7,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import au.com.mason.expensemanager.domain.Expense;
@@ -14,30 +16,20 @@ import au.com.mason.expensemanager.domain.Notification;
 
 @Repository
 @Transactional
-public class NotificationDao {
-	
+public class NotificationDao extends BaseDao<Notification> {
+
+	public NotificationDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
+		super(Notification.class, entityManager);
+	}
+
 	public List<Notification> getUnread() {
-		Query query = entityManager.createQuery("FROM Notification where read = false");
+		Query query = entityManager.createNamedQuery(Notification.GET_UNREAD, Notification.class);
 
 		return query.getResultList();
 	}
 	
-	public Notification create(Notification notification) {
-		entityManager.persist(notification);
-
-		return notification;
-	}
-	
-	public Notification getById(long id) {
-		return entityManager.find(Notification.class, id);
-	}
-	
-	public Notification update(Notification notification) {
-		return entityManager.merge(notification);
-	}
-	
 	public void deleteForExpense(Expense expense) {
-		Query query = entityManager.createQuery("FROM Notification where expense = :expense");
+		Query query = entityManager.createNamedQuery(Notification.FIND_FOR_EXPENSE, Notification.class);
 		query.setParameter("expense", expense);
 
 		List<Notification> notifications = query.getResultList();
@@ -45,11 +37,4 @@ public class NotificationDao {
 		notifications.forEach(notification -> entityManager.remove(notification));
 	}
 	
-	// Private fields
-
-	// An EntityManager will be automatically injected from entityManagerFactory
-	// setup on DatabaseConfig class.
-	@PersistenceContext
-	private EntityManager entityManager;
-
 }

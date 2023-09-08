@@ -1,38 +1,38 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.dto.DonationDto;
+import au.com.mason.expensemanager.dto.DonationSearchDto;
+import au.com.mason.expensemanager.dto.StatusResponseDto;
+import au.com.mason.expensemanager.mapper.DonationMapper;
+import au.com.mason.expensemanager.service.DonationService;
 import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import au.com.mason.expensemanager.domain.Donation;
-import au.com.mason.expensemanager.dto.DonationDto;
-import au.com.mason.expensemanager.dto.DonationSearchDto;
-import au.com.mason.expensemanager.mapper.DonationMapperWrapper;
-import au.com.mason.expensemanager.service.DonationService;
-
 @RestController
-public class DonationController extends BaseController<DonationDto, Donation> {
+public class DonationController extends BaseController<Donation, DonationDto> {
 	
 	@Autowired
 	private DonationService donationService;
-	
+
 	@Autowired
-	private DonationMapperWrapper donationMapperWrapper;
+	public DonationController(DonationMapper donationMapper) {
+		super(donationMapper);
+	}
 	
 	private static Logger LOGGER = LogManager.getLogger(DonationController.class);
-	private static Gson gson = new GsonBuilder().serializeNulls().create();
-	
+
 	@RequestMapping(value = "/donations", method = RequestMethod.GET, produces = "application/json")
 	List<DonationDto> getDonations() throws Exception {
 		LOGGER.info("entering DonationController getDonations");
@@ -51,7 +51,7 @@ public class DonationController extends BaseController<DonationDto, Donation> {
 		return convertToDto(donation);
     }
 	
-	@RequestMapping(value = "/donations/{id}", method = RequestMethod.PUT, produces = "application/json", 
+	@PutMapping(value = "/donations/{id}", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
 	DonationDto updateDonation(@RequestBody DonationDto donationDto, Long id) throws Exception {
 		LOGGER.info("entering DonationController updateDonation - " + id);
@@ -61,7 +61,7 @@ public class DonationController extends BaseController<DonationDto, Donation> {
 		return convertToDto(donation);
     }
 	
-	@RequestMapping(value = "/donations/{id}", method = RequestMethod.GET, produces = "application/json")
+	@GetMapping(value = "/donations/{id}", produces = "application/json")
 	DonationDto getDonation(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering DonationController getDonation - " + id);
 		Donation donation = donationService.getById(id);
@@ -71,17 +71,17 @@ public class DonationController extends BaseController<DonationDto, Donation> {
         
     }
 	
-	@RequestMapping(value = "/donations/{id}", method = RequestMethod.DELETE, produces = "application/json",
+	@DeleteMapping(value = "/donations/{id}", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String deleteDonation(@PathVariable Long id) throws Exception {
+	StatusResponseDto deleteDonation(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering DonationController deleteDonation - " + id);
 		donationService.deleteDonation(id);
 		LOGGER.info("leaving DonationController deleteDonation - " + id);
-		
-		return "{\"status\":\"success\"}";
+
+		return new StatusResponseDto("success");
     }
 	
-	@RequestMapping(value = "/donations/search", method = RequestMethod.POST, produces = "application/json", 
+	@PostMapping(value = "/donations/search", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
 	List<DonationDto> findDonations(@RequestBody DonationSearchDto donationSearchDto) throws Exception {
 		LOGGER.info("entering DonationController findDonations - " + donationSearchDto.getCause());
@@ -90,13 +90,5 @@ public class DonationController extends BaseController<DonationDto, Donation> {
 		
 		return convertList(donations);
     }
-	
-	public DonationDto convertToDto(Donation donation) throws Exception {
-	    return donationMapperWrapper.donationToDonationDto(donation);
-	}
-	
-	public Donation convertToEntity(DonationDto donationDto) throws Exception {
-		return donationMapperWrapper.donationDtoToDonation(donationDto);
-	}
 	
 }

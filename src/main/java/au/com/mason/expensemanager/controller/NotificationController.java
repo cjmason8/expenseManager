@@ -1,7 +1,11 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.domain.Notification;
+import au.com.mason.expensemanager.dto.NotificationDto;
+import au.com.mason.expensemanager.mapper.IncomeMapper;
+import au.com.mason.expensemanager.mapper.NotificationMapper;
+import au.com.mason.expensemanager.service.NotificationService;
 import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,20 +15,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import au.com.mason.expensemanager.domain.Notification;
-import au.com.mason.expensemanager.dto.NotificationDto;
-import au.com.mason.expensemanager.mapper.NotificationMapperWrapper;
-import au.com.mason.expensemanager.service.NotificationService;
-
 @RestController
 @CrossOrigin
-public class NotificationController extends BaseController<NotificationDto, Notification> {
+public class NotificationController extends BaseController<Notification, NotificationDto> {
 	
 	@Autowired
 	private NotificationService notificationService;
-	
+
 	@Autowired
-	private NotificationMapperWrapper notificationMapperWrapper;
+	public NotificationController(NotificationMapper notificationMapper) {
+		super(notificationMapper);
+	}
 	
 	private static Logger LOGGER = LogManager.getLogger(NotificationController.class);
 	
@@ -56,13 +57,5 @@ public class NotificationController extends BaseController<NotificationDto, Noti
 		
 		return convertToDto(result);
     }
-	
-	public NotificationDto convertToDto(Notification notification) throws Exception {
-		return notificationMapperWrapper.notificationToNotificationDto(notification);
-	}
-	
-	public Notification convertToEntity(NotificationDto notificationDto) throws Exception {
-		return notificationMapperWrapper.notificationDtoToNotification(notificationDto);
-	}
 	
 }

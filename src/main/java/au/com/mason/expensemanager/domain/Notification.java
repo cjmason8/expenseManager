@@ -8,12 +8,26 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = Notification.GET_UNREAD,
+						query = "FROM Notification where read = false"),
+				@NamedQuery(
+						name = Notification.FIND_FOR_EXPENSE,
+						query = "FROM Notification where expense = :expense"),
+		})
 @Entity
 @Table(name="notifications")
 public class Notification {
+
+	public static final String GET_UNREAD = "Notification.Repository.GetUnread";
+	public static final String FIND_FOR_EXPENSE = "Notification.Repository.FindForExpense";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

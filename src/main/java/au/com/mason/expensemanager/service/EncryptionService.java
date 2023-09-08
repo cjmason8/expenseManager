@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Component
-@PropertySource("file:/resources/required")
+@PropertySource("file:${resources.dir}/required")
 public class EncryptionService {
 	
 	@Value("${beta.key}")

@@ -8,6 +8,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import au.com.mason.expensemanager.domain.Income;
@@ -15,32 +17,12 @@ import au.com.mason.expensemanager.util.DateUtil;
 
 @Repository
 @Transactional
-public class IncomeDao implements TransactionDao<Income> {
-	
-	public Income create(Income income) {
-		entityManager.persist(income);
+public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income> {
 
-		return income;
+	public IncomeDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
+		super(Income.class, entityManager);
 	}
-	
-	public void delete(Income income) {
-		if (entityManager.contains(income))
-			entityManager.remove(income);
-		else
-			entityManager.remove(entityManager.merge(income));
-		return;
-	}
-	
-	public void deleteById(Long id) {
-		Income income = getById(id);
-		if (entityManager.contains(income))
-			entityManager.remove(income);
-		else
-			entityManager.remove(entityManager.merge(income));
-		return;
-	}
-	
-	@SuppressWarnings("unchecked")
+
 	public List<Income> getAllRecurring(boolean includeAll) {
 		
 		String sql = "from Income where recurringType IS NOT NULL AND deleted = false";
@@ -52,19 +34,11 @@ public class IncomeDao implements TransactionDao<Income> {
 		return entityManager.createQuery(sql).getResultList();
 	}	
 	
-	public Income getById(long id) {
-		return entityManager.find(Income.class, id);
-	}
-	
-	public Income update(Income income) {
-		return entityManager.merge(income);
-	}
-
 	public List<Income> getForWeek(LocalDate weekStartDate) {
 		String sql = "from Income where recurringType IS NULL "
 				+ "AND dueDate >= to_date('" + DateUtil.getFormattedDbDate(weekStartDate) + "', 'yyyy-mm-dd') "
 				+ "AND dueDate <= to_date('" + DateUtil.getFormattedDbDate(weekStartDate.plusDays(6)) + "', 'yyyy-mm-dd')"
-						+ " ORDER BY dueDate,entryType";
+						+ " ORDER BY dueDate,entryType.type";
 
 		return entityManager.createQuery(sql).getResultList();
 	}
@@ -99,11 +73,4 @@ public class IncomeDao implements TransactionDao<Income> {
 				.executeUpdate();
 	}
 	
-	// Private fields
-
-	// An EntityManager will be automatically injected from entityManagerFactory
-	// setup on DatabaseConfig class.
-	@PersistenceContext
-	private EntityManager entityManager;
-
 }

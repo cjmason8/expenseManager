@@ -1,5 +1,8 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.dto.StatusResponseDto;
+import au.com.mason.expensemanager.mapper.DonationMapper;
+import au.com.mason.expensemanager.mapper.ExpenseMapper;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,19 +16,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.dto.ExpenseDto;
-import au.com.mason.expensemanager.mapper.ExpenseMapperWrapper;
 import au.com.mason.expensemanager.service.ExpenseService;
 
 @RestController
-public class ExpenseController extends BaseController<ExpenseDto, Expense> {
+public class ExpenseController extends BaseController<Expense, ExpenseDto> {
 	
 	private static Logger LOGGER = LogManager.getLogger(ExpenseController.class);
 	
 	@Autowired
 	private ExpenseService expenseService;
-	
+
 	@Autowired
-	private ExpenseMapperWrapper expenseMapperWrapper;
+	public ExpenseController(ExpenseMapper expenseMapper) {
+		super(expenseMapper);
+	}
 	
 	@RequestMapping(value = "/expenses", method = RequestMethod.GET, produces = "application/json")
 	List<ExpenseDto> getExpenses() throws Exception {
@@ -91,20 +95,13 @@ public class ExpenseController extends BaseController<ExpenseDto, Expense> {
 	
 	@RequestMapping(value = "/expenses/{id}", method = RequestMethod.DELETE, produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String deleteExpense(@PathVariable Long id) throws Exception {
+	StatusResponseDto deleteExpense(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering ExpenseController deleteExpense - " + id);		
 		expenseService.deleteTransaction(id);
 		
 		LOGGER.info("leaving ExpenseController deleteExpense - " + id);
-		
-		return "{\"status\":\"success\"}";
+
+		return new StatusResponseDto("success");
     }
 	
-	public ExpenseDto convertToDto(Expense expense) throws Exception {
-		return expenseMapperWrapper.transactionToTransactionDto(expense);
-	}
-	
-	public Expense convertToEntity(ExpenseDto expenseDto) throws Exception {
-		return expenseMapperWrapper.transactionDtoToTransaction(expenseDto);
-	}
 }

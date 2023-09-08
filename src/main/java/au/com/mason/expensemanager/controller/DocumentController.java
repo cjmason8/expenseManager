@@ -1,12 +1,22 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.domain.Income;
+import au.com.mason.expensemanager.dto.DocumentDto;
+import au.com.mason.expensemanager.dto.MoveFilesDto;
+import au.com.mason.expensemanager.mapper.DocumentMapper;
+import au.com.mason.expensemanager.service.DocumentService;
+import au.com.mason.expensemanager.service.DonationService;
+import au.com.mason.expensemanager.service.ExpenseService;
+import au.com.mason.expensemanager.service.IncomeService;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,20 +36,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.domain.Donation;
-import au.com.mason.expensemanager.domain.Expense;
-import au.com.mason.expensemanager.domain.Income;
-import au.com.mason.expensemanager.dto.DocumentDto;
-import au.com.mason.expensemanager.dto.MoveFilesDto;
-import au.com.mason.expensemanager.service.DocumentService;
-import au.com.mason.expensemanager.service.DonationService;
-import au.com.mason.expensemanager.service.ExpenseService;
-import au.com.mason.expensemanager.service.IncomeService;
-import au.com.mason.expensemanager.util.DocumentUtil;
-
 @RestController
-public class DocumentController {
+public class DocumentController extends BaseController<Document, DocumentDto> {
 
 	@Value("${docs.location}")
 	private String docsFolder;
@@ -55,6 +53,11 @@ public class DocumentController {
 
 	@Autowired
 	private IncomeService incomeService;
+
+	@Autowired
+	public DocumentController(DocumentMapper documentMapper) {
+		super(documentMapper);
+	}
 	
 	private static Logger LOGGER = LogManager.getLogger(DocumentController.class);
 	
@@ -79,13 +82,7 @@ public class DocumentController {
 		
 		LOGGER.info("leaving DocumentController uploadFile");
 		
-		return DocumentUtil.convertToDto(document);
-	}
-
-	@PostMapping(value = "/documents/test", consumes = { "multipart/form-data" })
-	String testing(@RequestPart("uploadFile") MultipartFile file, @RequestParam String type) throws Exception {
-
-		return "{\"status\":\"success\"}";
+		return convertToDto(document);
 	}
 
 	@PostMapping(value = "/documents", produces = "application/json", consumes = "application/json")
@@ -100,7 +97,7 @@ public class DocumentController {
 		
 		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
 
-		documentService.updateDocument(DocumentUtil.convertToEntity(document));
+		documentService.updateDocument(convertToEntity(document));
 
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
@@ -116,7 +113,7 @@ public class DocumentController {
 					Paths.get(document.getFilePath()));
 		}
 
-		documentService.updateDocument(DocumentUtil.convertToEntity(document));
+		documentService.updateDocument(convertToEntity(document));
 		
 		LOGGER.info("leaving DocumentController updateFile - " + id);
 
@@ -128,7 +125,7 @@ public class DocumentController {
 
 		LOGGER.info("entering DocumentController createDirectory - " + directory.getFileName());
 		
-		documentService.createDirectory(DocumentUtil.convertToEntity(directory));
+		documentService.createDirectory(convertToEntity(directory));
 		
 		LOGGER.info("leaving DocumentController createDirectory - " + directory.getFileName());
 
@@ -142,7 +139,7 @@ public class DocumentController {
 		Files.move(Paths.get(directory.getFolderPath() + "/" + directory.getOriginalFileName()),
 				Paths.get(directory.getFolderPath() + "/" + directory.getFileName()));
 		
-		Document newDirectory = documentService.updateDocument(DocumentUtil.convertToEntity(directory));
+		Document newDirectory = documentService.updateDocument(convertToEntity(directory));
 		
 		LOGGER.info("leaving DocumentController updateDocument - " + newDirectory.getFileName());
 		
@@ -212,7 +209,7 @@ public class DocumentController {
 	@RequestMapping(value = "/documents/list", method = RequestMethod.POST)
 	public List<DocumentDto> getFiles(@RequestBody String folder) throws Exception {
 		LOGGER.info("entering DocumentController getFiles - " + folder);		
-		List<DocumentDto> documents = DocumentUtil.convertList(documentService.getAll(folder));
+		List<DocumentDto> documents = convertList(documentService.getAll(folder));
 
 		Collections.sort(documents);
 

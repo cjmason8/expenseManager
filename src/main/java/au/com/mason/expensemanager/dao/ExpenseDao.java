@@ -10,6 +10,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -21,17 +22,15 @@ import au.com.mason.expensemanager.util.DateUtil;
 
 @Repository
 @Transactional
-public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expense> {
+public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<Expense> {
 	
 	@Autowired
 	private NotificationDao notificationDao;
-	
-	public Expense create(Expense expense) {
-		entityManager.persist(expense);
 
-		return expense;
+	public ExpenseDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
+		super(Expense.class, entityManager);
 	}
-	
+
 	public void delete(Expense expense) {
 		notificationDao.deleteForExpense(expense);
 
@@ -41,64 +40,47 @@ public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expen
 			entityManager.remove(entityManager.merge(expense));
 		return;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Expense> getAllRecurring(boolean includeAll) {
-		String sql = "from Expense where recurringType IS NOT NULL AND deleted = false";
+		Query query = entityManager.createNamedQuery(Expense.GET_ALL_RECURRING, Expense.class);
 		if (!includeAll) {
-			sql += " AND (endDate is NULL OR endDate >= to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd'))";
+			query = entityManager.createNamedQuery(Expense.GET_RECURRING, Expense.class);
+			query.setParameter("endDate", DateUtil.getFormattedDbDate(LocalDate.now()));
 		}
-		sql += " ORDER BY entryType.description";
-		
-		return entityManager.createQuery(sql).getResultList();
+
+		return query.getResultList();
 	}	
 	
 	@SuppressWarnings("unchecked")
 	public List<Expense> getAll() {
-		Query query = entityManager.createQuery(
-				"from Expense ORDER BY dueDate DESC,entryType");
+		Query query = entityManager.createNamedQuery(Expense.GET_ALL, Expense.class);
 		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 
 		return query.getResultList();
 	}	
 	
 	@SuppressWarnings("unchecked")
-	public List<Expense> findAll() {
-		Query query = entityManager.createQuery("from Expense");
+	public List<Expense> getForWeek(LocalDate weekStartDate) {
+		Query query = entityManager.createNamedQuery(Expense.GET_FOR_WEEK, Expense.class);
+		query.setParameter("weekStartDate", DateUtil.getFormattedDbDate(weekStartDate));
+		query.setParameter("weekLaterFromStartDate", DateUtil.getFormattedDbDate(weekStartDate.plusDays(6)));
+
+		return query.getResultList();
+	}
+	
+	public List<Expense> getUnpaidBeforeWeek(LocalDate weekStartDate) {
+		Query query = entityManager.createNamedQuery(Expense.GET_UNPAID_BEFORE_WEEK);
+		query.setParameter("weekStartDate", DateUtil.getFormattedDbDate(weekStartDate));
 
 		return query.getResultList();
 	}	
 	
-	public Expense getById(long id) {
-		return entityManager.find(Expense.class, id);
-	}
-	
-	public Expense update(Expense expense) {
-		return entityManager.merge(expense);
-	}
-
-	public List<Expense> getForWeek(LocalDate weekStartDate) {
-		String sql = "from Expense where recurringType IS NULL "
-				+ "AND dueDate >= to_date('" + DateUtil.getFormattedDbDate(weekStartDate) + "', 'yyyy-mm-dd') "
-				+ "AND dueDate <= to_date('" + DateUtil.getFormattedDbDate(weekStartDate.plusDays(6)) + "', 'yyyy-mm-dd')"
-				+ " ORDER BY dueDate,entryType";
-
-		return entityManager.createQuery(sql).getResultList();
-	}
-	
-	public List<Expense> getUnpaidBeforeWeek(LocalDate weekStartDate) {
-		String sql = "from Expense where recurringType IS NULL "
-				+ "AND dueDate < to_date('" + DateUtil.getFormattedDbDate(weekStartDate) + "', 'yyyy-mm-dd') "
-				+ "AND paid = false ORDER BY dueDate,entryType";
-
-		return entityManager.createQuery(sql).getResultList();
-	}	
-	
 	public List<Expense> getPastDate(LocalDate date) {
-		String sql = "from Expense where recurringType IS NULL"
-				+ " AND dueDate > to_date('" + DateUtil.getFormattedDbDate(date) + "', 'yyyy-mm-dd')";
+		Query query = entityManager.createNamedQuery(Expense.GET_PAST_DATE);
+		query.setParameter("date", DateUtil.getFormattedDbDate(date));
 
-		return entityManager.createQuery(sql).getResultList();
+		return query.getResultList();
 	}
 
 	public List<Expense> getPastDate(LocalDate date, Expense recurringExpense) {
@@ -158,11 +140,4 @@ public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expen
 		return query.getResultList();
 	}
 	
-	// Private fields
-
-	// An EntityManager will be automatically injected from entityManagerFactory
-	// setup on DatabaseConfig class.
-	@PersistenceContext
-	private EntityManager entityManager;
-
 }

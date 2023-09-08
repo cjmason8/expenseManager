@@ -1,67 +1,52 @@
 package au.com.mason.expensemanager.dao;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.transaction.Transactional;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+@Transactional
+public class BaseDao<T> {
 
-import au.com.mason.expensemanager.domain.Metadata;
-import au.com.mason.expensemanager.dto.SearchParamsDto;
-
-public class BaseDao<T extends Metadata> {
+	private Class<T> className;
+	protected EntityManager entityManager;
 	
-	private Gson gson = new GsonBuilder().serializeNulls().create();
-	
-	protected List<T> filterByMetadata(SearchParamsDto searchParamsDto, List<T> results) {
-		Map<String, Object> metaData = (Map<String, Object>) gson.fromJson(searchParamsDto.getMetaDataChunk(), Map.class);
-		List<T> validResults = new ArrayList<>();
-		results.forEach(result -> {
-			boolean isValid = false;
-			for (String val : metaData.keySet()) {
-				if (result.getMetaData().get(val) == null) continue;
-
-				if (metaData.get(val) instanceof ArrayList) {
-					for (Object item: (ArrayList) metaData.get(val)) {
-						if (result.getMetaData().get(val) instanceof String
-								&& (convertToStringAndLower(result.getMetaData().get(val)).equals(convertToStringAndLower(item)))) {
-							isValid = true;
-							break;
-						}
-						else if (result.getMetaData().get(val) instanceof ArrayList) {
-							List<String> values = (List<String>) result.getMetaData().get(val);
-							if (values.stream().filter(value -> convertToStringAndLower(value).equals(convertToStringAndLower(item))).count() > 0) {
-								isValid = true;
-								break;
-							}
-						}
-					}
-				}
-				else if (result.getMetaData().get(val) instanceof ArrayList) {
-					List<String> values = (List<String>) result.getMetaData().get(val);
-					if (values.stream().filter(value -> convertToStringAndLower(value).equals(convertToStringAndLower(metaData.get(val)))).count() > 0) {
-						isValid = true;
-					}					
-				}
-				else if (convertToStringAndLower(result.getMetaData().get(val)).equals(convertToStringAndLower(metaData.get(val)))) {
-					isValid = true;
-				}
-				if (searchParamsDto.getKeyWords() != null && result.getMetaData().get(val) != null
-						&& convertToStringAndLower(result.getMetaData().get(val)).indexOf(convertToStringAndLower(searchParamsDto.getKeyWords())) != -1) {
-					isValid = true;
-				}
-			}
-			if (isValid) validResults.add(result);
-		});
-		
-		return validResults;
+	public BaseDao(Class<T> className, EntityManager entityManager) {
+		this.className = className;
+		this.entityManager = entityManager;
 	}
-	
-	private String convertToStringAndLower(Object val) {
-		String stringVal = (String) val;
-		
-		return stringVal == null ? null : stringVal.toLowerCase();
+
+	public T create(T item) {
+		entityManager.persist(item);
+
+		return item;
+	}
+
+	public void delete(T item) {
+		if (entityManager.contains(item))
+			entityManager.remove(item);
+		else
+			entityManager.remove(entityManager.merge(item));
+		return;
+	}
+
+	public void deleteById(Long id) {
+		T item = entityManager.find(className, id);
+		entityManager.remove(item);
+	}
+
+	public T getById(long id) {
+		return entityManager.find(className, id);
+	}
+
+	public T update(T item) {
+		return entityManager.merge(item);
+	}
+
+
+	public List<T> findAll() {
+		Query query = entityManager.createQuery("FROM " + className.getName());
+		return query.getResultList();
 	}
 
 }

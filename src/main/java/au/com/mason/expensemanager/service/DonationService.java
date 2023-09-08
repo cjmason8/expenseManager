@@ -23,7 +23,7 @@ public class DonationService {
 	
 	public Donation updateDonation(Donation donation) throws Exception {
 		
-		updateDocument(donation);
+		//updateDocument(donation);
 		
 		return donationDao.update(donation);
 	}
@@ -41,7 +41,7 @@ public class DonationService {
 	}
 	
 	private void updateDocument(Donation donation) throws IOException, Exception {
-		if (!donation.getDocument().getOriginalFileName().equals(donation.getDocument().getFileName())) {
+		if ((donation.getDocument() != null && donation.getDocument().getFileName() != null) && !donation.getDocument().getOriginalFileName().equals(donation.getDocument().getFileName())) {
 			Files.move(Paths.get(donation.getDocument().getFolderPath() + "/" + donation.getDocument().getOriginalFileName()),
 					Paths.get(donation.getDocument().getFolderPath() + "/" + donation.getDocument().getFileName()));
 			

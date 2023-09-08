@@ -1,61 +1,33 @@
 package au.com.mason.expensemanager.dao;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
-
-import org.springframework.stereotype.Repository;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.DonationSearchDto;
 import au.com.mason.expensemanager.util.DateUtil;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.util.List;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
-public class DonationDao {
+public class DonationDao extends BaseDao<Donation> {
 	
 	private Gson gson = new GsonBuilder().serializeNulls().create();
-	
+
+	public DonationDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
+		super(Donation.class, entityManager);
+	}
+
 	public List<Donation> getAll() {
-		Query query = entityManager.createQuery("FROM Donation ORDER BY dueDate DESC, cause.description");
+		Query query = entityManager.createNamedQuery(Donation.GET_ALL, Donation.class);
 		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 		return query.getResultList();
-	}
-	
-	public Donation create(Donation donation) {
-		entityManager.persist(donation);
-
-		return donation;
-	}
-	
-	public void delete(Donation donation) {
-		if (entityManager.contains(donation))
-			entityManager.remove(donation);
-		else
-			entityManager.remove(entityManager.merge(donation));
-		return;
-	}
-	
-	public void deleteById(Long id) {
-		Donation donation = entityManager.find(Donation.class, id);
-		entityManager.remove(donation);
-		return;
-	}
-	
-	public Donation getById(long id) {
-		return entityManager.find(Donation.class, id);
-	}
-	
-	public Donation update(Donation donation) {
-		return entityManager.merge(donation);
 	}
 	
 	public List<Donation> findDonations(DonationSearchDto donationSearchDto) {
@@ -100,12 +72,5 @@ public class DonationDao {
 		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 		return query.getResultList();
 	}
-
-	// Private fields
-
-	// An EntityManager will be automatically injected from entityManagerFactory
-	// setup on DatabaseConfig class.
-	@PersistenceContext
-	private EntityManager entityManager;
 
 }

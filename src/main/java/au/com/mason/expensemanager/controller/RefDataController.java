@@ -1,32 +1,34 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.dto.RefDataDto;
+import au.com.mason.expensemanager.dto.StatusResponseDto;
+import au.com.mason.expensemanager.mapper.BaseMapper;
+import au.com.mason.expensemanager.mapper.RefDataMapper;
+import au.com.mason.expensemanager.service.RefDataService;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.dto.RefDataDto;
-import au.com.mason.expensemanager.mapper.RefDataMapperWrapper;
-import au.com.mason.expensemanager.service.RefDataService;
-
 @RestController
-public class RefDataController extends BaseController<RefDataDto, RefData> {
+public class RefDataController extends BaseController<RefData, RefDataDto> {
 	
 	@Autowired
 	private RefDataService refDataService;
 	
 	@Autowired
-	private RefDataMapperWrapper refDataMapperWrapper;
+	public RefDataController(RefDataMapper refDataMapper) {
+		super(refDataMapper);
+	}
 	
 	private static Logger LOGGER = LogManager.getLogger(RefDataController.class);
 	private Gson gson = new GsonBuilder().serializeNulls().create();
@@ -80,12 +82,12 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 	
 	@RequestMapping(value = "/refDatas/{id}", method = RequestMethod.DELETE, produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String deleteRefData(@PathVariable Long id) throws Exception {
+	StatusResponseDto deleteRefData(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering RefDataController deleteRefData - " + id);
 		refDataService.deleteRefData(id);
 		LOGGER.info("leaving RefDataController deleteRefData - " + id);
-		
-		return "{\"status\":\"success\"}";
+
+		return new StatusResponseDto("success");
     }
 	
 	@RequestMapping(value = "/refDatas/search", method = RequestMethod.POST, produces = "application/json", 
@@ -97,13 +99,5 @@ public class RefDataController extends BaseController<RefDataDto, RefData> {
 		
 		return convertList(findRefDatas);
     }
-	
-	public RefDataDto convertToDto(RefData refData) throws Exception {
-		return refDataMapperWrapper.refDataToRefDataDto(refData);
-	}
-	
-	public RefData convertToEntity(RefDataDto refDataDto) throws Exception {
-		return refDataMapperWrapper.refDataDtoToRefData(refDataDto);
-	}
 	
 }

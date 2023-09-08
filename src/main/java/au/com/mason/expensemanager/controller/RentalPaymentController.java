@@ -1,41 +1,44 @@
 package au.com.mason.expensemanager.controller;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
 import au.com.mason.expensemanager.dto.RentalPaymentInfoDto;
-import au.com.mason.expensemanager.mapper.RentalPaymentMapperWrapper;
+import au.com.mason.expensemanager.dto.StatusResponseDto;
+import au.com.mason.expensemanager.mapper.RefDataMapper;
+import au.com.mason.expensemanager.mapper.RentalPaymentMapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class RentalPaymentController extends BaseController<RentalPaymentDto, RentalPayment> {
+public class RentalPaymentController extends BaseController<RentalPayment, RentalPaymentDto> {
 	
 	@Autowired
 	private RentalPaymentService rentalPaymentService;
 	
-	@Autowired
-	private RentalPaymentMapperWrapper rentalPaymentMapperWrapper;
-	
 	private static Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
+
+	@Autowired
+	public RentalPaymentController(RentalPaymentMapper rentalPaymentMapper) {
+		super(rentalPaymentMapper);
+	}
 	
-	@RequestMapping(value = {"/rentalPayments/getByProperty/{property}/{year}", "/rentalPayments/getByProperty/{property}"}, method = RequestMethod.GET, produces = "application/json")
+	@GetMapping(value = {"/rentalPayments/getByProperty/{property}/{year}", "/rentalPayments/getByProperty/{property}"}, produces = "application/json")
 	RentalPaymentInfoDto getRentalPayments(@PathVariable String property, @PathVariable(required=false) Integer year) throws Exception {
 		LOGGER.info("entering RentalPaymentController getRentalPayment");
-		LocalDate startDate = null;
-		LocalDate endDate = null;
+		LocalDate startDate;
+		LocalDate endDate;
 		if (year == null) {
 			year = (LocalDate.now().getMonth().getValue() <= 6) ? LocalDate.now().getYear() - 1 : LocalDate.now().getYear();
 			
@@ -77,7 +80,7 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 		return convertToDto(rentalPayment);
     }
 	
-	@RequestMapping(value = "/rentalPayments/{id}", method = RequestMethod.PUT, produces = "application/json", 
+	@PutMapping(value = "/rentalPayments/{id}", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
 	RentalPaymentDto updateDonation(@RequestBody RentalPaymentDto rentalPaymentDto, Long id) throws Exception {
 		LOGGER.info("entering RentalPaymentController updateRentalPayment - " + id);
@@ -88,17 +91,17 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
     }
 	
 	
-	@RequestMapping(value = "/rentalPayments/{id}", method = RequestMethod.DELETE, produces = "application/json",
+	@DeleteMapping(value = "/rentalPayments/{id}", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String deleteRentalPayment(@PathVariable Long id) throws Exception {
+	StatusResponseDto deleteRentalPayment(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering RentalPaymentController deleteRentalPayment - " + id);
 		rentalPaymentService.deleteRentalPayment(id);
 		LOGGER.info("leaving RentalPaymentController deleteRentalPayment - " + id);
 		
-		return "{\"status\":\"success\"}";
+		return new StatusResponseDto("success");
     }
 	
-	@RequestMapping(value = "/rentalPayments/{id}", method = RequestMethod.GET, produces = "application/json")
+	@GetMapping(value = "/rentalPayments/{id}", produces = "application/json")
 	RentalPaymentDto getRentalPayment(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering RentalPaymentController getRentalPayment - " + id);
 		RentalPayment rentalPayment = rentalPaymentService.getRentalPayment(id);
@@ -106,13 +109,5 @@ public class RentalPaymentController extends BaseController<RentalPaymentDto, Re
 		
 		return convertToDto(rentalPayment);
     }
-	
-	public RentalPaymentDto convertToDto(RentalPayment rentalPayment) throws Exception {
-		return rentalPaymentMapperWrapper.rentalPaymentToRentalPaymentDto(rentalPayment);
-	}
-	
-	public RentalPayment convertToEntity(RentalPaymentDto rentalPaymentDto) throws Exception {
-		return rentalPaymentMapperWrapper.rentalPaymentDtoToRentalPayment(rentalPaymentDto);
-	}
 	
 }

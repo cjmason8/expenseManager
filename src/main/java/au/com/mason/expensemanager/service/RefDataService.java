@@ -38,26 +38,29 @@ public class RefDataService {
 			throw new InvalidParameterException("value " + type + " for parameter type not valid.");
 		}
 		
-		return refDataDao.getAll(typeVal);
+		return refDataDao.getAllByType(typeVal);
 	}
 	
 	public RefData updateRefData(RefData refData) throws Exception {
 		return refDataDao.update(refData);
 	}
 	
-	public RefData createRefData(RefData refData) throws Exception {
+	public RefData createRefData(RefData refData) {
 		return refDataDao.create(refData);
 	}
 	
 	public void deleteRefData(Long id) {
-		refDataDao.deleteById(id);
+		RefData refData = getById(id);
+		refData.setDeleted(true);
+
+		refDataDao.update(refData);
 	}
 	
-	public RefData getById(Long id) throws Exception {
+	public RefData getById(Long id) {
 		return refDataDao.getById(id);
 	}
 	
-	public List<RefData> findRefDatas(RefData refData) throws Exception {
+	public List<RefData> findRefDatas(RefData refData) {
 		return refDataDao.findRefDatas(refData);
 	}
 	

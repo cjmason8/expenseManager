@@ -1,6 +1,7 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.IOException;
+import au.com.mason.expensemanager.dao.RentalPaymentDao;
+import au.com.mason.expensemanager.domain.RentalPayment;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -8,13 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import au.com.mason.expensemanager.dao.RentalPaymentDao;
-import au.com.mason.expensemanager.domain.RentalPayment;
 
 @Component
 public class RentalPaymentService {
@@ -71,17 +68,11 @@ public class RentalPaymentService {
 		return rentalPayment;
 	}
 	
-	private void updateDocument(RentalPayment rentalPayment) throws IOException, Exception {
+	private void updateDocument(RentalPayment rentalPayment) throws Exception {
 		
 		int month = rentalPayment.getStatementFrom().getMonth().getValue();
 		String year = String.valueOf(rentalPayment.getStatementFrom().getYear());
-		String folder = "";
-		if (month <= 6) {
-			folder = (Integer.valueOf(year) - 1) + "-" + year; 
-		}
-		else {
-			folder = year + "-" + (Integer.valueOf(year) + 1);
-		}
+		String folder = (month <= 6) ? (Integer.parseInt(year) - 1) + "-" + year : year + "-" + (Integer.parseInt(year) + 1);
 		Map<String, Object> metaData = new HashMap<>();
 		metaData.put("property", PROPERTIES.get(rentalPayment.getProperty()));
 		metaData.put("year", folder);
@@ -98,7 +89,7 @@ public class RentalPaymentService {
 		rentalPaymentDao.deleteById(id);
 	}
 	
-	public RentalPayment getRentalPayment(Long id) throws Exception {
+	public RentalPayment getRentalPayment(Long id) {
 		return rentalPaymentDao.getById(id);
 	}
 	

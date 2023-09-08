@@ -10,6 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -18,10 +20,18 @@ import org.hibernate.annotations.TypeDef;
 
 import au.com.mason.expensemanager.dao.MyJsonType;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = Donation.GET_ALL,
+						query = "FROM Donation ORDER BY dueDate DESC, cause.description"),
+		})
 @Entity
 @Table(name="donations")
 @TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
 public class Donation {
+
+	public static final String GET_ALL = "Donation.Repository.GetAll";
 	
 	public Donation() {}
 

@@ -9,6 +9,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
@@ -17,10 +19,26 @@ import org.hibernate.annotations.TypeDef;
 import au.com.mason.expensemanager.dao.MyJsonType;
 import au.com.mason.expensemanager.processor.EmailProcessor;
 
+@NamedQueries(
+		value = {
+				@NamedQuery(
+						name = RefData.GET_ALL_BY_TYPE,
+						query = "FROM RefData WHERE type = :type ORDER BY type, description"),
+				@NamedQuery(
+						name = RefData.GET_ALL,
+						query = "FROM RefData ORDER BY type, description"),
+				@NamedQuery(
+						name = RefData.GET_ALL_WITH_EMAIL_KEY,
+						query = "FROM RefData WHERE emailKey IS NOT NULL"),
+		})
 @Entity
 @Table(name="refdata")
 @TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
 public class RefData {
+
+	public static final String GET_ALL_BY_TYPE = "RefData.Repository.GetAllByType";
+	public static final String GET_ALL = "RefData.Repository.GetAll";
+	public static final String GET_ALL_WITH_EMAIL_KEY = "RefData.Repository.GetAllWithEmailKey";
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,6 +56,8 @@ public class RefData {
 	
 	@Enumerated(EnumType.STRING)
 	private EmailProcessor emailProcessor;
+
+	private boolean deleted;
 	
 	public long getId() {
 		return id;
@@ -89,6 +109,14 @@ public class RefData {
 
 	public void setEmailProcessor(EmailProcessor emailProcessor) {
 		this.emailProcessor = emailProcessor;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	public boolean isDeleted() {
+		return this.deleted;
 	}
 	
 }

@@ -53,9 +53,10 @@
 		    <artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.mapstruct</groupId>
-		    <artifactId>mapstruct</artifactId>
-		    <version>1.3.1.Final</version>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.28</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 		    <groupId>org.json</groupId>
@@ -122,35 +123,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-			    <groupId>org.bsc.maven</groupId>
-			    <artifactId>maven-processor-plugin</artifactId>
-			    <version>2.2.4</version>
-			    <configuration>
-			        <defaultOutputDirectory>
-			            ${project.build.directory}/generated-sources
-			        </defaultOutputDirectory>
-			        <processors>
-			            <processor>org.mapstruct.ap.MappingProcessor</processor>
-			        </processors>
-			    </configuration>
-			    <executions>
-			        <execution>
-			            <id>process</id>
-			            <phase>generate-sources</phase>
-			            <goals>
-			                <goal>process</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			    <dependencies>
-			        <dependency>
-			            <groupId>org.mapstruct</groupId>
-			            <artifactId>mapstruct-processor</artifactId>
-			            <version>1.3.1.Final</version>
-			        </dependency>
-			    </dependencies>
 			</plugin>
 		</plugins>
 	</build>
