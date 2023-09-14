@@ -28,7 +28,7 @@ public class DocumentDao extends MetaDataDao<Document> {
 	}
 	
 	public Document getFolder(String folderPath, String folderName) {
-		Query query = entityManager.createQuery(Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME, Document.class);
+		Query query = entityManager.createNamedQuery(Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME, Document.class);
 		query.setParameter("folderPath", folderPath);
 		query.setParameter("fileName", folderName);
 		return (Document) query.getSingleResult();
