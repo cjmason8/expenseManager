@@ -3,15 +3,15 @@ package au.com.mason.expensemanager.dao;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Repository
 @Transactional
@@ -21,8 +21,9 @@ public class DocumentDao extends MetaDataDao<Document> {
 		super(Document.class, entityManager);
 	}
 
-	public List<Document> getAll(String folderPath) {
-		Query query = entityManager.createNamedQuery(Document.GET_ALL_BY_FOLDER_PATH, Document.class);
+	public List<Document> getAll(String folderPath, boolean includeArchived) {
+		String queryName = includeArchived ? Document.GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED : Document.GET_ALL_BY_FOLDER_PATH;
+		Query query = entityManager.createNamedQuery(queryName, Document.class);
 		query.setParameter("folderPath", folderPath);
 		return query.getResultList();
 	}

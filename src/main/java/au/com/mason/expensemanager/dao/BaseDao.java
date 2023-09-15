@@ -1,9 +1,9 @@
 package au.com.mason.expensemanager.dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
 
 @Transactional
 public class BaseDao<T> {

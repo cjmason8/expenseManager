@@ -2,15 +2,12 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.dto.NotificationDto;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import au.com.mason.expensemanager.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NotificationMapper implements BaseMapper<Notification, NotificationDto> {
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
     @Autowired
     private ExpenseMapper expenseMapper;
 
@@ -25,7 +22,7 @@ public class NotificationMapper implements BaseMapper<Notification, Notification
             notification.setId( notificationDto.getId() );
         }
         notification.setMessage( notificationDto.getMessage() );
-        notification.setCreated(LocalDate.parse(notificationDto.getCreatedDateString(), formatter));
+        notification.setCreated(DateUtil.getFormattedDate(notificationDto.getCreatedDateString()));
         notification.setExpense( expenseMapper.dtoToEntity( notificationDto.getExpense() ) );
 
         return notification;
@@ -41,7 +38,7 @@ public class NotificationMapper implements BaseMapper<Notification, Notification
         notificationDto.setId( notification.getId() );
         notificationDto.setExpense( expenseMapper.entityToDto( notification.getExpense() ) );
         notificationDto.setMessage( notification.getMessage() );
-        notificationDto.setCreatedDateString(notification.getCreated().format(formatter));
+        notificationDto.setCreatedDateString(DateUtil.getFormattedDateString(notification.getCreated()));
 
         return notificationDto;
     }

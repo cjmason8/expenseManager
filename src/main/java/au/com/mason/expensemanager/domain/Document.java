@@ -1,26 +1,25 @@
 package au.com.mason.expensemanager.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.util.Map;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-
-import au.com.mason.expensemanager.dao.MyJsonType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @NamedQueries(
 		value = {
 				@NamedQuery(
 						name = Document.GET_ALL_BY_FOLDER_PATH,
+						query = "FROM Document WHERE folderPath = :folderPath AND isArchived = false"),
+				@NamedQuery(
+						name = Document.GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED,
 						query = "FROM Document WHERE folderPath = :folderPath"),
 				@NamedQuery(
 						name = Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME,
@@ -28,10 +27,10 @@ import au.com.mason.expensemanager.dao.MyJsonType;
 		})
 @Entity
 @Table(name="documents")
-@TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
 public class Document implements Metadata {
 
 	public static final String GET_ALL_BY_FOLDER_PATH = "Document.Repository.GetAllByFolderPath";
+	public static final String GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED = "Document.Repository.GetAllByFolderPathIncludeArchived";
 	public static final String GET_ALL_BY_FOLDER_PATH_AND_FILENAME = "Document.Repository.GetAllByFolderPathAndFilename";
 	
 	@Id
@@ -41,9 +40,10 @@ public class Document implements Metadata {
 	private String fileName;
 	private String folderPath;
 	private boolean isFolder;
+	private boolean isArchived;
 	
     @Column
-	@Type(type = "MyJsonType")
+	@JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> metaData;
     
     @Transient
@@ -79,6 +79,14 @@ public class Document implements Metadata {
 
 	public void setFolder(boolean isFolder) {
 		this.isFolder = isFolder;
+	}
+
+	public boolean isArchived() {
+		return isArchived;
+	}
+
+	public void setArchived(boolean isArchived) {
+		this.isArchived = isArchived;
 	}
 
 	public String getFolderPath() {

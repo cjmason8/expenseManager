@@ -84,33 +84,27 @@ public class MyJsonType implements UserType {
  
         return x.hashCode();
     }
- 
+
+    @Override
+    public Object nullSafeGet(ResultSet resultSet, int i, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws SQLException {
+        return null;
+    }
+
     @Override
     public boolean equals(Object x, Object y) throws HibernateException {
         return ObjectUtils.nullSafeEquals(x, y);
     }
- 
+
+    @Override
+    public int getSqlType() {
+        return Types.JAVA_OBJECT;
+    }
+
     @Override
     public Class<?> returnedClass() {
         return Map.class;
     }
  
-    @Override
-    public int[] sqlTypes() {
-        return new int[]{Types.JAVA_OBJECT};
-    }
-
-	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor arg2, Object arg3)
-			throws HibernateException, SQLException {
-		PGobject o = (PGobject) rs.getObject(names[0]);
-        if (o != null && o.getValue() != null) {
-            return gson.fromJson(o.getValue(), Map.class);
-        }
- 
-        return new HashMap<String, Object>();
-	}
-
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor arg3)
 			throws HibernateException, SQLException {

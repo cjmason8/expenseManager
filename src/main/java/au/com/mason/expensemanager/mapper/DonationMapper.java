@@ -2,6 +2,7 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.dto.DonationDto;
+import au.com.mason.expensemanager.util.DateUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.time.LocalDate;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class DonationMapper implements BaseMapper<Donation, DonationDto> {
 
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static Gson gson = new GsonBuilder().serializeNulls().create();
 
     @Autowired
@@ -34,7 +34,7 @@ public class DonationMapper implements BaseMapper<Donation, DonationDto> {
         donation.setCause( refDataMapper.dtoToEntity( donationDto.getCause() ) );
         donation.setDescription( donationDto.getDescription() );
         donation.setNotes( donationDto.getNotes() );
-        donation.setDueDate(LocalDate.parse(donationDto.getDueDateString(), formatter));
+        donation.setDueDate(DateUtil.getFormattedDate(donationDto.getDueDateString()));
         donation.setMetaData((Map<String, String>) gson.fromJson(donationDto.getMetaDataChunk(), Map.class));
         if (donationDto.getDocumentDto() != null && donationDto.getDocumentDto().getFileName() != null) {
             donation.setDocument(documentMapper.dtoToEntity(donationDto.getDocumentDto()));
@@ -54,7 +54,7 @@ public class DonationMapper implements BaseMapper<Donation, DonationDto> {
         donationDto.setCause( refDataMapper.entityToDto( donation.getCause() ) );
         donationDto.setDescription( donation.getDescription() );
         donationDto.setNotes( donation.getNotes() );
-        donationDto.setDueDateString(donation.getDueDate().format(formatter));
+        donationDto.setDueDateString(DateUtil.getFormattedDateString(donation.getDueDate()));
         donationDto.setMetaDataChunk(gson.toJson(donation.getMetaData(), Map.class));
         if (donation.getDocument() != null) {
             donationDto.setDocumentDto(documentMapper.entityToDto(donation.getDocument()));

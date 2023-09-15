@@ -5,6 +5,7 @@ import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.DocumentDto;
+import au.com.mason.expensemanager.dto.DocumentListDto;
 import au.com.mason.expensemanager.dto.MoveFilesDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
 import au.com.mason.expensemanager.service.DocumentService;
@@ -26,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -119,6 +121,22 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
+
+	@GetMapping(value = "/documents/{id}/archive", produces = "application/json",
+			consumes = "application/json", headers = "Accept=application/json")
+	String archiveFolder(@PathVariable Long id) throws Exception {
+
+		LOGGER.info("entering DocumentController archiveFolder - " + id);
+
+		Document folder = documentService.getById(id);
+		folder.setArchived(true);
+
+		documentService.updateDocument(folder);
+
+		LOGGER.info("leaving DocumentController archiveFolder - " + id);
+
+		return "{\"filePath\":\"" + folder.getFolderPath() + "\"}";
+	}
 	
 	@PostMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json")
 	String createDirectory(@RequestBody DocumentDto directory) throws Exception {
@@ -207,13 +225,13 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	}
 	
 	@RequestMapping(value = "/documents/list", method = RequestMethod.POST)
-	public List<DocumentDto> getFiles(@RequestBody String folder) throws Exception {
-		LOGGER.info("entering DocumentController getFiles - " + folder);		
-		List<DocumentDto> documents = convertList(documentService.getAll(folder));
+	public List<DocumentDto> getFiles(@RequestBody DocumentListDto documentListDto) throws Exception {
+		LOGGER.info("entering DocumentController getFiles - " + documentListDto.getFolderPath());
+		List<DocumentDto> documents = convertList(documentService.getAll(documentListDto.getFolderPath(), documentListDto.getIncludeArchived()));
 
 		Collections.sort(documents);
 
-		LOGGER.info("leaving DocumentController getFiles - " + folder);			
+		LOGGER.info("leaving DocumentController getFiles - " + documentListDto.getFolderPath());
 
 		return documents;
 	}

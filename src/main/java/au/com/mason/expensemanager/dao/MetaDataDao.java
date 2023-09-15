@@ -4,10 +4,10 @@ import au.com.mason.expensemanager.domain.Metadata;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
 
 public class MetaDataDao<T extends Metadata> extends BaseDao<T> {
 

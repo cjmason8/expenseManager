@@ -1,24 +1,20 @@
 package au.com.mason.expensemanager.dao;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
-
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.util.DateUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
+import org.apache.commons.lang3.StringUtils;
 
 @Repository
 @Transactional
@@ -93,9 +89,9 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 	
 	public List<Expense> findExpenses(SearchParamsDto searchParamsDto) {
-		String sql = "SELECT * FROM transactions e LEFT JOIN refdata r on e.entrytypeId = r.id "
+		String sql = "SELECT e.* FROM transactions e LEFT JOIN refdata r on e.entrytypeId = r.id "
 				+ "where transactiontype = 'EXPENSE' AND e.recurringtypeid IS NULL ";
-		if (!StringUtils.isEmpty(searchParamsDto.getTransactionType())) {
+		if (searchParamsDto.getTransactionType() != null) {
 			sql += "AND lower(r.description) = lower('" + searchParamsDto.getTransactionType().getDescription() + "') ";
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getKeyWords())) {

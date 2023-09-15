@@ -1,23 +1,20 @@
 package au.com.mason.expensemanager.domain;
 
-import java.util.Map;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-
 import au.com.mason.expensemanager.dao.MyJsonType;
 import au.com.mason.expensemanager.processor.EmailProcessor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import java.util.Map;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @NamedQueries(
 		value = {
@@ -33,7 +30,6 @@ import au.com.mason.expensemanager.processor.EmailProcessor;
 		})
 @Entity
 @Table(name="refdata")
-@TypeDef(name = "MyJsonType", typeClass = MyJsonType.class)
 public class RefData {
 
 	public static final String GET_ALL_BY_TYPE = "RefData.Repository.GetAllByType";
@@ -49,7 +45,7 @@ public class RefData {
 	private RefDataType type;
 	
     @Column
-	@Type(type = "MyJsonType")
+	@JdbcTypeCode(SqlTypes.JSON)
     private Map<String, String> metaData;
     
 	private String emailKey;

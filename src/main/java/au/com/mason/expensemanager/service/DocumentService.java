@@ -29,10 +29,10 @@ public class DocumentService {
 	@Autowired
 	private DocumentDao documentDao;
 	
-	public Document updateDocument(Document document) throws Exception {
+	public Document updateDocument(Document document) {
 		documentDao.update(document);
 		
-		if (document.isFolder() && !document.getOriginalFileName().equals(document.getFileName())) {
+		if (document.isFolder() && document.getOriginalFileName() != null && !document.getOriginalFileName().equals(document.getFileName())) {
 			documentDao.updateDirectoryPaths(document.getFolderPath() + "/" + document.getOriginalFileName(), document.getFolderPath() + "/" + document.getFileName());
 		}
 		
@@ -106,9 +106,9 @@ public class DocumentService {
 		document.setMetaData(parent.getMetaData());
 	}
 	
-	public Document createDirectory(Document directory) throws Exception {
+	public Document createDirectory(Document directory) {
 		String folderPathString = "";
-		if (directory.getFolderPath().indexOf("root") != -1) {
+		if (directory.getFolderPath().contains("root")) {
 			folderPathString = docsFolder + "/expenseManager/filofax/" + directory.getFolderPath().replace("root", "") + "/";
 		} else {
 			folderPathString = directory.getFolderPath();
@@ -153,8 +153,8 @@ public class DocumentService {
 		return documentDao.getById(id);
 	}
 	
-	public List<Document> getAll(String folder) throws Exception {
-		return documentDao.getAll(folder);
+	public List<Document> getAll(String folder, boolean includeArchived) throws Exception {
+		return documentDao.getAll(folder, includeArchived);
 	}
 	
 	public void moveFiles(String fullFolderPath, Long[] files) {

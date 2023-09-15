@@ -6,11 +6,11 @@ import au.com.mason.expensemanager.dto.DonationSearchDto;
 import au.com.mason.expensemanager.util.DateUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -31,7 +31,7 @@ public class DonationDao extends BaseDao<Donation> {
 	}
 	
 	public List<Donation> findDonations(DonationSearchDto donationSearchDto) {
-		String sql = "SELECT * from donations d LEFT JOIN refdata r on d.causeId = r.id where ";
+		String sql = "SELECT d.* from donations d LEFT JOIN refdata r on d.causeId = r.id where ";
 		boolean addAnd = false;
 		if (donationSearchDto.getCause() != null) {
 			addAnd = true;

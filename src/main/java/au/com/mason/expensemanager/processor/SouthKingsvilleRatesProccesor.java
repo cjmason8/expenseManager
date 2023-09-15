@@ -62,7 +62,7 @@ public class SouthKingsvilleRatesProccesor extends Processor {
 		}		
 	}
 
-	private void handleFirst(Message message, RefData refData) throws MessagingException, IOException, Exception {
+	private void handleFirst(Message message, RefData refData) throws Exception {
 		if (message.isMimeType("multipart/*")) {
 	        MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
 	        int count = mimeMultipart.getCount();

@@ -2,6 +2,7 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
+import au.com.mason.expensemanager.util.DateUtil;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -12,8 +13,6 @@ import org.springframework.stereotype.Component;
 public class RentalPaymentMapper implements BaseMapper<RentalPayment, RentalPaymentDto> {
     @Autowired
     private DocumentMapper documentMapper;
-
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     public RentalPayment dtoToEntity(RentalPaymentDto rentalPaymentDto) {
         if ( rentalPaymentDto == null ) {
@@ -38,8 +37,8 @@ public class RentalPaymentMapper implements BaseMapper<RentalPayment, RentalPaym
             rentalPayment.setTotalRent( new BigDecimal( rentalPaymentDto.getTotalRent() ) );
         }
         rentalPayment.setProperty( rentalPaymentDto.getProperty() );
-        rentalPayment.setStatementFrom(LocalDate.parse(rentalPaymentDto.getStatementFromString(), formatter));
-        rentalPayment.setStatementTo(LocalDate.parse(rentalPaymentDto.getStatementToString(), formatter));
+        rentalPayment.setStatementFrom(DateUtil.getFormattedDate(rentalPaymentDto.getStatementFromString()));
+        rentalPayment.setStatementTo(DateUtil.getFormattedDate(rentalPaymentDto.getStatementToString()));
         if (rentalPaymentDto.getDocumentDto() != null && rentalPaymentDto.getDocumentDto().getFileName() != null) {
             rentalPayment.setDocument(documentMapper.dtoToEntity(rentalPaymentDto.getDocumentDto()));
         }
@@ -68,8 +67,8 @@ public class RentalPaymentMapper implements BaseMapper<RentalPayment, RentalPaym
         if ( rentalPayment.getOtherFee() != null ) {
             rentalPaymentDto.setOtherFee( rentalPayment.getOtherFee().toString() );
         }
-        rentalPaymentDto.setStatementFromString(rentalPayment.getStatementFrom().format(formatter));
-        rentalPaymentDto.setStatementToString(rentalPayment.getStatementTo().format(formatter));
+        rentalPaymentDto.setStatementFromString(DateUtil.getFormattedDateString(rentalPayment.getStatementFrom()));
+        rentalPaymentDto.setStatementToString(DateUtil.getFormattedDateString(rentalPayment.getStatementTo()));
         if (rentalPayment.getDocument() != null) {
             rentalPaymentDto.setDocumentDto(documentMapper.entityToDto(rentalPayment.getDocument()));
         }
