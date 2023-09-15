@@ -1,6 +1,5 @@
 package au.com.mason.expensemanager.dao;
 
-import au.com.mason.expensemanager.controller.DocumentController;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
@@ -10,8 +9,6 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.apache.commons.lang3.StringUtils;
@@ -19,8 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 @Repository
 @Transactional
 public class DocumentDao extends MetaDataDao<Document> {
-
-	private static Logger LOGGER = LogManager.getLogger(DocumentDao.class);
 	
 	public DocumentDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(Document.class, entityManager);
@@ -28,7 +23,6 @@ public class DocumentDao extends MetaDataDao<Document> {
 
 	public List<Document> getAll(String folderPath, boolean includeArchived) {
 		String queryName = includeArchived ? Document.GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED : Document.GET_ALL_BY_FOLDER_PATH;
-		LOGGER.info("queryName: " + queryName);
 		Query query = entityManager.createNamedQuery(queryName, Document.class);
 		query.setParameter("folderPath", folderPath);
 		return query.getResultList();
