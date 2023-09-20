@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.Map;
@@ -34,7 +35,8 @@ public class Document implements Metadata {
 	public static final String GET_ALL_BY_FOLDER_PATH_AND_FILENAME = "Document.Repository.GetAllByFolderPathAndFilename";
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "documents_seq")
+	@SequenceGenerator(name = "documents_seq", sequenceName = "documents_seq", allocationSize = 1)
 	private long id;
 
 	private String fileName;

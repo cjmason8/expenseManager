@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.Date;
@@ -29,7 +30,8 @@ public class Notification {
 	public static final String FIND_FOR_EXPENSE = "Notification.Repository.FindForExpense";
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "notifications_seq")
+	@SequenceGenerator(name = "notifications_seq", sequenceName = "notifications_seq", allocationSize = 1)
 	private long id;
 	
 	@OneToOne

@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.Date;
@@ -31,7 +32,8 @@ public class Donation {
 	public Donation() {}
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "donations_seq")
+	@SequenceGenerator(name = "donations_seq", sequenceName = "donations_seq", allocationSize = 1)
 	private long id;
 
 	@OneToOne

@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -37,7 +38,8 @@ public class RefData {
 	public static final String GET_ALL_WITH_EMAIL_KEY = "RefData.Repository.GetAllWithEmailKey";
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "refdata_seq")
+	@SequenceGenerator(name = "refdata_seq", sequenceName = "refdata_seq", allocationSize = 1)
 	private long id;
 
 	private String description;

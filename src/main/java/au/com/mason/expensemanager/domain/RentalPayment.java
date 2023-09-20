@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,7 +18,8 @@ public class RentalPayment {
 	public RentalPayment() {}
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "rentalpayments_seq")
+	@SequenceGenerator(name = "rentalpayments_seq", sequenceName = "rentalpayments_seq", allocationSize = 1)
 	private long id;
 
 	private BigDecimal managementFee = new BigDecimal(0);
