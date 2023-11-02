@@ -34,10 +34,14 @@ public abstract class LumoProcessor extends Processor {
 		        BodyPart bodyPart = mimeMultipart.getBodyPart(i);
 		        if (bodyPart.isMimeType("text/html")) {
 		            body = (String) bodyPart.getContent();
-		            int startIndex = body.indexOf("debited $");
-					int stopIndex = body.indexOf(" on", startIndex);
-					amount = body.substring(startIndex + 9, stopIndex).trim();
-		            String dueDateString = body.substring(stopIndex + 4, body.indexOf(" unless", startIndex)).trim();
+		            int startIndex = body.indexOf("TOTAL AMOUNT DUE");
+					startIndex = body.indexOf("$", startIndex);
+					int stopIndex = body.indexOf("<", startIndex);
+					amount = body.substring(startIndex, stopIndex).trim();
+					startIndex = body.indexOf("DUE DATE");
+					startIndex = body.indexOf("white", startIndex) + 7;
+					stopIndex = body.indexOf("<", startIndex);
+		            String dueDateString = body.substring(startIndex, stopIndex).trim();
 		            DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("d MMM yy").toFormatter().localizedBy(Locale.ENGLISH);
 
 		            dueDate = LocalDate.parse(dueDateString, formatter);
