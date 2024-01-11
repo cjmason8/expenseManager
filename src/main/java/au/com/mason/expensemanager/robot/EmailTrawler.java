@@ -115,7 +115,7 @@ public class EmailTrawler {
 	}
 
 	private boolean matchEmail(String email) {
-		List<String> blackListedEmails = List.of("tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com", "storm", "marvel", "paypal", "tennis");
+		List<String> blackListedEmails = List.of("tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com", "storm", "marvel", "paypal", "tennis", "mightymunch");
 
 		return blackListedEmails.stream().anyMatch(email::contains);
 	}
