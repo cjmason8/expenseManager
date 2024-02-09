@@ -19,7 +19,7 @@ public class SearchController {
 	@Autowired
 	private SearchService searchService;
 	
-	private static Logger LOGGER = LogManager.getLogger(SearchController.class);
+	private static final Logger LOGGER = LogManager.getLogger(SearchController.class);
 	
 	@PostMapping(value = "/search", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")

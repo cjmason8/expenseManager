@@ -25,7 +25,7 @@ public class IncomeController extends BaseController<Income, IncomeDto> {
 		super(incomeMapper);
 	}
 	
-	private static Logger LOGGER = LogManager.getLogger(IncomeController.class);
+	private static final Logger LOGGER = LogManager.getLogger(IncomeController.class);
 	
 	@RequestMapping(value = "/incomes/{id}", method = RequestMethod.GET, produces = "application/json")
 	IncomeDto getIncome(@PathVariable Long id) throws Exception {

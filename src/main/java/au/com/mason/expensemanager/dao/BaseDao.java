@@ -8,7 +8,7 @@ import java.util.List;
 @Transactional
 public class BaseDao<T> {
 
-	private Class<T> className;
+	private final Class<T> className;
 	protected EntityManager entityManager;
 	
 	public BaseDao(Class<T> className, EntityManager entityManager) {
@@ -44,9 +44,8 @@ public class BaseDao<T> {
 	}
 
 
-	public List<T> findAll() {
-		Query query = entityManager.createQuery("FROM " + className.getName());
-		return query.getResultList();
+	public List findAll() {
+		return entityManager.createQuery("FROM " + className.getName()).getResultList();
 	}
 
 }

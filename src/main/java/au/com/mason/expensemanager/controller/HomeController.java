@@ -39,7 +39,7 @@ public class HomeController {
 	@Autowired
 	private IncomeController incomeController;
 	
-	private static Logger LOGGER = LogManager.getLogger(HomeController.class);
+	private static final Logger LOGGER = LogManager.getLogger(HomeController.class);
 	
 	@RequestMapping(value = "/week", method = RequestMethod.GET, produces = "application/json")
 	TransactionsForWeekDto expensesForWeek() throws Exception {

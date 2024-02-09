@@ -27,7 +27,7 @@ public class NotificationController extends BaseController<Notification, Notific
 		super(notificationMapper);
 	}
 	
-	private static Logger LOGGER = LogManager.getLogger(NotificationController.class);
+	private static final Logger LOGGER = LogManager.getLogger(NotificationController.class);
 	
 	@RequestMapping(value = "/notifications", method = RequestMethod.GET, produces = "application/json")
 	List<NotificationDto> getNotifications() throws Exception {

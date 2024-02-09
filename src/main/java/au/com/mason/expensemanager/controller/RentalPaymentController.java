@@ -4,7 +4,6 @@ import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.dto.RentalPaymentDto;
 import au.com.mason.expensemanager.dto.RentalPaymentInfoDto;
 import au.com.mason.expensemanager.dto.StatusResponseDto;
-import au.com.mason.expensemanager.mapper.RefDataMapper;
 import au.com.mason.expensemanager.mapper.RentalPaymentMapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
 import java.time.LocalDate;
@@ -27,7 +26,7 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
 	@Autowired
 	private RentalPaymentService rentalPaymentService;
 	
-	private static Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
+	private static final Logger LOGGER = LogManager.getLogger(RentalPaymentController.class);
 
 	@Autowired
 	public RentalPaymentController(RentalPaymentMapper rentalPaymentMapper) {
@@ -93,7 +92,7 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
 	
 	@DeleteMapping(value = "/rentalPayments/{id}", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	StatusResponseDto deleteRentalPayment(@PathVariable Long id) throws Exception {
+	StatusResponseDto deleteRentalPayment(@PathVariable Long id) {
 		LOGGER.info("entering RentalPaymentController deleteRentalPayment - " + id);
 		rentalPaymentService.deleteRentalPayment(id);
 		LOGGER.info("leaving RentalPaymentController deleteRentalPayment - " + id);
@@ -102,7 +101,7 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
     }
 	
 	@GetMapping(value = "/rentalPayments/{id}", produces = "application/json")
-	RentalPaymentDto getRentalPayment(@PathVariable Long id) throws Exception {
+	RentalPaymentDto getRentalPayment(@PathVariable Long id) {
 		LOGGER.info("entering RentalPaymentController getRentalPayment - " + id);
 		RentalPayment rentalPayment = rentalPaymentService.getRentalPayment(id);
 		LOGGER.info("leaving RentalPaymentController getRentalPayment - " + id);

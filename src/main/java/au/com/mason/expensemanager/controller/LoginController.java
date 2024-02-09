@@ -22,7 +22,7 @@ public class LoginController {
 	@Autowired
 	private UserAuthenticationService userAuthenticationService;
 	
-	private static Logger LOGGER = LogManager.getLogger(LoginController.class);
+	private static final Logger LOGGER = LogManager.getLogger(LoginController.class);
 	
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
 	String login(@RequestBody LoginInput loginInput) {

@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class MetaDataDao<T extends Metadata> extends BaseDao<T> {
 
@@ -19,7 +20,7 @@ public class MetaDataDao<T extends Metadata> extends BaseDao<T> {
     protected List<T> filterByMetadata(SearchParamsDto searchParamsDto, List<T> results) {
         Map<String, Object> metaData = (Map<String, Object>) gson.fromJson(searchParamsDto.getMetaDataChunk(), Map.class);
         List<T> validResults = new ArrayList<>();
-        results.forEach(result -> {
+        results.stream().filter(result -> result.getMetaData() != null).forEach(result -> {
             boolean isValid = false;
             for (String val : metaData.keySet()) {
                 if (result.getMetaData().get(val) == null) continue;
@@ -42,15 +43,15 @@ public class MetaDataDao<T extends Metadata> extends BaseDao<T> {
                 }
                 else if (result.getMetaData().get(val) instanceof ArrayList) {
                     List<String> values = (List<String>) result.getMetaData().get(val);
-                    if (values.stream().filter(value -> convertToStringAndLower(value).equals(convertToStringAndLower(metaData.get(val)))).count() > 0) {
+                    if (values.stream().anyMatch(value -> convertToStringAndLower(value).equals(convertToStringAndLower(metaData.get(val))))) {
                         isValid = true;
                     }
                 }
-                else if (convertToStringAndLower(result.getMetaData().get(val)).equals(convertToStringAndLower(metaData.get(val)))) {
+                else if (Objects.equals(convertToStringAndLower(result.getMetaData().get(val)), convertToStringAndLower(metaData.get(val)))) {
                     isValid = true;
                 }
                 if (searchParamsDto.getKeyWords() != null && result.getMetaData().get(val) != null
-                        && convertToStringAndLower(result.getMetaData().get(val)).indexOf(convertToStringAndLower(searchParamsDto.getKeyWords())) != -1) {
+                        && Objects.requireNonNull(convertToStringAndLower(result.getMetaData().get(val))).contains(convertToStringAndLower(searchParamsDto.getKeyWords()))) {
                     isValid = true;
                 }
             }

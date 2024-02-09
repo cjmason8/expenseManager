@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public abstract class BaseController<V, F> {
 
-	private BaseMapper<V, F> baseMapper;
+	private final BaseMapper<V, F> baseMapper;
 
 	public BaseController(BaseMapper<V, F> baseMapper) {
 		this.baseMapper = baseMapper;
@@ -16,7 +16,7 @@ public abstract class BaseController<V, F> {
 
 	public List<F> convertList(List<V> items) throws Exception {
 		return items.stream()
-		          .map(item -> convertToDtoWrapper(item))
+		          .map(this::convertToDtoWrapper)
 		          .collect(Collectors.toList());
 	}
 	

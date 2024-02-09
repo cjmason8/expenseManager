@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +62,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		super(documentMapper);
 	}
 	
-	private static Logger LOGGER = LogManager.getLogger(DocumentController.class);
+	private static final Logger LOGGER = LogManager.getLogger(DocumentController.class);
 	
 	@PostMapping(value = "/documents/move", consumes = { "application/json" })
 	String moveFiles(@RequestBody MoveFilesDto moveFilesDto) {
@@ -190,7 +191,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	public ResponseEntity<byte[]> getFile(@PathVariable Long id, @PathVariable String type) throws Exception {
 		LOGGER.info("entering DocumentController getFile - " + id);
 
-		Path path = Paths.get(getPath(id, type));
+		Path path = Paths.get(Objects.requireNonNull(getPath(id, type)));
 		String mediaType = getContentType(path.getFileName().toString());
 
 		HttpHeaders headers = new HttpHeaders();

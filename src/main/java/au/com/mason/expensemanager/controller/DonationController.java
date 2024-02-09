@@ -31,7 +31,7 @@ public class DonationController extends BaseController<Donation, DonationDto> {
 		super(donationMapper);
 	}
 	
-	private static Logger LOGGER = LogManager.getLogger(DonationController.class);
+	private static final Logger LOGGER = LogManager.getLogger(DonationController.class);
 
 	@RequestMapping(value = "/donations", method = RequestMethod.GET, produces = "application/json")
 	List<DonationDto> getDonations() throws Exception {

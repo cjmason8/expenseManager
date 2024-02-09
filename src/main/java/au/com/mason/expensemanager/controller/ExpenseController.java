@@ -21,7 +21,7 @@ import au.com.mason.expensemanager.service.ExpenseService;
 @RestController
 public class ExpenseController extends BaseController<Expense, ExpenseDto> {
 	
-	private static Logger LOGGER = LogManager.getLogger(ExpenseController.class);
+	private static final Logger LOGGER = LogManager.getLogger(ExpenseController.class);
 	
 	@Autowired
 	private ExpenseService expenseService;

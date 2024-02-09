@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.controller;
 
+import au.com.mason.expensemanager.dto.EmailTrawlerResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,11 +15,11 @@ public class EmailTrawlerController {
 	private EmailTrawler emailTrawler;
 	
 	@RequestMapping(value = "/runEmailTrawler", method = RequestMethod.GET, produces = "application/json")
-	String expensesForWeek() throws Exception {
+	EmailTrawlerResponseDto expensesForWeek() {
 		
 		emailTrawler.check();
 		
-		return "{\"success\":\"true\"}";
+		return new EmailTrawlerResponseDto("true");
     }
 
 }

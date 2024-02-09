@@ -30,9 +30,8 @@ public class RefDataController extends BaseController<RefData, RefDataDto> {
 		super(refDataMapper);
 	}
 	
-	private static Logger LOGGER = LogManager.getLogger(RefDataController.class);
-	private Gson gson = new GsonBuilder().serializeNulls().create();
-	
+	private static final Logger LOGGER = LogManager.getLogger(RefDataController.class);
+
 	@RequestMapping(value = "/refDatas/type/{type}", method = RequestMethod.GET, produces = "application/json")
 	List<RefDataDto> getRefDatasByType(@PathVariable String type) throws Exception {
 		LOGGER.info("entering RefDataController getRefDatasByType - " + type);
