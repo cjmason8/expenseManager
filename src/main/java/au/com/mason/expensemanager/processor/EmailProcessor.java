@@ -23,6 +23,8 @@ public enum EmailProcessor {
 	WODONGA_RENT_STATEMENT(WodongaRentalStatementProccesor.class),
 	DINGLEY_RATES(DingleyRatesProcessor.class),
 	VERADA_REGO(VeradaRegoProcessor.class),
+	FORESTER_REGO(ForesterRegoProcessor.class),
+	FORESTER_INSURANCE(ForesterInsuranceProccesor.class),
 	SOUTH_KINGSVILLE_RENT_STATEMENT(SouthKingsvilleRentalStatementProccesor.class);
 	
 	private Class processor;
