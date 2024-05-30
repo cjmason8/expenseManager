@@ -78,6 +78,7 @@ public class EmailTrawler {
 
 			for (Message message : messages) {
 				if (Arrays.stream(message.getFrom()).filter(f -> matchEmail(f.toString())).count() > 0) {
+					message.getContent();
 					continue;
 				}
 

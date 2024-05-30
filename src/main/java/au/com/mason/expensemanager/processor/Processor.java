@@ -67,7 +67,7 @@ public abstract class Processor {
 				}
 			}
 		}
-		BigDecimal reqAmount = new BigDecimal(amount.replace("$", ""));
+		BigDecimal reqAmount = new BigDecimal(amount.replace("$", "").replace(",", ""));
 		if (expenses.size() == 0 || reqExpense == null) {
 			createExpense(refData, dueDate, document, notes, reqAmount);
 		}
