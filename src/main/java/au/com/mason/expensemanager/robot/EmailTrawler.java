@@ -78,7 +78,7 @@ public class EmailTrawler {
 
 			for (Message message : messages) {
 				if (Arrays.stream(message.getFrom()).filter(f -> matchEmail(f.toString())).count() > 0) {
-					message.getContent();
+					markAsRead(message);
 					continue;
 				}
 
@@ -100,9 +100,7 @@ public class EmailTrawler {
 				}
 				
 				//mark as read
-				message.getContent();
-				MimeMessage source = (MimeMessage) message;
-				MimeMessage copy = new MimeMessage(source);
+				markAsRead(message);
 			}
 
 			// close the store and folder objects
@@ -113,6 +111,12 @@ public class EmailTrawler {
 			LOGGER.error(e);
 			e.printStackTrace();
 		}
+	}
+
+	private static void markAsRead(Message message) throws IOException, MessagingException {
+		message.getContent();
+		MimeMessage source = (MimeMessage) message;
+		MimeMessage copy = new MimeMessage(source);
 	}
 
 	private boolean matchEmail(String email) {
