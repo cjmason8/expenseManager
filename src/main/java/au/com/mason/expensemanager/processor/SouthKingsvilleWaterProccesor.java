@@ -30,45 +30,31 @@ public class SouthKingsvilleWaterProccesor extends Processor {
 	public void execute(Message message, RefData refData) throws Exception {
 		String body;
 		System.out.println("Entering South Kingsville Water");
-		if (message.isMimeType("multipart/*")) {
-			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
-			int count = mimeMultipart.getCount();
-			LocalDate dueDate = null;
-			String[] amount = new String[1];
-			DateTimeFormatter dueDateFormatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy").toFormatter();
-			for (int i = 0; i < count; i++) {
-				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-				if (bodyPart.isMimeType("text/html")) {
-					body = (String) bodyPart.getContent();
-					String url = body.substring(body.indexOf("https://viewpoint"), body.indexOf("\"", body.indexOf("https://viewpoint")));
-					int start = body.indexOf(">By") + 4;
-					dueDate = LocalDate.parse(body.substring(start, body.indexOf("<", start)), dueDateFormatter);
+		LocalDate dueDate = null;
+		String amount = null;
+		if (message.isMimeType("text/html")) {
+			body = (String) message.getContent();
+			String urlContent = body.substring(0, body.indexOf("View my bill"));
+			String url = urlContent.substring(urlContent.lastIndexOf("https"), urlContent.lastIndexOf("style") - 2);
+			String dateContent = body.substring(body.indexOf("Pay by") + 13);
+			dateContent = dateContent.substring(0, dateContent.indexOf("</span"));
+			dueDate = LocalDate.parse(dateContent.substring(dateContent.lastIndexOf(">") + 1), DateTimeFormatter.ofPattern("dd LLL yyyy"));
+			amount = body.substring(body.indexOf("$") + 1, body.indexOf("<", body.indexOf("$")));
 
-					HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS)
-							.build();
+			HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS)
+					.build();
 
-					HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofMinutes(1))
-							.GET().build();
+			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofMinutes(1))
+					.GET().build();
 
-					HttpResponse<byte[]> response = client.send(request, BodyHandlers.ofByteArray());
-					
-					String content = PdfReader.extract(response.body());
-					
-					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> {
-						if (line.indexOf("PLEASE PAY") != -1) {
-							amount[0] = line.substring(line.indexOf("$") + 1);
-						}
-					});
-					
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-					
-					String fileName = "SouthKingsvilleWater-" + formatter.format(dueDate) + ".pdf";
-					Document document = documentService.createDocumentFromEmailForExpense(response.body(), fileName);
+			HttpResponse<byte[]> response = client.send(request, BodyHandlers.ofByteArray());
 
-					updateExpense(refData, dueDate, amount[0], document, null);
-				}
-			}
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+
+			String fileName = "SouthKingsvilleWater-" + formatter.format(dueDate) + ".pdf";
+			Document document = documentService.createDocumentFromEmailForExpense(response.body(), fileName);
+
+			updateExpense(refData, dueDate, amount, document, null);
 		}
 	}
-
 }
