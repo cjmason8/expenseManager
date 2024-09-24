@@ -20,7 +20,9 @@ public class ExceptionHandlerController {
     @ExceptionHandler(value = {Exception.class, RuntimeException.class})
     public ResponseEntity<ErrorDto> defaultErrorHandler(HttpServletRequest request, Exception e) {
     	
-    	LOGGER.error("Unhandled Exception - " + request.getServletPath(), e);
+    	if (!e.getMessage().contains("No static resource")) {
+            LOGGER.error("Unhandled Exception - " + request.getServletPath(), e);
+        }
     	
     	return new ResponseEntity<>(new ErrorDto(ExceptionUtils.getRootCauseMessage(e), ExceptionUtils.getStackTrace(e)), HttpStatus.INTERNAL_SERVER_ERROR);
     }
