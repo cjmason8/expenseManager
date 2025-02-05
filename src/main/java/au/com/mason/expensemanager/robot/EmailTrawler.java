@@ -139,6 +139,9 @@ public class EmailTrawler {
 				else if (refData.getEmailProcessor().equals(EmailProcessor.FORD_INSURANCE)) {
 					return bodyContains(message, "FORD FAIRMONT");
 				}
+				else if (refData.getEmailProcessor().equals(EmailProcessor.FORESTER_INSURANCE)) {
+					return bodyContains(message, "SUBARU FORESTER");
+				}
 				else {
 					return bodyContains(message, "MAZDA TRIBUTE");
 				}
