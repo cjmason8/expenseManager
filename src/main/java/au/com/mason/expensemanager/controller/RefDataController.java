@@ -80,7 +80,7 @@ public class RefDataController extends BaseController<RefData, RefDataDto> {
     }
 	
 	@RequestMapping(value = "/refDatas/{id}", method = RequestMethod.DELETE, produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+			headers = "Accept=application/json")
 	StatusResponseDto deleteRefData(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering RefDataController deleteRefData - " + id);
 		refDataService.deleteRefData(id);

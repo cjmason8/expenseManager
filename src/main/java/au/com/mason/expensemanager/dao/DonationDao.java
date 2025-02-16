@@ -25,9 +25,7 @@ public class DonationDao extends BaseDao<Donation> {
 	}
 
 	public List<Donation> getAll() {
-		Query query = entityManager.createNamedQuery(Donation.GET_ALL, Donation.class);
-		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
-		return query.getResultList();
+		return entityManager.createNamedQuery(Donation.GET_ALL, Donation.class).getResultList();
 	}
 	
 	public List<Donation> findDonations(DonationSearchDto donationSearchDto) {
@@ -68,9 +66,7 @@ public class DonationDao extends BaseDao<Donation> {
 		}
 		sql += " ORDER BY dueDate DESC,r.description";
 		
-		Query query = entityManager.createNativeQuery(sql, Donation.class);
-		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
-		return query.getResultList();
+		return entityManager.createNativeQuery(sql, Donation.class).getResultList();
 	}
 
 }

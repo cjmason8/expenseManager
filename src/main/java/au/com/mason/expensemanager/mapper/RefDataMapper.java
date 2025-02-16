@@ -45,6 +45,7 @@ public class RefDataMapper implements BaseMapper<RefData, RefDataDto> {
             refDataDto.setTypeDescription(refData.getType().getDescription());
         }
         refDataDto.setMetaDataChunk(gson.toJson(refData.getMetaData(), Map.class));
+        refDataDto.setDeleted(refData.isDeleted());
 
         return refDataDto;
     }

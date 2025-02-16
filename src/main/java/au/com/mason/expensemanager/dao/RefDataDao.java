@@ -27,15 +27,12 @@ public class RefDataDao extends BaseDao<RefData> {
 	
 	public List<RefData> getAll() {
 		Query query = entityManager.createNamedQuery(RefData.GET_ALL, RefData.class);
-		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 
 		return query.getResultList();
 	}	
 	
 	public List<RefData> getAllWithEmailKey() {
-		Query query = entityManager.createNamedQuery(RefData.GET_ALL_WITH_EMAIL_KEY, RefData.class);
-
-		return query.getResultList();
+		return entityManager.createNamedQuery(RefData.GET_ALL_WITH_EMAIL_KEY, RefData.class).getResultList();
 	}
 	
 	public List<RefData> findRefDatas(RefData refData) {
@@ -55,10 +52,7 @@ public class RefDataDao extends BaseDao<RefData> {
 		}
 		sql += "ORDER BY type,description";
 
-		Query query = entityManager.createNativeQuery(sql, RefData.class);
-		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
-
-		return query.getResultList();
+		return entityManager.createNativeQuery(sql, RefData.class).getResultList();
 	}
 	
 }

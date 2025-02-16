@@ -55,6 +55,7 @@ public class DonationMapper implements BaseMapper<Donation, DonationDto> {
         donationDto.setDescription( donation.getDescription() );
         donationDto.setNotes( donation.getNotes() );
         donationDto.setDueDateString(DateUtil.getFormattedDateString(donation.getDueDate()));
+        donationDto.setDueDate(donation.getDueDate());
         donationDto.setMetaDataChunk(gson.toJson(donation.getMetaData(), Map.class));
         if (donation.getDocument() != null) {
             donationDto.setDocumentDto(documentMapper.entityToDto(donation.getDocument()));

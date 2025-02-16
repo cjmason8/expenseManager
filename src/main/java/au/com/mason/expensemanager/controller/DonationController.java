@@ -72,7 +72,7 @@ public class DonationController extends BaseController<Donation, DonationDto> {
     }
 	
 	@DeleteMapping(value = "/donations/{id}", produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+			headers = "Accept=application/json")
 	StatusResponseDto deleteDonation(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering DonationController deleteDonation - " + id);
 		donationService.deleteDonation(id);

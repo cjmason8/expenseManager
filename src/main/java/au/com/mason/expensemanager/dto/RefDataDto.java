@@ -8,6 +8,7 @@ public class RefDataDto {
 	private String typeDescription;
 	private String description;
 	private String metaDataChunk;
+	private boolean deleted;
 	
 	public Long getId() {
 		return id;
@@ -56,5 +57,12 @@ public class RefDataDto {
 	public void setMetaDataChunk(String metaDataChunk) {
 		this.metaDataChunk = metaDataChunk;
 	}
-	
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
 }

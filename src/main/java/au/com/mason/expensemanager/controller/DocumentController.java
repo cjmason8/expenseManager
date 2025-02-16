@@ -75,7 +75,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	}
 			
 
-	@PostMapping(value = "/documents/upload", consumes = { "multipart/form-data" })
+	@PostMapping(value = "/documents/upload", consumes = { "multipart/form-data" }, produces="application/json")
 	DocumentDto uploadFile(@RequestPart("uploadFile") MultipartFile file, @RequestParam String type,
 			@RequestParam(required = false) String path) throws Exception {
 		

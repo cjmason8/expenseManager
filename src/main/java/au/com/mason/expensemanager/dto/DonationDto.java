@@ -1,11 +1,14 @@
 package au.com.mason.expensemanager.dto;
 
+import java.time.LocalDate;
+
 public class DonationDto {
 
 	private Long id;
 	private RefDataDto cause;
 	private String description;
 	private String dueDateString;
+	private LocalDate dueDate;
 	private String notes;
 	private DocumentDto documentDto;
 	private String metaDataChunk;
@@ -40,6 +43,14 @@ public class DonationDto {
 
 	public void setDueDateString(String dueDateString) {
 		this.dueDateString = dueDateString;
+	}
+
+	public void setDueDate(LocalDate dueDate) {
+		this.dueDate = dueDate;
+	}
+
+	public LocalDate getDueDate() {
+		return dueDate;
 	}
 
 	public String getNotes() {
