@@ -2,6 +2,7 @@ package au.com.mason.expensemanager.controller;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -90,6 +91,9 @@ public class HomeController {
 		transactionsForWeekDto.setThisWeek(localDate.format(FORMATTER));
 		if (localDate.isEqual(DateUtil.getMonday(LocalDate.now()))) {
 			transactionsForWeekDto.setUnpaidExpenses(expenseController.convertList(expenseService.getUnpaidBeforeWeek(localDate)));
+		}
+		else {
+			transactionsForWeekDto.setUnpaidExpenses(new ArrayList<>());
 		}
 		transactionsForWeekDto.setTotals();
 		
