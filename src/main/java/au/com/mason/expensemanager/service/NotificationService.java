@@ -19,13 +19,20 @@ public class NotificationService {
 	}
 	
 	public List<Notification> getAll() throws Exception {
-		return notificationDao.getUnread();
+		return notificationDao.getNotRemoved();
 	}
 	
 	public Notification markRead(Long id) throws Exception {
 		Notification notification = notificationDao.getById(id);
 		notification.setRead(true);
 		
+		return notificationDao.update(notification);
+	}
+
+	public Notification markRemoved(Long id) throws Exception {
+		Notification notification = notificationDao.getById(id);
+		notification.setRemoved(true);
+
 		return notificationDao.update(notification);
 	}
 	

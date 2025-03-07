@@ -2,7 +2,6 @@ package au.com.mason.expensemanager.dao;
 
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RefDataType;
-import au.com.mason.expensemanager.domain.Statics;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;

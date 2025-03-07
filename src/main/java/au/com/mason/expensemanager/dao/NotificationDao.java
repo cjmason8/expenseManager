@@ -17,8 +17,8 @@ public class NotificationDao extends BaseDao<Notification> {
 		super(Notification.class, entityManager);
 	}
 
-	public List<Notification> getUnread() {
-		Query query = entityManager.createNamedQuery(Notification.GET_UNREAD, Notification.class);
+	public List<Notification> getNotRemoved() {
+		Query query = entityManager.createNamedQuery(Notification.GET_NOT_REMOVED, Notification.class);
 
 		return query.getResultList();
 	}

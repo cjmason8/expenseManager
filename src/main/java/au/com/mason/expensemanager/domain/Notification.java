@@ -16,8 +16,8 @@ import java.util.Date;
 @NamedQueries(
 		value = {
 				@NamedQuery(
-						name = Notification.GET_UNREAD,
-						query = "FROM Notification where read = false"),
+						name = Notification.GET_NOT_REMOVED,
+						query = "FROM Notification where removed = false"),
 				@NamedQuery(
 						name = Notification.FIND_FOR_EXPENSE,
 						query = "FROM Notification where expense = :expense"),
@@ -26,7 +26,7 @@ import java.util.Date;
 @Table(name="notifications")
 public class Notification {
 
-	public static final String GET_UNREAD = "Notification.Repository.GetUnread";
+	public static final String GET_NOT_REMOVED = "Notification.Repository.GetNotRemoved";
 	public static final String FIND_FOR_EXPENSE = "Notification.Repository.FindForExpense";
 
 	@Id
@@ -43,6 +43,8 @@ public class Notification {
 	private boolean read = false;
 	
 	private Date created = new Date();
+
+	private boolean removed = false;
 
 	public long getId() {
 		return id;
@@ -74,6 +76,14 @@ public class Notification {
 
 	public void setRead(boolean read) {
 		this.read = read;
+	}
+
+	public void setRemoved(boolean removed) {
+		this.removed = removed;
+	}
+
+	public boolean isRemoved() {
+		return removed;
 	}
 
 	public LocalDate getCreated() {

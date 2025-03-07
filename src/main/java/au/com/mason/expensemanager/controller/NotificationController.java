@@ -47,6 +47,16 @@ public class NotificationController extends BaseController<Notification, Notific
 		
 		return convertToDto(result);
     }
+
+	@RequestMapping(value = "/notifications/markRemoved/{id}", method = RequestMethod.GET, produces = "application/json")
+	NotificationDto markRemoved(@PathVariable Long id) throws Exception {
+		LOGGER.info("entering NotificationController markRemoved - " + id);
+		Notification result = notificationService.markRemoved(id);
+
+		LOGGER.info("leaving NotificationController markRemoved - " + id);
+
+		return convertToDto(result);
+	}
 	
 	@RequestMapping(value = "/notifications/markUnRead/{id}", method = RequestMethod.GET, produces = "application/json")
 	NotificationDto markUnRead(@PathVariable Long id) throws Exception {
