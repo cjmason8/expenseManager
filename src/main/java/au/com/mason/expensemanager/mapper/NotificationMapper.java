@@ -36,7 +36,9 @@ public class NotificationMapper implements BaseMapper<Notification, Notification
         NotificationDto notificationDto = new NotificationDto();
 
         notificationDto.setId( notification.getId() );
-        notificationDto.setExpense( expenseMapper.entityToDto( notification.getExpense() ) );
+        if (notification.getExpense() != null) {
+            notificationDto.setExpense(expenseMapper.entityToDto(notification.getExpense()));
+        }
         notificationDto.setMessage( notification.getMessage() );
         notificationDto.setCreatedDateString(DateUtil.getFormattedDateString(notification.getCreated()));
         notificationDto.setRead( notification.isRead() );
