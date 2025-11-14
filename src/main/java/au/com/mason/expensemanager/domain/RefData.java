@@ -24,7 +24,7 @@ import org.hibernate.type.SqlTypes;
 						query = "FROM RefData WHERE type = :type ORDER BY type, description"),
 				@NamedQuery(
 						name = RefData.GET_ALL,
-						query = "FROM RefData ORDER BY type, description"),
+						query = "FROM RefData WHERE deleted = false ORDER BY type, description"),
 				@NamedQuery(
 						name = RefData.GET_ALL_WITH_EMAIL_KEY,
 						query = "FROM RefData WHERE emailKey IS NOT NULL"),

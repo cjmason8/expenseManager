@@ -55,14 +55,8 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
 		
 		List<RentalPayment> results = rentalPaymentService.getAll(property, startDate, endDate);
 		
-		Integer prevYear = null;
-		Integer nextYear = null;
-		if (rentalPaymentService.getAll(property, startDate.minus(1, ChronoUnit.YEARS), endDate.minus(1, ChronoUnit.YEARS)).size() > 0) {
-			prevYear = endDate.getYear() - 1;
-		}
-		if (rentalPaymentService.getAll(property, startDate.plus(1, ChronoUnit.YEARS), endDate.plus(1, ChronoUnit.YEARS)).size() > 0) {
-			nextYear = endDate.getYear() + 1;
-		}
+		Integer prevYear = endDate.getYear() - 1;;
+		Integer nextYear = endDate.getYear() + 1;
 		LOGGER.info("leaving RentalPaymentController getRentalPayments");
 
 		return new RentalPaymentInfoDto(convertList(results), prevYear, nextYear);
@@ -88,8 +82,7 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
     }
 	
 	
-	@DeleteMapping(value = "/rentalPayments/{id}", produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+	@DeleteMapping(value = "/rentalPayments/{id}", produces = "application/json")
 	StatusResponseDto deleteRentalPayment(@PathVariable Long id) {
 		LOGGER.info("entering RentalPaymentController deleteRentalPayment - " + id);
 		rentalPaymentService.deleteRentalPayment(id);

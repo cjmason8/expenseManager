@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -43,12 +44,14 @@ public class RentalPaymentService {
 	}
 	
 	public RentalPayment updateRentalPayment(RentalPayment rentalPayment) throws Exception {
+
+		RentalPayment existingRentalPayment = rentalPaymentDao.getById(rentalPayment.getId());
 		
 		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getFileName() == null) {
 			rentalPayment.setDocument(null);
 		}
 		
-		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null) {
+		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null && !Objects.equals(rentalPayment.getDocument().getFileName(), existingRentalPayment.getDocument().getFileName())) {
 			updateDocument(rentalPayment);
 		}
 		

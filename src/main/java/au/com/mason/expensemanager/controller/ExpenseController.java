@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -83,7 +84,7 @@ public class ExpenseController extends BaseController<Expense, ExpenseDto> {
     }
 	
 	@RequestMapping(value = "/expenses/{id}", method = RequestMethod.PUT, produces = "application/json", 
-			consumes = "application/json", headers = "Accept=application/json")
+			headers = "Accept=application/json")
 	ExpenseDto updateExpense(@RequestBody ExpenseDto expense, Long id) throws Exception {
 		LOGGER.info("entering ExpenseController updateExpense - " + id);		
 		Expense result = expenseService.updateTransaction(convertToEntity(expense));
@@ -93,8 +94,7 @@ public class ExpenseController extends BaseController<Expense, ExpenseDto> {
 		return convertToDto(result);
     }
 	
-	@RequestMapping(value = "/expenses/{id}", method = RequestMethod.DELETE, produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+	@DeleteMapping(value = "/expenses/{id}", produces = "application/json")
 	StatusResponseDto deleteExpense(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering ExpenseController deleteExpense - " + id);		
 		expenseService.deleteTransaction(id);

@@ -20,7 +20,7 @@ import jakarta.persistence.OneToOne;
 						query = "from Expense ORDER BY dueDate DESC,entryType.type"),
 				@NamedQuery(
 						name = Expense.GET_FOR_WEEK,
-						query = "from Expense where recurringType IS NULL AND dueDate >= to_date(:weekStartDate, 'yyyy-mm-dd') AND dueDate <= to_date(:weekLaterFromStartDate, 'yyyy-mm-dd') ORDER BY dueDate,entryType.type"),
+						query = "from Expense where recurringType IS NULL AND dueDate >= to_date(:weekStartDate, 'yyyy-mm-dd') AND dueDate <= to_date(:weekLaterFromStartDate, 'yyyy-mm-dd') AND deleted = false ORDER BY dueDate,entryType.type"),
 				@NamedQuery(
 						name = Expense.GET_UNPAID_BEFORE_WEEK,
 						query = "from Expense where recurringType IS NULL AND dueDate < to_date(:weekStartDate, 'yyyy-mm-dd') AND paid = false ORDER BY dueDate,entryType.type"),
