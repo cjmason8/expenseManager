@@ -25,7 +25,8 @@ public enum EmailProcessor {
 	VERADA_REGO(VeradaRegoProcessor.class),
 	FORESTER_REGO(ForesterRegoProcessor.class),
 	FORESTER_INSURANCE(ForesterInsuranceProccesor.class),
-	SOUTH_KINGSVILLE_RENT_STATEMENT(SouthKingsvilleRentalStatementProccesor.class);
+	SOUTH_KINGSVILLE_RENT_STATEMENT(SouthKingsvilleRentalStatementProccesor.class),
+	GLOBIRD_ELECTRICITY_AND_GAS(GlobirdElectricityAndGasProcessor.class);
 	
 	private Class processor;
 	
