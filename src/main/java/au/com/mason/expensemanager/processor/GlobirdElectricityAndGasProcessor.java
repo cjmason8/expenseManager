@@ -5,6 +5,7 @@ import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.pdf.PdfReader;
 import au.com.mason.expensemanager.util.CollectionUtil;
 import com.sun.mail.util.BASE64DecoderStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -27,8 +28,10 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
 			int count = mimeMultipart.getCount();
 			LocalDate dueDate = null;
+			LocalDate issueDate = null;
 			String amount = null;
 			Document document = null;
+			String notes = null;
 			boolean foundAmountDue = false;
 			for (int i = 0; i < count; i++) {
 				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
@@ -39,7 +42,10 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 					String content = PdfReader.extract(byteArray);
 					List<String> lines = CollectionUtil.splitAndConvert(content, "\n");
 					for (String line : lines) {
-						if (line.startsWith("Due Date")) {
+						if (line.startsWith("Issue Date")) {
+							issueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1), DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+						}
+						else if (line.startsWith("Due Date")) {
 							dueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1), DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
 						}
 						else if (line.startsWith("Amount Due")) {
@@ -52,13 +58,22 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 					}
 
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-					String fileName = "Globird - " + formatter.format(dueDate) + ".pdf";
+					String fileName;
+					if (dueDate == null) {
+						fileName = "Globird - " + formatter.format(issueDate) + ".pdf";
+						dueDate = issueDate.plusMonths(1).withDayOfMonth(10);
+						notes = "Amount due is zero due to credit, therefore due date is fake.";
+						amount = BigDecimal.ZERO.toString();
+					}
+					else {
+						fileName = "Globird - " + formatter.format(dueDate) + ".pdf";
+					}
 					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
 				}
 			}
 
 			LOGGER.info("Adding a Globird expense - dueDate - " + dueDate + ", amount - " + amount);
-			updateExpense(refData, dueDate, amount, document);
+			updateExpense(refData, dueDate, amount, document, notes);
 		}
 	}
 
