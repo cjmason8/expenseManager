@@ -8,6 +8,7 @@ import au.com.mason.expensemanager.service.IncomeService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,9 +56,8 @@ public class IncomeController extends BaseController<Income, IncomeDto> {
 		
 		return convertToDto(income);
     }
-	
-	@RequestMapping(value = "/incomes/{id}", method = RequestMethod.DELETE, produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+
+	@DeleteMapping(value = "/incomes/{id}", produces = "application/json")
 	StatusResponseDto deleteIncome(@PathVariable Long id) throws Exception {
 		LOGGER.info("entering IncomeController deleteIncome - " + id);
 		incomeService.deleteTransaction(id);

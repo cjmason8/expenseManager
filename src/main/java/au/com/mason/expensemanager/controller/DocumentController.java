@@ -7,6 +7,7 @@ import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.DocumentDto;
 import au.com.mason.expensemanager.dto.DocumentListDto;
 import au.com.mason.expensemanager.dto.MoveFilesDto;
+import au.com.mason.expensemanager.dto.StatusResponseDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
 import au.com.mason.expensemanager.service.DocumentService;
 import au.com.mason.expensemanager.service.DonationService;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -164,9 +166,8 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		
 		return "{\"folderPath\":\"" + newDirectory.getFolderPath() + "/" + newDirectory.getFileName() + "\"}";
 	}
-	
-	@RequestMapping(value = "/documents/{id}", method = RequestMethod.DELETE, produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+
+	@DeleteMapping(value = "/documents/{id}", produces = "application/json")
 	String deleteDocument(@PathVariable Long id) throws Exception {
 		
 		LOGGER.info("entering DocumentController deleteDocument - " + id);
