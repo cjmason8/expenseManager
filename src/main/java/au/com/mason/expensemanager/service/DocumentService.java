@@ -2,16 +2,21 @@ package au.com.mason.expensemanager.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +35,7 @@ public class DocumentService {
 	private DocumentDao documentDao;
 	
 	public Document updateDocument(Document document) {
+		document.setFolderPath(normalizeDocsPath(document.getFolderPath()));
 		documentDao.update(document);
 		
 		if (document.isFolder() && document.getOriginalFileName() != null && !document.getOriginalFileName().equals(document.getFileName())) {
@@ -41,15 +47,12 @@ public class DocumentService {
 	
 	public Document createDocument(String path, String type, MultipartFile file) throws Exception {
 		byte[] bytes = file.getBytes();
-		String folderPathString = docsFolder + "/expenseManager/" + type;
-		if (path != null) {
-			folderPathString = path;
-		}
+		String folderPathString = resolveFolderPath(path, type);
 		String filePathString = folderPathString + "/" + file.getOriginalFilename();
 		Path folderPath = Paths.get(folderPathString);
 		Path filePath = Paths.get(filePathString);
 		if (!Files.exists(folderPath)) {
-			Files.createDirectory(folderPath);
+			Files.createDirectories(folderPath);
 		}
 		Files.write(filePath, bytes);
 		
@@ -57,10 +60,31 @@ public class DocumentService {
 		document.setFileName(file.getOriginalFilename());
 		document.setFolderPath(folderPathString);
 		if (type.equals("documents")) {
-			setMetadata(path, document);
+			setMetadata(folderPathString, document);
 		}
 		
 		return documentDao.create(document);
+	}
+
+	private String resolveFolderPath(String path, String type) {
+		String defaultPath = docsFolder + "/expenseManager/" + type;
+		if (path == null || path.isBlank()) {
+			return defaultPath;
+		}
+		return normalizeDocsPath(path);
+	}
+
+	public String normalizeDocsPath(String path) {
+		if (path == null || path.isBlank()) {
+			return path;
+		}
+		if (path.equals("/docs")) {
+			return docsFolder;
+		}
+		if (path.startsWith("/docs/")) {
+			return docsFolder + path.substring("/docs".length());
+		}
+		return path;
 	}
 	
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
@@ -101,9 +125,14 @@ public class DocumentService {
 	private void setMetadata(String path, Document document) {
 		String parentFolderPath = path.substring(0, path.lastIndexOf("/"));
 		String parentFolderName = path.substring(path.lastIndexOf("/") + 1);
-		
-		Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
-		document.setMetaData(parent.getMetaData());
+
+		try {
+			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
+			document.setMetaData(parent.getMetaData());
+		}
+		catch (EmptyResultDataAccessException e) {
+			document.setMetaData(new HashMap<>());
+		}
 	}
 	
 	public Document createDirectory(Document directory) {
@@ -111,7 +140,7 @@ public class DocumentService {
 		if (directory.getFolderPath().contains("root")) {
 			folderPathString = docsFolder + "/expenseManager/filofax/" + directory.getFolderPath().replace("root", "") + "/";
 		} else {
-			folderPathString = directory.getFolderPath();
+			folderPathString = normalizeDocsPath(directory.getFolderPath());
 		}
 
 		File folder = new File(folderPathString + "/" + directory.getFileName());
@@ -154,22 +183,50 @@ public class DocumentService {
 	}
 	
 	public List<Document> getAll(String folder, boolean includeArchived) throws Exception {
-		return documentDao.getAll(folder, includeArchived);
+		Map<Long, Document> uniqueDocuments = new LinkedHashMap<>();
+		for (String candidateFolderPath : getFolderPathCandidates(folder)) {
+			List<Document> documents = documentDao.getAll(candidateFolderPath, includeArchived);
+			documents.forEach(doc -> uniqueDocuments.put(doc.getId(), doc));
+		}
+		return new ArrayList<>(uniqueDocuments.values());
+	}
+
+	private Set<String> getFolderPathCandidates(String folder) {
+		Set<String> candidates = new LinkedHashSet<>();
+		if (folder == null || folder.isBlank()) {
+			return candidates;
+		}
+		addFolderPathVariants(candidates, folder);
+		addFolderPathVariants(candidates, normalizeDocsPath(folder));
+		return candidates;
+	}
+
+	private void addFolderPathVariants(Set<String> candidates, String path) {
+		if (path == null || path.isBlank()) {
+			return;
+		}
+		candidates.add(path);
+		if (path.endsWith("/")) {
+			candidates.add(path.substring(0, path.length() - 1));
+		} else {
+			candidates.add(path + "/");
+		}
 	}
 	
 	public void moveFiles(String fullFolderPath, Long[] files) {
+		String normalizedFolderPath = normalizeDocsPath(fullFolderPath);
 		Arrays.asList(files).forEach(fileId -> {
 			Document file = documentDao.getById(fileId);
 			
 			try {
 				Files.move(Paths.get(file.getFolderPath() + "/" + file.getFileName()),
-						Paths.get(fullFolderPath + "/" + file.getFileName()));
+						Paths.get(normalizedFolderPath + "/" + file.getFileName()));
 			}
 			catch (IOException e) {
 				throw new RuntimeException("error moving file", e);
 			}
 			
-			file.setFolderPath(fullFolderPath);
+			file.setFolderPath(normalizedFolderPath);
 			documentDao.update(file);
 		});
 		

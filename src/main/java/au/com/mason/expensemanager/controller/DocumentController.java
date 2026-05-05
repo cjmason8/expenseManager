@@ -94,10 +94,12 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	String createFile(@RequestBody DocumentDto document) throws Exception {
 		
 		LOGGER.info("entering DocumentController createFile - " + document.getFileName());
+		String resolvedFolderPath = documentService.normalizeDocsPath(document.getFolderPath());
+		document.setFolderPath(resolvedFolderPath);
 		
 		if (!document.getOriginalFileName().equals(document.getFileName())) {
-			Files.move(Paths.get(document.getFolderPath() + "/" + document.getOriginalFileName()),
-					Paths.get(document.getFolderPath() + "/" + document.getFileName()));
+			Files.move(Paths.get(resolvedFolderPath + "/" + document.getOriginalFileName()),
+					Paths.get(resolvedFolderPath + "/" + document.getFileName()));
 		}
 		
 		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
@@ -112,9 +114,11 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	String updateFile(@RequestBody DocumentDto document, Long id) throws Exception {
 		
 		LOGGER.info("entering DocumentController updateFile - " + id);
+		String resolvedFolderPath = documentService.normalizeDocsPath(document.getFolderPath());
+		document.setFolderPath(resolvedFolderPath);
 
 		if (!document.getOriginalFileName().equals(document.getFileName())) {
-			Files.move(Paths.get(document.getFolderPath() + "/" + document.getOriginalFileName()),
+			Files.move(Paths.get(resolvedFolderPath + "/" + document.getOriginalFileName()),
 					Paths.get(document.getFilePath()));
 		}
 
@@ -145,6 +149,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	String createDirectory(@RequestBody DocumentDto directory) throws Exception {
 
 		LOGGER.info("entering DocumentController createDirectory - " + directory.getFileName());
+		directory.setFolderPath(documentService.normalizeDocsPath(directory.getFolderPath()));
 		
 		documentService.createDirectory(convertToEntity(directory));
 		
@@ -156,9 +161,11 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	@RequestMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json", method = RequestMethod.PUT)
 	String updateDirectory(@RequestBody DocumentDto directory) throws Exception {
 		LOGGER.info("entering DocumentController updateDocument - " + directory.getFileName());
+		String resolvedFolderPath = documentService.normalizeDocsPath(directory.getFolderPath());
+		directory.setFolderPath(resolvedFolderPath);
 		
-		Files.move(Paths.get(directory.getFolderPath() + "/" + directory.getOriginalFileName()),
-				Paths.get(directory.getFolderPath() + "/" + directory.getFileName()));
+		Files.move(Paths.get(resolvedFolderPath + "/" + directory.getOriginalFileName()),
+				Paths.get(resolvedFolderPath + "/" + directory.getFileName()));
 		
 		Document newDirectory = documentService.updateDocument(convertToEntity(directory));
 		
@@ -228,12 +235,13 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	
 	@RequestMapping(value = "/documents/list", method = RequestMethod.POST)
 	public List<DocumentDto> getFiles(@RequestBody DocumentListDto documentListDto) throws Exception {
-		LOGGER.info("entering DocumentController getFiles - " + documentListDto.getFolderPath());
-		List<DocumentDto> documents = convertList(documentService.getAll(documentListDto.getFolderPath(), documentListDto.getIncludeArchived()));
+		String requestedFolderPath = documentListDto.getFolderPath();
+		LOGGER.info("entering DocumentController getFiles - " + requestedFolderPath);
+		List<DocumentDto> documents = convertList(documentService.getAll(requestedFolderPath, documentListDto.getIncludeArchived()));
 
 		Collections.sort(documents);
 
-		LOGGER.info("leaving DocumentController getFiles - " + documentListDto.getFolderPath());
+		LOGGER.info("leaving DocumentController getFiles - " + requestedFolderPath);
 
 		return documents;
 	}
