@@ -76,18 +76,20 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 						else if (line.indexOf("Accounting Fee") != -1) { 
 							rentalPayment.setAdminFee(new BigDecimal(line.substring(line.indexOf("*") + 3).replace(",", ""))); 
 						} 
-						else if (line.indexOf("Rent paid to") != -1) { 
-							String endDate = line.substring(13, line.indexOf("(") - 1); 
-							int index = 20; 
-							if (line.indexOf("moved in") != -1) {
-								index = 10; 
-							} 
-							
-							String startDate = line.substring(line.indexOf("(") + index, line.indexOf(")")); 
-							DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-							rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
-							rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
-						} else if (line.indexOf("You Received") != -1) { 
+					else if (line.indexOf("Rent paid to") != -1) { 
+						String endDatePart = line.substring(13, line.indexOf("(") - 1);
+						String endDate = endDatePart.substring(0, 10);
+						int index = 20; 
+						if (line.indexOf("moved in") != -1) {
+							index = 10; 
+						} 
+						
+						String startDatePart = line.substring(line.indexOf("(") + index, line.indexOf(")")); 
+						String startDate = startDatePart.substring(0, 10);
+						DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+						rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
+						rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
+					} else if (line.indexOf("You Received") != -1) { 
 							paymentToOwner[0] = new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", "")); 
 						} 
 					});
