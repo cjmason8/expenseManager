@@ -5,6 +5,7 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
@@ -14,14 +15,17 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import au.com.mason.expensemanager.service.EncryptionService;
+import au.com.mason.expensemanager.service.AwsSecretsService;
 
 @Configuration
 @EnableTransactionManagement
 public class DatabaseConfig {
 	
 	@Autowired
-	private EncryptionService encryptionService;
+	private AwsSecretsService awsSecretsService;
+	
+	@Value("${env:local}")
+	private String environment;
 
 	/**
 	 * DataSource definition for database connection. Settings are read from the
@@ -32,8 +36,13 @@ public class DatabaseConfig {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(System.getenv().get("DB_DRIVER"));
 		dataSource.setUrl(System.getenv().get("DB_URL"));
-		dataSource.setUsername(System.getenv().get("DB_USER"));
-		dataSource.setPassword(encryptionService.decrypt(System.getenv().get("DB_PASS")));
+		
+		String secretName = environment.equalsIgnoreCase("prd") 
+			? "prod-database-credentials" 
+			: "local-database-credentials";
+		dataSource.setUsername(awsSecretsService.getSecretValue(secretName, "USER_NAME"));
+		dataSource.setPassword(awsSecretsService.getSecretValue(secretName, "PASSWORD"));
+		
 		return dataSource;
 	}
 

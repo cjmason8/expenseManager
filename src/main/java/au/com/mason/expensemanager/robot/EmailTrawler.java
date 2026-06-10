@@ -1,201 +1,290 @@
 package au.com.mason.expensemanager.robot;
 
+import au.com.mason.expensemanager.domain.Notification;
+import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.processor.EmailProcessor;
+import au.com.mason.expensemanager.service.AwsSecretsService;
+import au.com.mason.expensemanager.service.NotificationService;
+import au.com.mason.expensemanager.service.RefDataService;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Flags;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.search.FlagTerm;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-
-import javax.mail.BodyPart;
-import javax.mail.Flags;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.search.FlagTerm;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import au.com.mason.expensemanager.domain.Notification;
-import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.processor.EmailProcessor;
-import au.com.mason.expensemanager.service.EncryptionService;
-import au.com.mason.expensemanager.service.NotificationService;
-import au.com.mason.expensemanager.service.RefDataService;
-
 @Component
 public class EmailTrawler {
 	
 	private static final Logger LOGGER = LogManager.getLogger(EmailTrawler.class);
+	private static final String GMAIL_HOST = "imap.gmail.com";
+	private static final String MAIL_PROTOCOL = "imaps";
+	private static final String INBOX_FOLDER = "INBOX";
+	
+	private static final List<String> BLACKLISTED_EMAILS = List.of(
+		"tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com", 
+		"storm", "marvel", "paypal", "tennis", "mightymunch"
+	);
+	
+	private final AwsSecretsService awsSecretsService;
+	private final RefDataService refDataService;
+	private final NotificationService notificationService;
+	
+	@Value("${email.secret.name:email-credentials}")
+	private String emailSecretName;
 	
 	@Autowired
-	private EncryptionService encryptionService;
-	
-	@Autowired
-	private RefDataService refDataService;
-	
-	@Autowired
-	protected NotificationService notificationService;
-	
-	@Value("${required.info}")
-	private String requiredKey;
-	
-	@Value("${req.account}")
-	private String reqAccount;
+	public EmailTrawler(AwsSecretsService awsSecretsService, 
+	                    RefDataService refDataService,
+	                    NotificationService notificationService) {
+		this.awsSecretsService = awsSecretsService;
+		this.refDataService = refDataService;
+		this.notificationService = notificationService;
+	}
 	
 	public void check() {
+		Store store = null;
+		Folder emailFolder = null;
+		
 		try {
-			String host = "pop.gmail.com";// change accordingly
-			String user = encryptionService.decrypt(reqAccount);
-			String password = encryptionService.decrypt(requiredKey);
+			String user = awsSecretsService.getSecretValue(emailSecretName, "USER_NAME");
+			String password = awsSecretsService.getSecretValue(emailSecretName, "PASSWORD");
 			
-			// create properties field
-			Properties properties = new Properties();
-			properties.put("mail.store.protocol", "imaps");
-			properties.put("mail.imaps.ssl.trust", host);
-			properties.put("mail.imaps.ssl.protocols", "TLSv1.2");
-
-			Session emailSession = Session.getDefaultInstance(properties);
-			Store store = emailSession.getStore();
-			store.connect(host, user, password);
+			Session emailSession = createEmailSession();
+			store = emailSession.getStore(MAIL_PROTOCOL);
+			store.connect(GMAIL_HOST, user, password);
 			
-			Folder emailFolder = store.getFolder("INBOX");
-			// use READ_ONLY if you don't wish the messages
-			// to be marked as read after retrieving its content
+			emailFolder = store.getFolder(INBOX_FOLDER);
 			emailFolder.open(Folder.READ_WRITE);
 
-			Message[] messages = emailFolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-			System.out.println("messages.length---" + messages.length);
+			Message[] messages = fetchUnreadMessages(emailFolder);
+			if (messages.length == 0) {
+				LOGGER.info("No unread messages found");
+				return;
+			}
 			
-			List<RefData> refDatas = refDataService.getAllWithEmailKey(); 
+			LOGGER.info("Processing {} unread messages", messages.length);
+			List<RefData> refDatas = refDataService.getAllWithEmailKey();
+			
+			processMessages(messages, refDatas);
 
-			for (Message message : messages) {
-				if (Arrays.stream(message.getFrom()).filter(f -> matchEmail(f.toString())).count() > 0) {
+		} catch (Exception e) {
+			LOGGER.error("Error checking emails", e);
+		} finally {
+			closeResources(emailFolder, store);
+		}
+	}
+	
+	private Session createEmailSession() {
+		Properties properties = new Properties();
+		properties.put("mail.store.protocol", MAIL_PROTOCOL);
+		properties.put("mail.imaps.ssl.trust", GMAIL_HOST);
+		properties.put("mail.imaps.ssl.protocols", "TLSv1.2");
+		properties.put("mail.imaps.timeout", "10000");
+		properties.put("mail.imaps.connectiontimeout", "10000");
+		return Session.getInstance(properties);
+	}
+	
+	private Message[] fetchUnreadMessages(Folder folder) throws MessagingException {
+		Flags unseenFlag = new Flags(Flags.Flag.SEEN);
+		FlagTerm unseenFlagTerm = new FlagTerm(unseenFlag, false);
+		return folder.search(unseenFlagTerm);
+	}
+	
+	private void processMessages(Message[] messages, List<RefData> refDatas) {
+		for (Message message : messages) {
+			try {
+				if (isBlacklisted(message)) {
+					LOGGER.debug("Skipping blacklisted email from: {}", getFromAddress(message));
 					markAsRead(message);
 					continue;
 				}
 
-				System.out.println("Handling Subject: " + message.getSubject());
-				boolean foundIt = false;
-				for (RefData refData : refDatas) {
-					if (refDataMatch(message, refData)) {
-						System.out.println("Found Processor: " + refData.getEmailProcessor().getProcessor().getClass());
-						refData.getEmailProcessor().getProcessor().execute(message, refData);
-						foundIt = true;
-						break;
-					}
+				String subject = message.getSubject();
+				LOGGER.info("Processing email: {}", subject);
+				
+				boolean processed = processMessage(message, refDatas);
+				
+				if (!processed) {
+					createUnhandledNotification(subject);
 				}
 				
-				if (!foundIt) {
-					Notification notification = new Notification();
-					notification.setMessage("Unhandled Email with title - " + message.getSubject());
-					notificationService.create(notification);
-				}
-				
-				//mark as read
 				markAsRead(message);
+				
+			} catch (Exception e) {
+				LOGGER.error("Error processing message", e);
 			}
-
-			// close the store and folder objects
-			emailFolder.close(false);
-			store.close();
-
-		} catch (Exception e) {
-			LOGGER.error(e);
-			e.printStackTrace();
+		}
+	}
+	
+	private boolean processMessage(Message message, List<RefData> refDatas) throws MessagingException, IOException {
+		for (RefData refData : refDatas) {
+			if (refDataMatch(message, refData)) {
+				LOGGER.info("Matched processor: {}", refData.getEmailProcessor().getProcessor().getClass().getSimpleName());
+				try {
+					refData.getEmailProcessor().getProcessor().execute(message, refData);
+				} catch (Exception e) {
+					LOGGER.error("Error executing processor", e);
+					throw new IOException("Processor execution failed", e);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private void createUnhandledNotification(String subject) {
+		Notification notification = new Notification();
+		notification.setMessage("Unhandled Email: " + subject);
+		notificationService.create(notification);
+	}
+	
+	private void closeResources(Folder folder, Store store) {
+		try {
+			if (folder != null && folder.isOpen()) {
+				folder.close(false);
+			}
+		} catch (MessagingException e) {
+			LOGGER.warn("Error closing folder", e);
+		}
+		
+		try {
+			if (store != null && store.isConnected()) {
+				store.close();
+			}
+		} catch (MessagingException e) {
+			LOGGER.warn("Error closing store", e);
 		}
 	}
 
-	private static void markAsRead(Message message) throws IOException, MessagingException {
-		message.getContent();
-		MimeMessage source = (MimeMessage) message;
-		MimeMessage copy = new MimeMessage(source);
+	private void markAsRead(Message message) throws MessagingException {
+		message.setFlag(Flags.Flag.SEEN, true);
 	}
-
-	private boolean matchEmail(String email) {
-		List<String> blackListedEmails = List.of("tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com", "storm", "marvel", "paypal", "tennis", "mightymunch");
-
-		return blackListedEmails.stream().anyMatch(email::contains);
+	
+	private boolean isBlacklisted(Message message) throws MessagingException {
+		String fromAddress = getFromAddress(message);
+		if (fromAddress == null) {
+			return false;
+		}
+		
+		String lowerCaseFrom = fromAddress.toLowerCase();
+		return BLACKLISTED_EMAILS.stream().anyMatch(lowerCaseFrom::contains);
+	}
+	
+	private String getFromAddress(Message message) throws MessagingException {
+		if (message.getFrom() != null && message.getFrom().length > 0) {
+			return message.getFrom()[0].toString();
+		}
+		return null;
 	}
 
 	private boolean refDataMatch(Message message, RefData refData) throws MessagingException, IOException {
-		if (bodyContains(message, "RACV")) {
-			if (refData.getEmailProcessor().equals(EmailProcessor.RACV_MEMBERSHIP)) {
-				String fromAddress = ((InternetAddress) message.getFrom()[0]).getAddress();
-				
-				return message.getSubject().startsWith(refData.getEmailKey()) && fromAddress.startsWith("racvrenewal_noreply");
-			}
-			else if (refData.getEmailKey().equals("Your Renewal RACV Comprehensive")) {
-				if (refData.getEmailProcessor().equals(EmailProcessor.CAMRY_INSURANCE)) {
-					return bodyContains(message, "TOYOTA CAMRY");
-				}
-				else if (refData.getEmailProcessor().equals(EmailProcessor.FORD_INSURANCE)) {
-					return bodyContains(message, "FORD FAIRMONT");
-				}
-				else if (refData.getEmailProcessor().equals(EmailProcessor.FORESTER_INSURANCE)) {
-					return bodyContains(message, "SUBARU FORESTER");
-				}
-				else {
-					return bodyContains(message, "MAZDA TRIBUTE");
-				}
-			}
-			else if (refData.getEmailKey().equals("Your Renewal RACV Home Buildings Ins")) {
-				if (refData.getEmailProcessor().equals(EmailProcessor.WODONGA_INSURANCE)) {
-					return bodyContains(message, "WODONGA");
-				}
-				else {
-					return bodyContains(message, "SOUTH KINGSVILLE");
-				}
-			}
-			else if (refData.getEmailProcessor().equals(EmailProcessor.DINGLEY_INSURANCE)) {
-				return message.getSubject().startsWith(refData.getEmailKey());
-			}
-			
+		String subject = message.getSubject();
+		if (subject == null) {
 			return false;
 		}
+		
+		String emailKey = refData.getEmailKey();
+		EmailProcessor processor = refData.getEmailProcessor();
+		
+		// Check for RACV-specific processing
+		if (bodyContains(message, "RACV")) {
+			return matchRACVEmail(message, subject, emailKey, processor);
+		}
 
-		return message.getSubject().indexOf(refData.getEmailKey()) != -1;
+		// Default: simple subject match
+		return subject.contains(emailKey);
 	}
 	
-	private boolean bodyContains(Message message, String phrase) throws MessagingException, IOException {
-		if (message.isMimeType("multipart/*")) {
-	        MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
-	        int count = mimeMultipart.getCount();
-		    for (int i = 0; i < count; i++) {
-		        BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-		        if (bodyPart.isMimeType("text/html")) {
-		            return ((String) bodyPart.getContent()).contains(phrase);
-		        }
-		    }
-	    }
+	private boolean matchRACVEmail(Message message, String subject, String emailKey, EmailProcessor processor) 
+			throws MessagingException, IOException {
+		
+		if (processor.equals(EmailProcessor.RACV_MEMBERSHIP)) {
+			String fromAddress = getEmailAddress(message);
+			return subject.startsWith(emailKey) && fromAddress != null && fromAddress.startsWith("racvrenewal_noreply");
+		}
+		
+		if (emailKey.equals("Your Renewal RACV Comprehensive")) {
+			return matchRACVComprehensive(message, processor);
+		}
+		
+		if (emailKey.equals("Your Renewal RACV Home Buildings Ins")) {
+			return matchRACVHomeInsurance(message, processor);
+		}
+		
+		if (processor.equals(EmailProcessor.DINGLEY_INSURANCE)) {
+			return subject.startsWith(emailKey);
+		}
 		
 		return false;
 	}
 	
-	public Message[] fetchMessages(String host, String user, String password, boolean read) throws Exception {
-		Properties properties = new Properties();
-		properties.put("mail.store.protocol", "imaps");
-
-		Session emailSession = Session.getDefaultInstance(properties);
-		Store store = emailSession.getStore();
-		store.connect(host, user, password);
-
-		Folder emailFolder = store.getFolder("INBOX");
-		// use READ_ONLY if you don't wish the messages
-		// to be marked as read after retrieving its content
-		emailFolder.open(Folder.READ_WRITE);
-
-		// search for all "unseen" messages
-		Flags seen = new Flags(Flags.Flag.SEEN);
-		FlagTerm unseenFlagTerm = new FlagTerm(seen, read);
-		return emailFolder.search(unseenFlagTerm);
+	private boolean matchRACVComprehensive(Message message, EmailProcessor processor) throws MessagingException, IOException {
+		if (processor.equals(EmailProcessor.CAMRY_INSURANCE)) {
+			return bodyContains(message, "TOYOTA CAMRY");
+		}
+		if (processor.equals(EmailProcessor.FORD_INSURANCE)) {
+			return bodyContains(message, "FORD FAIRMONT");
+		}
+		if (processor.equals(EmailProcessor.FORESTER_INSURANCE)) {
+			return bodyContains(message, "SUBARU FORESTER");
+		}
+		return bodyContains(message, "MAZDA TRIBUTE");
+	}
+	
+	private boolean matchRACVHomeInsurance(Message message, EmailProcessor processor) throws MessagingException, IOException {
+		if (processor.equals(EmailProcessor.WODONGA_INSURANCE)) {
+			return bodyContains(message, "WODONGA");
+		}
+		return bodyContains(message, "SOUTH KINGSVILLE");
+	}
+	
+	private String getEmailAddress(Message message) throws MessagingException {
+		if (message.getFrom() != null && message.getFrom().length > 0 
+				&& message.getFrom()[0] instanceof InternetAddress) {
+			return ((InternetAddress) message.getFrom()[0]).getAddress();
+		}
+		return null;
+	}
+	
+	private boolean bodyContains(Message message, String phrase) throws MessagingException, IOException {
+		if (!message.isMimeType("multipart/*")) {
+			return false;
+		}
+		
+		try {
+			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+			int count = mimeMultipart.getCount();
+			
+			for (int i = 0; i < count; i++) {
+				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
+				if (bodyPart.isMimeType("text/html") || bodyPart.isMimeType("text/plain")) {
+					Object content = bodyPart.getContent();
+					if (content instanceof String) {
+						String bodyContent = (String) content;
+						if (bodyContent.contains(phrase)) {
+							return true;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.warn("Error reading message body", e);
+		}
+		
+		return false;
 	}
 
 }
