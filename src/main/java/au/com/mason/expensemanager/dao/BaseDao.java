@@ -30,12 +30,12 @@ public class BaseDao<T> {
 		return;
 	}
 
-	public void deleteById(Long id) {
+	public void deleteById(Object id) {
 		T item = entityManager.find(className, id);
 		entityManager.remove(item);
 	}
 
-	public T getById(long id) {
+	public T getById(Object id) {
 		return entityManager.find(className, id);
 	}
 

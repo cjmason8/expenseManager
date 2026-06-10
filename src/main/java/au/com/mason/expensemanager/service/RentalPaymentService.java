@@ -2,102 +2,92 @@ package au.com.mason.expensemanager.service;
 
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import au.com.mason.expensemanager.util.S3Keys;
+import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class RentalPaymentService {
-	
-	public static List<String> FIRST_SIX_MONTHS;
-	public static Map<String, String> PROPERTIES;
 
-	@Value("${docs.location}")
-	private String docsFolder;
-	
-	@Autowired
-	private RentalPaymentDao rentalPaymentDao;
-	
-	@Autowired
-	protected DocumentService documentService;
-	
-	static {
-		FIRST_SIX_MONTHS = new ArrayList<>();
-		FIRST_SIX_MONTHS.add("Jan");
-		FIRST_SIX_MONTHS.add("Feb");
-		FIRST_SIX_MONTHS.add("Mar");
-		FIRST_SIX_MONTHS.add("Apr");
-		FIRST_SIX_MONTHS.add("May");
-		FIRST_SIX_MONTHS.add("Jun");
-		
-		PROPERTIES = new HashMap<>();
-		PROPERTIES.put("WODONGA", "Wodonga");
-		PROPERTIES.put("STH_KINGSVILLE", "South Kingsville");
+	private static final Map<String, String> PROPERTIES = Map.of(
+			"WODONGA", "Wodonga",
+			"STH_KINGSVILLE", "South Kingsville"
+	);
+
+	private String docsRoot;
+	private final RentalPaymentDao rentalPaymentDao;
+	private final DocumentService documentService;
+
+	public RentalPaymentService(@Value("${docs.location}") String docsRoot,
+			RentalPaymentDao rentalPaymentDao,
+			DocumentService documentService) {
+		this.docsRoot = S3Keys.normalize(docsRoot);
+		this.rentalPaymentDao = rentalPaymentDao;
+		this.documentService = documentService;
 	}
-	
-	public RentalPayment updateRentalPayment(RentalPayment rentalPayment) throws Exception {
 
+	public RentalPayment updateRentalPayment(RentalPayment rentalPayment) throws Exception {
 		RentalPayment existingRentalPayment = rentalPaymentDao.getById(rentalPayment.getId());
-		
+
 		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getFileName() == null) {
 			rentalPayment.setDocument(null);
 		}
-		
-		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null && !Objects.equals(rentalPayment.getDocument().getFileName(), existingRentalPayment.getDocument().getFileName())) {
-			updateDocument(rentalPayment);
+
+		if (rentalPayment.getDocument() != null
+				&& rentalPayment.getDocument().getOriginalFileName() != null
+				&& !Objects.equals(rentalPayment.getDocument().getFileName(),
+						existingRentalPayment.getDocument().getFileName())) {
+			moveAndUpdateDocument(rentalPayment);
 		}
-		
+
 		rentalPaymentDao.update(rentalPayment);
-		
+
 		return rentalPayment;
 	}
-	
+
 	public RentalPayment createRentalPayment(RentalPayment rentalPayment) throws Exception {
-		
 		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null) {
-			updateDocument(rentalPayment);
+			moveAndUpdateDocument(rentalPayment);
 		}
-		
+
 		rentalPaymentDao.create(rentalPayment);
-		
+
 		return rentalPayment;
 	}
-	
-	private void updateDocument(RentalPayment rentalPayment) throws Exception {
-		
+
+	private void moveAndUpdateDocument(RentalPayment rentalPayment) throws IOException {
+		int year = rentalPayment.getStatementFrom().getYear();
 		int month = rentalPayment.getStatementFrom().getMonth().getValue();
-		String year = String.valueOf(rentalPayment.getStatementFrom().getYear());
-		String folder = (month <= 6) ? (Integer.parseInt(year) - 1) + "-" + year : year + "-" + (Integer.parseInt(year) + 1);
-		Map<String, Object> metaData = new HashMap<>();
-		metaData.put("property", PROPERTIES.get(rentalPayment.getProperty()));
-		metaData.put("year", folder);
-		
-		String folderPath = docsFolder + DocumentService.IP_FOLDER_PATH + "/" + PROPERTIES.get(rentalPayment.getProperty())+ "/" + folder + "/Statements";
-		Files.move(Paths.get(rentalPayment.getDocument().getFilePath()), Paths.get(folderPath + "/" + rentalPayment.getDocument().getFileName()));
-		rentalPayment.getDocument().setFolderPath(folderPath);
-		rentalPayment.getDocument().setMetaData(metaData);
-		
+		String financialYear = (month <= 6) ? (year - 1) + "-" + year : year + "-" + (year + 1);
+		String propertyName = PROPERTIES.get(rentalPayment.getProperty());
+
+		String destParent = S3Keys.join(
+				S3Keys.join(S3Keys.join(S3Keys.join(docsRoot, DocumentService.IP_FOLDER_PATH), propertyName), financialYear),
+				"Statements");
+
+		documentService.moveDocumentToParentFolder(rentalPayment.getDocument(), destParent);
+		rentalPayment.getDocument().setMetaData(Map.of(
+				"property", propertyName,
+				"year", financialYear));
+
 		documentService.updateDocument(rentalPayment.getDocument());
 	}
-	
+
 	public void deleteRentalPayment(Long id) {
 		rentalPaymentDao.deleteById(id);
 	}
-	
+
 	public RentalPayment getRentalPayment(Long id) {
 		return rentalPaymentDao.getById(id);
 	}
-	
+
 	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) throws Exception {
 		return rentalPaymentDao.getAll(property, startDate, endDate);
 	}
-	
+
 }

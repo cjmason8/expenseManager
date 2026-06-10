@@ -1,8 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +37,10 @@ public class DonationService {
 		return donationDao.create(donation);
 	}
 	
-	private void updateDocument(Donation donation) throws IOException, Exception {
-		if ((donation.getDocument() != null && donation.getDocument().getFileName() != null) && !donation.getDocument().getOriginalFileName().equals(donation.getDocument().getFileName())) {
-			Files.move(Paths.get(donation.getDocument().getFolderPath() + "/" + donation.getDocument().getOriginalFileName()),
-					Paths.get(donation.getDocument().getFolderPath() + "/" + donation.getDocument().getFileName()));
-			
+	private void updateDocument(Donation donation) throws Exception {
+		if (donation.getDocument() != null && donation.getDocument().getFileName() != null
+				&& donation.getDocument().getOriginalFileName() != null
+				&& !donation.getDocument().getOriginalFileName().equals(donation.getDocument().getFileName())) {
 			documentService.updateDocument(donation.getDocument());
 		}
 	}

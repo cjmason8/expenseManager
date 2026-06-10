@@ -1,8 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -50,12 +47,9 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 		return expense;
 	}
 
-	private void updateDocument(V expense) throws IOException, Exception {
+	private void updateDocument(V expense) throws Exception {
 		if (!expense.getDocument().getOriginalFileName().equals(expense.getDocument().getFileName())) {
-			Files.move(Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getOriginalFileName()),
-					Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getFileName()));
-			
-			expense.getDocument();
+			documentService.updateDocument(expense.getDocument());
 		}
 	}
 

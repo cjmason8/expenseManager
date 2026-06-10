@@ -4,8 +4,12 @@ import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RefDataType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -35,23 +39,39 @@ public class RefDataDao extends BaseDao<RefData> {
 	}
 	
 	public List<RefData> findRefDatas(RefData refData) {
-		String sql = "SELECT * from refdata where deleted = false ";
+		StringBuilder jpql = new StringBuilder("FROM RefData r WHERE r.deleted = false ");
 		if (refData.getType() != null) {
-			sql += " AND type = '" + refData.getType() + "' ";
+			jpql.append("AND r.type = :type ");
 		}
 		if (refData.getDescription() != null) {
-			sql += " AND LOWER(description) like '%" + refData.getDescription().toLowerCase() + "%'";
+			jpql.append("AND lower(r.description) LIKE lower(:description) ");
 		}
-		if (refData.getMetaData() != null) {
-			if (refData.getMetaData() != null) {
-				for (String val : refData.getMetaData().keySet()) {
-					sql += " AND metaData->>'" + val + "' = '" + refData.getMetaData().get(val) + "' ";
-				}
+		jpql.append("ORDER BY r.type, r.description");
+
+		TypedQuery<RefData> query = entityManager.createQuery(jpql.toString(), RefData.class);
+		if (refData.getType() != null) {
+			query.setParameter("type", refData.getType());
+		}
+		if (refData.getDescription() != null) {
+			query.setParameter("description", "%" + refData.getDescription().toLowerCase() + "%");
+		}
+		List<RefData> list = query.getResultList();
+		if (refData.getMetaData() != null && !refData.getMetaData().isEmpty()) {
+			list = list.stream().filter(r -> refDataMatchesMetaData(r, refData.getMetaData())).collect(Collectors.toList());
+		}
+		return list;
+	}
+
+	private static boolean refDataMatchesMetaData(RefData r, Map<String, String> criteria) {
+		if (r.getMetaData() == null) {
+			return false;
+		}
+		for (Map.Entry<String, String> e : criteria.entrySet()) {
+			if (!Objects.equals(r.getMetaData().get(e.getKey()), e.getValue())) {
+				return false;
 			}
 		}
-		sql += "ORDER BY type,description";
-
-		return entityManager.createNativeQuery(sql, RefData.class).getResultList();
+		return true;
 	}
 	
 }

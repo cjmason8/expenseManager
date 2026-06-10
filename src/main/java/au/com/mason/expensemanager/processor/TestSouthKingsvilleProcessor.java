@@ -151,6 +151,10 @@ public class TestSouthKingsvilleProcessor {
     }
     
     static class MockRentalPaymentService extends RentalPaymentService {
+        public MockRentalPaymentService() {
+            super("docs", null, null);
+        }
+        
         @Override
         public RentalPayment createRentalPayment(RentalPayment rentalPayment) {
             System.out.println("\n💰 Rental Payment Created:");

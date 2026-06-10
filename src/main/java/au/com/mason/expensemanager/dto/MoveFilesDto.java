@@ -1,9 +1,11 @@
 package au.com.mason.expensemanager.dto;
 
+import java.util.UUID;
+
 public class MoveFilesDto {
 
 	private String directoryTo;
-	private Long[] fileIds;
+	private UUID[] fileIds;
 	
 	public String getDirectoryTo() {
 		return directoryTo;
@@ -13,11 +15,11 @@ public class MoveFilesDto {
 		this.directoryTo = directoryTo;
 	}
 
-	public Long[] getFileIds() {
+	public UUID[] getFileIds() {
 		return fileIds;
 	}
 
-	public void setFileIds(Long[] fileIds) {
+	public void setFileIds(UUID[] fileIds) {
 		this.fileIds = fileIds;
 	}
 	

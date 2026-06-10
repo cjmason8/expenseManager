@@ -7,10 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.Map;
+import java.util.UUID;
+import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
+import au.com.mason.expensemanager.util.S3Keys;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -35,9 +38,9 @@ public class Document implements Metadata {
 	public static final String GET_ALL_BY_FOLDER_PATH_AND_FILENAME = "Document.Repository.GetAllByFolderPathAndFilename";
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "documents_seq")
-	@SequenceGenerator(name = "documents_seq", sequenceName = "documents_seq", allocationSize = 1)
-	private long id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@JdbcType(DocumentUuidJdbcType.class)
+	private UUID id;
 
 	private String fileName;
 	private String folderPath;
@@ -51,11 +54,11 @@ public class Document implements Metadata {
     @Transient
     private String originalFileName;
 
-	public long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -91,8 +94,11 @@ public class Document implements Metadata {
 		this.isArchived = isArchived;
 	}
 
+	/**
+	 * Parent folder key within the bucket (S3 prefix of this document, no trailing slash).
+	 */
 	public String getFolderPath() {
-		return folderPath;
+		return S3Keys.normalize(folderPath);
 	}
 
 	public void setFolderPath(String folderPath) {
@@ -107,9 +113,22 @@ public class Document implements Metadata {
 		this.originalFileName = originalFileName;
 	}
 	
+	/**
+	 * Full S3 object key: for files {@code folderPath + "/" + id}; for folders {@code folderPath + "/" + fileName}.
+	 */
 	@Transient
 	public String getFilePath() {
-		return folderPath + "/" + fileName;
+		String parent = S3Keys.normalize(folderPath);
+		if (parent == null) {
+			return null;
+		}
+		if (isFolder) {
+			return S3Keys.join(parent, fileName);
+		}
+		if (id != null) {
+			return S3Keys.join(parent, id.toString());
+		}
+		return S3Keys.join(parent, fileName);
 	}
 
 }

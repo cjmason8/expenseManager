@@ -1,21 +1,23 @@
 package au.com.mason.expensemanager.dto;
 
+import au.com.mason.expensemanager.util.S3Keys;
 import java.util.Comparator;
+import java.util.UUID;
 
 public class DocumentDto implements Comparator<DocumentDto>, Comparable<DocumentDto> {
 
-	private Long id;
+	private UUID id;
 	private String fileName;
 	private String originalFileName;
 	private boolean isFolder;
 	private String metaDataChunk;
 	private String folderPath;
 	
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -36,7 +38,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	}
 	
 	public String getFolderPath() {
-		return folderPath;
+		return S3Keys.normalize(folderPath);
 	}
 
 	public void setFolderPath(String folderPath) {
@@ -60,7 +62,17 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	}
 	
 	public String getFilePath() {
-		return folderPath + "/" + fileName;
+		String parent = S3Keys.normalize(folderPath);
+		if (parent == null) {
+			return null;
+		}
+		if (isFolder) {
+			return S3Keys.join(parent, fileName);
+		}
+		if (id != null) {
+			return S3Keys.join(parent, id.toString());
+		}
+		return S3Keys.join(parent, fileName);
 	}
 
 	@Override

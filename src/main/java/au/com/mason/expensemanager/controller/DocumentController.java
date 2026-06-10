@@ -13,14 +13,14 @@ import au.com.mason.expensemanager.service.DocumentService;
 import au.com.mason.expensemanager.service.DonationService;
 import au.com.mason.expensemanager.service.ExpenseService;
 import au.com.mason.expensemanager.service.IncomeService;
-import java.io.File;
+import au.com.mason.expensemanager.service.S3Service;
+import au.com.mason.expensemanager.util.S3Keys;
+import jakarta.annotation.PostConstruct;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import org.apache.commons.io.FileUtils;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class DocumentController extends BaseController<Document, DocumentDto> {
 
 	@Value("${docs.location}")
-	private String docsFolder;
+	private String docsRoot;
+
+	@PostConstruct
+	void normalizeDocsRoot() {
+		docsRoot = S3Keys.normalize(docsRoot);
+	}
 
 	@Autowired
 	private DonationService donationService;
@@ -60,70 +65,61 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	private IncomeService incomeService;
 
 	@Autowired
+	private S3Service s3Service;
+
+	@Autowired
 	public DocumentController(DocumentMapper documentMapper) {
 		super(documentMapper);
 	}
-	
+
 	private static final Logger LOGGER = LogManager.getLogger(DocumentController.class);
-	
+
 	@PostMapping(value = "/documents/move", consumes = { "application/json" })
 	String moveFiles(@RequestBody MoveFilesDto moveFilesDto) {
 		LOGGER.info("entering DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
-		String fullFolderPath = docsFolder + "/expenseManager/filofax" + moveFilesDto.getDirectoryTo();
-		documentService.moveFiles(fullFolderPath, moveFilesDto.getFileIds());
+		String destParent = S3Keys.join(S3Keys.join(docsRoot, "expenseManager/filofax"),
+				moveFilesDto.getDirectoryTo().replaceFirst("^/+", ""));
+		documentService.moveFiles(destParent, moveFilesDto.getFileIds());
 		LOGGER.info("leaving DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
-		
-		return "{\"folderPath\":\"" + fullFolderPath + "\"}";
-	}
-			
 
-	@PostMapping(value = "/documents/upload", consumes = { "multipart/form-data" }, produces="application/json")
+		return "{\"folderPath\":\"" + destParent + "\"}";
+	}
+
+	@PostMapping(value = "/documents/upload", consumes = { "multipart/form-data" }, produces = "application/json")
 	DocumentDto uploadFile(@RequestPart("uploadFile") MultipartFile file, @RequestParam String type,
 			@RequestParam(required = false) String path) throws Exception {
-		
+
 		LOGGER.info("entering DocumentController uploadFile");
 
 		Document document = documentService.createDocument(path, type, file);
-		
+
 		LOGGER.info("leaving DocumentController uploadFile");
-		
+
 		return convertToDto(document);
 	}
 
 	@PostMapping(value = "/documents", produces = "application/json", consumes = "application/json")
 	String createFile(@RequestBody DocumentDto document) throws Exception {
-		
+
 		LOGGER.info("entering DocumentController createFile - " + document.getFileName());
-		String resolvedFolderPath = documentService.normalizeDocsPath(document.getFolderPath());
-		document.setFolderPath(resolvedFolderPath);
-		
-		if (!document.getOriginalFileName().equals(document.getFileName())) {
-			Files.move(Paths.get(resolvedFolderPath + "/" + document.getOriginalFileName()),
-					Paths.get(resolvedFolderPath + "/" + document.getFileName()));
-		}
-		
+
 		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
 
 		documentService.updateDocument(convertToEntity(document));
 
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
-	
-	@RequestMapping(value = "/documents/{id}", method = RequestMethod.PUT, produces = "application/json", 
+
+	@RequestMapping(value = "/documents/{id}", method = RequestMethod.PUT, produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String updateFile(@RequestBody DocumentDto document, Long id) throws Exception {
-		
+	String updateFile(@RequestBody DocumentDto document, @PathVariable UUID id) throws Exception {
+
 		LOGGER.info("entering DocumentController updateFile - " + id);
-		String resolvedFolderPath = documentService.normalizeDocsPath(document.getFolderPath());
+		String resolvedFolderPath = documentService.toBucketKey(document.getFolderPath());
 		document.setFolderPath(resolvedFolderPath);
 
-		if (!document.getOriginalFileName().equals(document.getFileName())) {
-			Files.move(Paths.get(resolvedFolderPath + "/" + document.getOriginalFileName()),
-					Paths.get(document.getFilePath()));
-		}
-
 		documentService.updateDocument(convertToEntity(document));
-		
+
 		LOGGER.info("leaving DocumentController updateFile - " + id);
 
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
@@ -131,7 +127,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 
 	@GetMapping(value = "/documents/{id}/archive", produces = "application/json",
 			consumes = "application/json", headers = "Accept=application/json")
-	String archiveFolder(@PathVariable Long id) throws Exception {
+	String archiveFolder(@PathVariable UUID id) throws Exception {
 
 		LOGGER.info("entering DocumentController archiveFolder - " + id);
 
@@ -144,137 +140,143 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 
 		return "{\"filePath\":\"" + folder.getFolderPath() + "\"}";
 	}
-	
+
 	@PostMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json")
 	String createDirectory(@RequestBody DocumentDto directory) throws Exception {
 
 		LOGGER.info("entering DocumentController createDirectory - " + directory.getFileName());
-		directory.setFolderPath(documentService.normalizeDocsPath(directory.getFolderPath()));
-		
-		documentService.createDirectory(convertToEntity(directory));
-		
+
+		Document created = documentService.createDirectory(convertToEntity(directory));
+
 		LOGGER.info("leaving DocumentController createDirectory - " + directory.getFileName());
 
-		return "{\"folderPath\":\"" + directory.getFilePath() + "\"}";
+		return "{\"folderPath\":\"" + created.getFilePath() + "\"}";
 	}
-	
+
 	@RequestMapping(value = "/documents/directory", produces = "application/json", consumes = "application/json", method = RequestMethod.PUT)
 	String updateDirectory(@RequestBody DocumentDto directory) throws Exception {
 		LOGGER.info("entering DocumentController updateDocument - " + directory.getFileName());
-		String resolvedFolderPath = documentService.normalizeDocsPath(directory.getFolderPath());
-		directory.setFolderPath(resolvedFolderPath);
-		
-		Files.move(Paths.get(resolvedFolderPath + "/" + directory.getOriginalFileName()),
-				Paths.get(resolvedFolderPath + "/" + directory.getFileName()));
-		
 		Document newDirectory = documentService.updateDocument(convertToEntity(directory));
-		
+
 		LOGGER.info("leaving DocumentController updateDocument - " + newDirectory.getFileName());
-		
-		return "{\"folderPath\":\"" + newDirectory.getFolderPath() + "/" + newDirectory.getFileName() + "\"}";
+
+		return "{\"folderPath\":\"" + newDirectory.getFilePath() + "\"}";
 	}
 
 	@DeleteMapping(value = "/documents/{id}", produces = "application/json")
-	String deleteDocument(@PathVariable Long id) throws Exception {
-		
+	String deleteDocument(@PathVariable UUID id) throws Exception {
 		LOGGER.info("entering DocumentController deleteDocument - " + id);
-		
+
 		Document document = documentService.getById(id);
 		String parentFolder = document.getFolderPath();
-		if (document.isFolder()) {
-			FileUtils.deleteDirectory(new File(document.getFileName()));
-		}
-		else {
-			Files.delete(Paths.get(parentFolder + "/" + document.getFileName()));
-		}
-		
+
 		documentService.deleteDocument(document);
-		
+
 		LOGGER.info("leaving DocumentController deleteDocument - " + id);
-		
+
 		return "{\"folderPath\":\"" + parentFolder + "\"}";
-    }
+	}
 
 	@RequestMapping(value = "/documents/get/{type}/{id}", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> getFile(@PathVariable Long id, @PathVariable String type) throws Exception {
 		LOGGER.info("entering DocumentController getFile - " + id);
 
-		Path path = Paths.get(Objects.requireNonNull(getPath(id, type)));
-		String mediaType = getContentType(path.getFileName().toString());
+		String objectKey = getObjectKey(id, type);
+		String nameHint = getFileNameHint(id, type);
+		String mediaType = getContentType(nameHint);
+
+		byte[] body = s3Service.getObjectAsBytes(objectKey);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.parseMediaType(mediaType));
-		String filename = "output"
-				+ path.getFileName().toString().substring(path.getFileName().toString().lastIndexOf("."));
+		int dot = nameHint.lastIndexOf('.');
+		String ext = dot >= 0 ? nameHint.substring(dot) : "";
+		String filename = "output" + ext;
 		headers.setContentDispositionFormData(filename, filename);
 		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		
+
 		LOGGER.info("leaving DocumentController getFile - " + id);
 
-		return new ResponseEntity<byte[]>(Files.readAllBytes(path), headers, HttpStatus.OK);
+		return new ResponseEntity<>(body, headers, HttpStatus.OK);
 	}
-	
+
 	@RequestMapping(value = "/documents/get/{id}", method = RequestMethod.GET)
-	public ResponseEntity<byte[]> getFileById(@PathVariable Long id) throws Exception {
-		
+	public ResponseEntity<byte[]> getFileById(@PathVariable UUID id) throws Exception {
+
 		LOGGER.info("enterting DocumentController getFileById - " + id);
-		
+
 		Document document = documentService.getById(id);
-		
+
 		HttpHeaders headers = new HttpHeaders();
 		String mediaType = getContentType(document.getFileName());
 		headers.setContentType(MediaType.parseMediaType(mediaType));
 		String filename = "output.pdf";
 		headers.setContentDispositionFormData(filename, filename);
 		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		
+
 		LOGGER.info("leaving DocumentController getFileById - " + id);
-	
-		return new ResponseEntity<byte[]>(Files.readAllBytes(Paths.get(document.getFilePath())), headers, HttpStatus.OK);
+
+		byte[] body = s3Service.getObjectAsBytes(document.getFilePath());
+		return new ResponseEntity<>(body, headers, HttpStatus.OK);
 	}
-	
+
 	@RequestMapping(value = "/documents/list", method = RequestMethod.POST)
 	public List<DocumentDto> getFiles(@RequestBody DocumentListDto documentListDto) throws Exception {
-		String requestedFolderPath = documentListDto.getFolderPath();
-		LOGGER.info("entering DocumentController getFiles - " + requestedFolderPath);
-		List<DocumentDto> documents = convertList(documentService.getAll(requestedFolderPath, documentListDto.getIncludeArchived()));
+		LOGGER.info("entering DocumentController getFiles - " + documentListDto.getFolderPath());
+		List<DocumentDto> documents = convertList(
+				documentService.getAll(documentListDto.getFolderPath(), documentListDto.getIncludeArchived()));
 
 		Collections.sort(documents);
 
-		LOGGER.info("leaving DocumentController getFiles - " + requestedFolderPath);
+		LOGGER.info("leaving DocumentController getFiles - " + documentListDto.getFolderPath());
 
 		return documents;
 	}
 
 	private String getContentType(String path) {
+		if (path == null) {
+			return "application/octet-stream";
+		}
 		String mediaType = "application/pdf";
 		if (path.endsWith("doc") || path.endsWith("docx")) {
 			mediaType = "application/msword";
 		}
 		if (path.endsWith("jpg") || path.endsWith("jpeg")) {
 			mediaType = "image/jpeg";
-		} else if (path.endsWith("xls") || path.endsWith("xlsx")) {
+		}
+		else if (path.endsWith("xls") || path.endsWith("xlsx")) {
 			mediaType = "application/vnd.ms-excel";
 		}
 		return mediaType;
 	}
 
-	private String getPath(Long id, String type) throws Exception {
+	private String getObjectKey(Long id, String type) throws Exception {
 		if (type.equals("donations")) {
 			Donation donation = donationService.getById(id);
-
 			return donation.getDocument().getFilePath();
-		} else if (type.equals("expenses")) {
+		}
+		else if (type.equals("expenses")) {
 			Expense expense = expenseService.getById(id);
-
 			return expense.getDocument().getFilePath();
-		} else if (type.equals("incomes")) {
+		}
+		else if (type.equals("incomes")) {
 			Income income = incomeService.getById(id);
-
 			return income.getDocument().getFilePath();
 		}
 
 		return null;
 	}
 
+	private String getFileNameHint(Long id, String type) throws Exception {
+		if (type.equals("donations")) {
+			return donationService.getById(id).getDocument().getFileName();
+		}
+		else if (type.equals("expenses")) {
+			return expenseService.getById(id).getDocument().getFileName();
+		}
+		else if (type.equals("incomes")) {
+			return incomeService.getById(id).getDocument().getFileName();
+		}
+		return "";
+	}
 }
