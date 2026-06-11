@@ -5,15 +5,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Component;
 
-import com.sun.mail.util.BASE64DecoderStream;
+import org.eclipse.angus.mail.util.BASE64DecoderStream;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;

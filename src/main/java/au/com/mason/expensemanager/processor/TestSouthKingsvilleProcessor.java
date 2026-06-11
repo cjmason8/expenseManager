@@ -12,14 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 
-import com.sun.mail.util.BASE64DecoderStream;
+import org.eclipse.angus.mail.util.BASE64DecoderStream;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Notification;
@@ -69,8 +69,8 @@ public class TestSouthKingsvilleProcessor {
             // Add PDF part (this should trigger the else if on line 58)
             MimeBodyPart pdfPart = new MimeBodyPart();
             // Use setDataHandler to properly set the content with the right MIME type
-            javax.activation.DataHandler dh = new javax.activation.DataHandler(
-                new javax.activation.DataSource() {
+            jakarta.activation.DataHandler dh = new jakarta.activation.DataHandler(
+                new jakarta.activation.DataSource() {
                     public java.io.InputStream getInputStream() {
                         return new ByteArrayInputStream(pdfBytes);
                     }

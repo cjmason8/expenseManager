@@ -12,9 +12,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.internet.MimeMultipart;
 
 import org.springframework.stereotype.Component;
 
