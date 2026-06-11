@@ -2,48 +2,18 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.dto.NotificationDto;
-import au.com.mason.expensemanager.util.DateUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class NotificationMapper implements BaseMapper<Notification, NotificationDto> {
-    @Autowired
-    private ExpenseMapper expenseMapper;
+@Mapper(componentModel = "spring", uses = {ExpenseMapper.class, MappingConverters.class})
+public interface NotificationMapper extends BaseMapper<Notification, NotificationDto> {
 
-    public Notification dtoToEntity(NotificationDto notificationDto) {
-        if ( notificationDto == null ) {
-            return null;
-        }
+	@Override
+	@Mapping(source = "created", target = "createdDateString", qualifiedByName = "localDateToString")
+	NotificationDto entityToDto(Notification notification);
 
-        Notification notification = new Notification();
+	@Override
+	@Mapping(source = "createdDateString", target = "created", qualifiedByName = "stringToLocalDate")
+	Notification dtoToEntity(NotificationDto notificationDto);
 
-        if ( notificationDto.getId() != null ) {
-            notification.setId( notificationDto.getId() );
-        }
-        notification.setMessage( notificationDto.getMessage() );
-        notification.setCreated(DateUtil.getFormattedDate(notificationDto.getCreatedDateString()));
-        notification.setExpense( expenseMapper.dtoToEntity( notificationDto.getExpense() ) );
-
-        return notification;
-    }
-
-    public NotificationDto entityToDto(Notification notification) {
-        if ( notification == null ) {
-            return null;
-        }
-
-        NotificationDto notificationDto = new NotificationDto();
-
-        notificationDto.setId( notification.getId() );
-        if (notification.getExpense() != null) {
-            notificationDto.setExpense(expenseMapper.entityToDto(notification.getExpense()));
-        }
-        notificationDto.setMessage( notification.getMessage() );
-        notificationDto.setCreatedDateString(DateUtil.getFormattedDateString(notification.getCreated()));
-        notificationDto.setRead( notification.isRead() );
-        notificationDto.setRemoved( notification.isRemoved() );
-
-        return notificationDto;
-    }
 }

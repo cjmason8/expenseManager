@@ -2,65 +2,23 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.dto.DonationDto;
-import au.com.mason.expensemanager.util.DateUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class DonationMapper implements BaseMapper<Donation, DonationDto> {
+@Mapper(componentModel = "spring", uses = {RefDataMapper.class, DocumentMapper.class, MappingConverters.class})
+public interface DonationMapper extends BaseMapper<Donation, DonationDto> {
 
-    private static Gson gson = new GsonBuilder().serializeNulls().create();
+	@Override
+	@Mapping(source = "dueDate", target = "dueDateString", qualifiedByName = "localDateToString")
+	@Mapping(source = "dueDate", target = "dueDate")
+	@Mapping(source = "metaData", target = "metaDataChunk", qualifiedByName = "stringMapToJson")
+	@Mapping(source = "document", target = "documentDto")
+	DonationDto entityToDto(Donation donation);
 
-    @Autowired
-    private RefDataMapper refDataMapper;
-    @Autowired
-    private DocumentMapper documentMapper;
+	@Override
+	@Mapping(source = "dueDateString", target = "dueDate", qualifiedByName = "stringToLocalDate")
+	@Mapping(source = "metaDataChunk", target = "metaData", qualifiedByName = "jsonToStringMap")
+	@Mapping(source = "documentDto", target = "document", conditionQualifiedByName = "hasDocumentFileName")
+	Donation dtoToEntity(DonationDto donationDto);
 
-    public Donation dtoToEntity(DonationDto donationDto) {
-        if ( donationDto == null ) {
-            return null;
-        }
-
-        Donation donation = new Donation();
-
-        if ( donationDto.getId() != null ) {
-            donation.setId( donationDto.getId() );
-        }
-        donation.setCause( refDataMapper.dtoToEntity( donationDto.getCause() ) );
-        donation.setDescription( donationDto.getDescription() );
-        donation.setNotes( donationDto.getNotes() );
-        donation.setDueDate(DateUtil.getFormattedDate(donationDto.getDueDateString()));
-        donation.setMetaData((Map<String, String>) gson.fromJson(donationDto.getMetaDataChunk(), Map.class));
-        if (donationDto.getDocumentDto() != null && donationDto.getDocumentDto().getFileName() != null) {
-            donation.setDocument(documentMapper.dtoToEntity(donationDto.getDocumentDto()));
-        }
-
-        return donation;
-    }
-
-    public DonationDto entityToDto(Donation donation) {
-        if ( donation == null ) {
-            return null;
-        }
-
-        DonationDto donationDto = new DonationDto();
-
-        donationDto.setId( donation.getId() );
-        donationDto.setCause( refDataMapper.entityToDto( donation.getCause() ) );
-        donationDto.setDescription( donation.getDescription() );
-        donationDto.setNotes( donation.getNotes() );
-        donationDto.setDueDateString(DateUtil.getFormattedDateString(donation.getDueDate()));
-        donationDto.setDueDate(donation.getDueDate());
-        donationDto.setMetaDataChunk(gson.toJson(donation.getMetaData(), Map.class));
-        if (donation.getDocument() != null) {
-            donationDto.setDocumentDto(documentMapper.entityToDto(donation.getDocument()));
-        }
-
-        return donationDto;
-    }
 }

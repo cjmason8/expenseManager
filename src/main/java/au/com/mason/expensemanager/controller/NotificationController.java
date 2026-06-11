@@ -2,7 +2,6 @@ package au.com.mason.expensemanager.controller;
 
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.dto.NotificationDto;
-import au.com.mason.expensemanager.mapper.IncomeMapper;
 import au.com.mason.expensemanager.mapper.NotificationMapper;
 import au.com.mason.expensemanager.service.NotificationService;
 import java.util.List;

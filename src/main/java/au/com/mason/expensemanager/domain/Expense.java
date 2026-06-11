@@ -6,6 +6,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NamedQueries(
 		value = {
@@ -14,22 +18,25 @@ import jakarta.persistence.OneToOne;
 						query = "from Expense where recurringType IS NOT NULL AND deleted = false ORDER BY entryType.description"),
 				@NamedQuery(
 						name = Expense.GET_RECURRING,
-						query = "from Expense where recurringType IS NOT NULL AND deleted = false AND (endDate is NULL OR endDate >= to_date(:endDate, 'yyyy-mm-dd')) ORDER BY entryType.description"),
+						query = "from Expense where recurringType IS NOT NULL AND deleted = false AND (endDate is NULL OR endDate >= :endDate) ORDER BY entryType.description"),
 				@NamedQuery(
 						name = Expense.GET_ALL,
 						query = "from Expense ORDER BY dueDate DESC,entryType.type"),
 				@NamedQuery(
 						name = Expense.GET_FOR_WEEK,
-						query = "from Expense where recurringType IS NULL AND dueDate >= to_date(:weekStartDate, 'yyyy-mm-dd') AND dueDate <= to_date(:weekLaterFromStartDate, 'yyyy-mm-dd') AND deleted = false ORDER BY dueDate,entryType.type"),
+						query = "from Expense where recurringType IS NULL AND dueDate >= :weekStartDate AND dueDate <= :weekLaterFromStartDate AND deleted = false ORDER BY dueDate,entryType.type"),
 				@NamedQuery(
 						name = Expense.GET_UNPAID_BEFORE_WEEK,
-						query = "from Expense where recurringType IS NULL AND dueDate < to_date(:weekStartDate, 'yyyy-mm-dd') AND paid = false ORDER BY dueDate,entryType.type"),
+						query = "from Expense where recurringType IS NULL AND dueDate < :weekStartDate AND paid = false ORDER BY dueDate,entryType.type"),
 				@NamedQuery(
 						name = Expense.GET_PAST_DATE,
-						query = "from Expense where recurringType IS NULL AND dueDate > to_date(:date, 'yyyy-mm-dd')"),
+						query = "from Expense where recurringType IS NULL AND dueDate > :date"),
 		})
 @Entity
 @DiscriminatorValue("EXPENSE")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Expense extends Transaction {
 
 	public static final String GET_ALL_RECURRING = "Expense.Repository.GetAllRecurring";
@@ -38,11 +45,15 @@ public class Expense extends Transaction {
 	public static final String GET_FOR_WEEK = "Expense.Repository.GetForWeek";
 	public static final String GET_UNPAID_BEFORE_WEEK = "Expense.Repository.GetUnpaidBeforeWeek";
 	public static final String GET_PAST_DATE = "Expense.Repository.GetPastDate";
-	
+
+	@Getter(AccessLevel.NONE)
+	@Setter(AccessLevel.NONE)
 	@OneToOne
 	@JoinColumn(name = "recurringTransactionId")
 	private Expense recurringTransaction;
-	
+
+	@Getter(AccessLevel.NONE)
+	@Setter(AccessLevel.NONE)
 	private boolean paid = false;
 
 	@Override
@@ -54,7 +65,7 @@ public class Expense extends Transaction {
 	public void setRecurringTransaction(Transaction recurringTransaction) {
 		this.recurringTransaction = (Expense) recurringTransaction;
 	}
-	
+
 	public boolean getPaid() {
 		return paid;
 	}
