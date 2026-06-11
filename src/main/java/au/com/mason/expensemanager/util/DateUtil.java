@@ -37,15 +37,10 @@ public class DateUtil {
 	}
 	
 	public static String getFormattedDbDate(String date) {
-		if (date.indexOf("Z") != -1) {
-			ZonedDateTime createdAtUTC = ZonedDateTime.parse(date);
-			ZonedDateTime createdAtMelb = createdAtUTC.withZoneSameInstant(ZoneId.of("Australia/Melbourne"));
-			
-			return DB_FORMATTER.format(createdAtMelb.toLocalDate());
+		if (date == null || date.isBlank()) {
+			return null;
 		}
-		else {
-			return LocalDate.parse(date, DB_FORMATTER).toString();
-		}
+		return getFormattedDbDate(getFormattedDate(date));
 	}
 	
 	public static String getFormattedDateString(LocalDate date) {

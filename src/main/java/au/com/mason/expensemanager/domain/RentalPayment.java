@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.domain;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,14 +9,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name="rentalpayments")
+@Getter
+@Setter
+@NoArgsConstructor
 public class RentalPayment {
-	
-	public RentalPayment() {}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "rentalpayments_seq")
@@ -26,88 +32,21 @@ public class RentalPayment {
 	private BigDecimal adminFee = new BigDecimal(0);
 	private BigDecimal otherFee = new BigDecimal(0);
 	private BigDecimal totalRent = new BigDecimal(0);
+
+	@Convert(converter = TimestampLocalDateConverter.class)
 	private LocalDate statementFrom;
+
+	@Convert(converter = TimestampLocalDateConverter.class)
 	private LocalDate statementTo;
+
 	private String property;
 
 	@OneToOne
 	@JoinColumn(name = "documentId")
-	private Document document; 
-	
-	public long getId() {
-		return id;
-	}
+	private Document document;
 
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public Document getDocument() {
-		return document;
-	}
-
-	public void setDocument(Document document) {
-		this.document = document;
-	}
-
-	public BigDecimal getManagementFee() {
-		return managementFee;
-	}
-
-	public void setManagementFee(BigDecimal managementFee) {
-		this.managementFee = managementFee;
-	}
-
-	public BigDecimal getAdminFee() {
-		return adminFee;
-	}
-
-	public void setAdminFee(BigDecimal adminFee) {
-		this.adminFee = adminFee;
-	}
-
-	public BigDecimal getOtherFee() {
-		return otherFee;
-	}
-
-	public void setOtherFee(BigDecimal otherFee) {
-		this.otherFee = otherFee;
-	}
-
-	public BigDecimal getTotalRent() {
-		return totalRent;
-	}
-
-	public void setTotalRent(BigDecimal totalRent) {
-		this.totalRent = totalRent;
-	}
-
-	public LocalDate getStatementFrom() {
-		return statementFrom;
-	}
-
-	public void setStatementFrom(LocalDate statementFrom) {
-		this.statementFrom = statementFrom;
-	}
-
-	public LocalDate getStatementTo() {
-		return statementTo;
-	}
-
-	public void setStatementTo(LocalDate statementTo) {
-		this.statementTo = statementTo;
-	}
-	
 	public BigDecimal getPaymentToOwner() {
 		return totalRent.subtract(adminFee).subtract(managementFee);
-	}
-
-	public String getProperty() {
-		return property;
-	}
-
-	public void setProperty(String property) {
-		this.property = property;
 	}
 
 }

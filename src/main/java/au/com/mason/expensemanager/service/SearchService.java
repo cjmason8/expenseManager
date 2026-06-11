@@ -1,6 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import au.com.mason.expensemanager.controller.ExpenseController;
 import au.com.mason.expensemanager.dao.DocumentDao;
 import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.Document;
@@ -11,6 +10,7 @@ import au.com.mason.expensemanager.dto.GraphDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.dto.SearchResultsDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
+import au.com.mason.expensemanager.mapper.ExpenseMapper;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,19 +20,19 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SearchService {
-	
+
 	@Autowired
 	private TransactionDao<Expense> expenseDao;
-	
+
 	@Autowired
 	private DocumentDao documentDao;
-	
+
 	@Autowired
-	private ExpenseController expenseController;
+	private ExpenseMapper expenseMapper;
 
 	@Autowired
 	private DocumentMapper documentMapper;
-	
+
 	public SearchResultsDto findSearchResults(SearchParamsDto searchParamsDto) throws Exception {
 		List<Expense> expenses = expenseDao.findExpenses(searchParamsDto);
 		List<Document> documents = documentDao.findDocuments(searchParamsDto);
@@ -40,19 +40,19 @@ public class SearchService {
 		for (Document document : documents) {
 			documentDtos.add(documentMapper.entityToDto(document));
 		}
-		
+
 		int paidExpensesSize = expenses.stream().filter(expense -> expense.getPaid()).collect(Collectors.toList()).size();
 		String[] labels = new String[paidExpensesSize];
 		BigDecimal[] data = new BigDecimal[paidExpensesSize];
 		int count = 0;
-		
+
 		for (Expense expense : expenses) {
 			if (expense.getPaid()) {
 				labels[count] = expense.getDueDate().getMonthValue() + "/" + expense.getDueDate().getYear();
 				data[count++] = expense.getAmount();
 			}
 		}
-		
+
 		String description = null;
 		if (searchParamsDto.getTransactionType() == null) {
 			description = searchParamsDto.getMetaDataChunk();
@@ -61,9 +61,9 @@ public class SearchService {
 			description = searchParamsDto.getTransactionType().getDescription();
 		}
 		GraphDto graphDto = new GraphDto(description, data);
-		
-		return new SearchResultsDto(expenseController.convertList(expenses), documentDtos, 
+
+		return new SearchResultsDto(expenseMapper.entityListToDto(expenses), documentDtos,
 				new ExpenseGraphDto((String[]) labels, new GraphDto[] {graphDto}));
 	}
-	
+
 }
