@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.domain;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,8 +11,11 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
 import java.time.LocalDate;
-import java.util.Date;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NamedQueries(
 		value = {
@@ -24,6 +28,9 @@ import java.util.Date;
 		})
 @Entity
 @Table(name="notifications")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Notification {
 
 	public static final String GET_NOT_REMOVED = "Notification.Repository.GetNotRemoved";
@@ -33,69 +40,18 @@ public class Notification {
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "notifications_seq")
 	@SequenceGenerator(name = "notifications_seq", sequenceName = "notifications_seq", allocationSize = 1)
 	private long id;
-	
+
 	@OneToOne
 	@JoinColumn(name = "expenseId")
 	private Expense expense;
 
 	private String message;
-	
+
 	private boolean read = false;
-	
-	private Date created = new Date();
+
+	@Convert(converter = TimestampLocalDateConverter.class)
+	private LocalDate created = LocalDate.now();
 
 	private boolean removed = false;
 
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public Expense getExpense() {
-		return expense;
-	}
-
-	public void setExpense(Expense expense) {
-		this.expense = expense;
-	}
-
-	public boolean isRead() {
-		return read;
-	}
-
-	public void setRead(boolean read) {
-		this.read = read;
-	}
-
-	public void setRemoved(boolean removed) {
-		this.removed = removed;
-	}
-
-	public boolean isRemoved() {
-		return removed;
-	}
-
-	public LocalDate getCreated() {
-		if (created != null) {
-			return new java.sql.Date(created.getTime()).toLocalDate();
-		}
-	
-		return null;
-	}
-
-	public void setCreated(LocalDate created) {
-		this.created = java.sql.Date.valueOf(created);
-	}
-	
 }

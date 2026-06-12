@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.domain;
 
+import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
+import au.com.mason.expensemanager.util.S3Keys;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,8 +13,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.util.Map;
 import java.util.UUID;
-import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
-import au.com.mason.expensemanager.util.S3Keys;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -36,7 +36,7 @@ public class Document implements Metadata {
 	public static final String GET_ALL_BY_FOLDER_PATH = "Document.Repository.GetAllByFolderPath";
 	public static final String GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED = "Document.Repository.GetAllByFolderPathIncludeArchived";
 	public static final String GET_ALL_BY_FOLDER_PATH_AND_FILENAME = "Document.Repository.GetAllByFolderPathAndFilename";
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	@JdbcType(DocumentUuidJdbcType.class)
@@ -46,13 +46,13 @@ public class Document implements Metadata {
 	private String folderPath;
 	private boolean isFolder;
 	private boolean isArchived;
-	
-    @Column
+
+	@Column
 	@JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> metaData;
-    
-    @Transient
-    private String originalFileName;
+	private Map<String, Object> metaData;
+
+	@Transient
+	private String originalFileName;
 
 	public UUID getId() {
 		return id;
@@ -112,7 +112,7 @@ public class Document implements Metadata {
 	public void setOriginalFileName(String originalFileName) {
 		this.originalFileName = originalFileName;
 	}
-	
+
 	/**
 	 * Full S3 object key: for files {@code folderPath + "/" + id}; for folders {@code folderPath + "/" + fileName}.
 	 */

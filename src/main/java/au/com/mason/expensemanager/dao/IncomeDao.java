@@ -1,7 +1,6 @@
 package au.com.mason.expensemanager.dao;
 
 import au.com.mason.expensemanager.domain.Income;
-import au.com.mason.expensemanager.util.DateUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
@@ -24,53 +23,60 @@ public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income>
 	}
 
 	public List<Income> getAllRecurring(boolean includeAll) {
-		
 		String sql = "from Income where recurringType IS NOT NULL AND deleted = false";
 		if (!includeAll) {
-			sql += " AND (endDate is NULL OR endDate >= to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd'))";
+			sql += " AND (endDate is NULL OR endDate >= :today)";
 		}
 		sql += " ORDER BY entryType.description";
-		
-		return entityManager.createQuery(sql).getResultList();
-	}	
-	
-	public List<Income> getForWeek(LocalDate weekStartDate) {
-		String sql = "from Income where recurringType IS NULL "
-				+ "AND dueDate >= to_date('" + DateUtil.getFormattedDbDate(weekStartDate) + "', 'yyyy-mm-dd') "
-				+ "AND dueDate <= to_date('" + DateUtil.getFormattedDbDate(weekStartDate.plusDays(6)) + "', 'yyyy-mm-dd')"
-						+ " ORDER BY dueDate,entryType.type";
 
-		return entityManager.createQuery(sql).getResultList();
+		Query query = entityManager.createQuery(sql);
+		if (!includeAll) {
+			query.setParameter("today", LocalDate.now());
+		}
+
+		return query.getResultList();
+	}
+
+	public List<Income> getForWeek(LocalDate weekStartDate) {
+		Query query = entityManager.createQuery(
+				"from Income where recurringType IS NULL AND dueDate >= :weekStartDate "
+						+ "AND dueDate <= :weekEndDate ORDER BY dueDate,entryType.type");
+		query.setParameter("weekStartDate", weekStartDate);
+		query.setParameter("weekEndDate", weekStartDate.plusDays(6));
+
+		return query.getResultList();
 	}
 
 	public List<Income> getPastDate(LocalDate date) {
-		String sql = "from Income where recurringType IS NULL"
-				+ " AND dueDate > to_date('" + DateUtil.getFormattedDbDate(date) + "', 'yyyy-mm-dd')";
+		Query query = entityManager.createQuery(
+				"from Income where recurringType IS NULL AND dueDate > :date");
+		query.setParameter("date", date);
 
-		return entityManager.createQuery(sql).getResultList();
+		return query.getResultList();
 	}
 
 	public List<Income> getPastDate(LocalDate date, Income recurringIncome) {
-		String sql = "from Income where dueDate > to_date('" + DateUtil.getFormattedDbDate(date)
-				+ "', 'yyyy-mm-dd') and recurringTransaction = :recurringTransaction";
-		Query query = entityManager.createQuery(sql);
+		Query query = entityManager.createQuery(
+				"from Income where dueDate > :date and recurringTransaction = :recurringTransaction");
+		query.setParameter("date", date);
 		query.setParameter("recurringTransaction", recurringIncome);
 
 		return query.getResultList();
 	}
-	
+
 	public List<Income> getForRecurring(Income recurringIncome) {
-		String sql = "from Income where recurringTransaction = :recurringTransaction";
-		Query query = entityManager.createQuery(sql);
+		Query query = entityManager.createQuery("from Income where recurringTransaction = :recurringTransaction");
 		query.setParameter("recurringTransaction", recurringIncome);
 
 		return query.getResultList();
 	}
 
 	public void deleteTransactions(Long recurringTransactionId) {
-		entityManager.createQuery("delete from Income where recurringTransaction.id = " + recurringTransactionId
-				+ " AND dueDate > to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd')")
+		entityManager.createQuery(
+				"delete from Income where recurringTransaction.id = :recurringTransactionId AND dueDate > :today")
+				.setParameter("recurringTransactionId", recurringTransactionId)
+				.setParameter("today", LocalDate.now())
 				.executeUpdate();
 	}
-	
+
 }

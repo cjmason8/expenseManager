@@ -13,15 +13,15 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
-import org.apache.commons.lang3.StringUtils;
 
 @Repository
 @Transactional
 public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<Expense> {
-	
+
 	@Autowired
 	private NotificationDao notificationDao;
 
@@ -49,52 +49,52 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 		Query query = entityManager.createNamedQuery(Expense.GET_ALL_RECURRING, Expense.class);
 		if (!includeAll) {
 			query = entityManager.createNamedQuery(Expense.GET_RECURRING, Expense.class);
-			query.setParameter("endDate", DateUtil.getFormattedDbDate(LocalDate.now()));
+			query.setParameter("endDate", LocalDate.now());
 		}
 
 		return query.getResultList();
-	}	
-	
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<Expense> getAll() {
 		Query query = entityManager.createNamedQuery(Expense.GET_ALL, Expense.class);
 		query.setMaxResults(Statics.MAX_RESULTS.getIntValue());
 
 		return query.getResultList();
-	}	
-	
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<Expense> getForWeek(LocalDate weekStartDate) {
 		Query query = entityManager.createNamedQuery(Expense.GET_FOR_WEEK, Expense.class);
-		query.setParameter("weekStartDate", DateUtil.getFormattedDbDate(weekStartDate));
-		query.setParameter("weekLaterFromStartDate", DateUtil.getFormattedDbDate(weekStartDate.plusDays(6)));
+		query.setParameter("weekStartDate", weekStartDate);
+		query.setParameter("weekLaterFromStartDate", weekStartDate.plusDays(6));
 
 		return query.getResultList();
 	}
-	
+
 	public List<Expense> getUnpaidBeforeWeek(LocalDate weekStartDate) {
 		Query query = entityManager.createNamedQuery(Expense.GET_UNPAID_BEFORE_WEEK);
-		query.setParameter("weekStartDate", DateUtil.getFormattedDbDate(weekStartDate));
+		query.setParameter("weekStartDate", weekStartDate);
 
 		return query.getResultList();
-	}	
-	
+	}
+
 	public List<Expense> getPastDate(LocalDate date) {
 		Query query = entityManager.createNamedQuery(Expense.GET_PAST_DATE);
-		query.setParameter("date", DateUtil.getFormattedDbDate(date));
+		query.setParameter("date", date);
 
 		return query.getResultList();
 	}
 
 	public List<Expense> getPastDate(LocalDate date, Expense recurringExpense) {
-		String sql = "from Expense where dueDate > to_date('" + DateUtil.getFormattedDbDate(date)
-				+ "', 'yyyy-mm-dd') and recurringTransaction = :recurringTransaction";
-		Query query = entityManager.createQuery(sql);
+		Query query = entityManager.createQuery(
+				"from Expense where dueDate > :date and recurringTransaction = :recurringTransaction");
+		query.setParameter("date", date);
 		query.setParameter("recurringTransaction", recurringExpense);
 
 		return query.getResultList();
 	}
-	
+
 	public List<Expense> findExpenses(SearchParamsDto searchParamsDto) {
 		// JPQL only: Hibernate 6 still treats native SQL with EXISTS/subqueries on other tables as duplicate "id" aliases.
 		StringBuilder jpql = new StringBuilder("SELECT e FROM Expense e WHERE e.recurringType IS NULL ");
@@ -110,10 +110,10 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 			jpql.append("AND lower(e.notes) LIKE lower(:keyWords) ");
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getStartDateString())) {
-			jpql.append("AND e.dueDate >= to_date(:startDate, 'yyyy-mm-dd') ");
+			jpql.append("AND e.dueDate >= :startDate ");
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getEndDateString())) {
-			jpql.append("AND e.dueDate <= to_date(:endDate, 'yyyy-mm-dd') ");
+			jpql.append("AND e.dueDate <= :endDate ");
 		}
 		jpql.append("ORDER BY e.dueDate DESC, e.entryType.description");
 
@@ -130,10 +130,10 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 			query.setParameter("keyWords", "%" + searchParamsDto.getKeyWords() + "%");
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getStartDateString())) {
-			query.setParameter("startDate", DateUtil.getFormattedDbDate(searchParamsDto.getStartDateString()));
+			query.setParameter("startDate", DateUtil.getFormattedDate(searchParamsDto.getStartDateString()));
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getEndDateString())) {
-			query.setParameter("endDate", DateUtil.getFormattedDbDate(searchParamsDto.getEndDateString()));
+			query.setParameter("endDate", DateUtil.getFormattedDate(searchParamsDto.getEndDateString()));
 		}
 
 		List<Expense> results = query.getResultList();
@@ -145,25 +145,26 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public List<Expense> getForRecurring(Expense recurringExpense) {
-		String sql = "from Expense where recurringTransaction = :recurringTransaction";
-		Query query = entityManager.createQuery(sql);
+		Query query = entityManager.createQuery("from Expense where recurringTransaction = :recurringTransaction");
 		query.setParameter("recurringTransaction", recurringExpense);
 
 		return query.getResultList();
 	}
 
 	public void deleteTransactions(Long recurringTransactionId) {
-		entityManager.createQuery("delete from Expense where recurringTransaction.id = " + recurringTransactionId
-				+ " AND dueDate > to_date('" + DateUtil.getFormattedDbDate(LocalDate.now()) + "', 'yyyy-mm-dd')")
+		entityManager.createQuery(
+				"delete from Expense where recurringTransaction.id = :recurringTransactionId AND dueDate > :today")
+				.setParameter("recurringTransactionId", recurringTransactionId)
+				.setParameter("today", LocalDate.now())
 				.executeUpdate();
 	}
-	
+
 	public List<Expense> findExpenses(RefData entryType) {
-		String sql = "from Expense where entryType = :entryType AND paid = false AND recurringType is null order by dueDate";
-		Query query = entityManager.createQuery(sql);
+		Query query = entityManager.createQuery(
+				"from Expense where entryType = :entryType AND paid = false AND recurringType is null order by dueDate");
 		query.setParameter("entryType", entryType);
 
 		return query.getResultList();
 	}
-	
+
 }

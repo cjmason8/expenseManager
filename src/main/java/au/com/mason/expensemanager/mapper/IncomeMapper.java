@@ -3,89 +3,47 @@ package au.com.mason.expensemanager.mapper;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.IncomeDto;
 import au.com.mason.expensemanager.util.DateUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-@Component
-public class IncomeMapper implements BaseMapper<Income, IncomeDto> {
-    private static Gson gson = new GsonBuilder().serializeNulls().create();
+@Mapper(componentModel = "spring", uses = {RefDataMapper.class, DocumentMapper.class, MappingConverters.class})
+public interface IncomeMapper extends BaseMapper<Income, IncomeDto> {
 
-    @Autowired
-    private RefDataMapper refDataMapper;
-    @Autowired
-    private DocumentMapper documentMapper;
+	@Override
+	@Mapping(source = "entryType", target = "transactionType")
+	@Mapping(source = "amount", target = "amount", qualifiedByName = "bigDecimalToString")
+	@Mapping(source = "dueDate", target = "dueDateString", qualifiedByName = "localDateToString")
+	@Mapping(source = "startDate", target = "startDateString", qualifiedByName = "localDateToString")
+	@Mapping(source = "endDate", target = "endDateString", qualifiedByName = "localDateToString")
+	@Mapping(source = "metaData", target = "metaDataChunk", qualifiedByName = "objectMapToJson")
+	@Mapping(source = "document", target = "documentDto")
+	@Mapping(target = "week", ignore = true)
+	IncomeDto entityToDto(Income income);
 
-    public Income dtoToEntity(IncomeDto incomeDto) {
-        if ( incomeDto == null ) {
-            return null;
-        }
+	@Override
+	@Mapping(source = "transactionType", target = "entryType")
+	@Mapping(source = "amount", target = "amount", qualifiedByName = "stringToBigDecimal")
+	@Mapping(source = "dueDateString", target = "dueDate", qualifiedByName = "stringToLocalDate")
+	@Mapping(source = "startDateString", target = "startDate", qualifiedByName = "stringToLocalDate")
+	@Mapping(source = "endDateString", target = "endDate", qualifiedByName = "stringToLocalDate")
+	@Mapping(source = "metaDataChunk", target = "metaData", qualifiedByName = "jsonToObjectMap")
+	@Mapping(source = "documentDto", target = "document")
+	@Mapping(target = "deleted", ignore = true)
+	@Mapping(target = "documentationFilePath", ignore = true)
+	@Mapping(target = "recurringTransaction", ignore = true)
+	Income dtoToEntity(IncomeDto incomeDto);
 
-        Income income = new Income();
+	@AfterMapping
+	default void setWeekFromDates(@MappingTarget IncomeDto dto, Income income) {
+		if (income.getDueDate() != null) {
+			dto.setWeek(DateUtil.getFormattedDateString(income.getDueDate().with(DayOfWeek.MONDAY)));
+		}
+		if (income.getStartDate() != null) {
+			dto.setWeek(DateUtil.getFormattedDateString(income.getStartDate().with(DayOfWeek.MONDAY)));
+		}
+	}
 
-        income.setEntryType( refDataMapper.dtoToEntity( incomeDto.getTransactionType() ) );
-        if ( incomeDto.getId() != null ) {
-            income.setId( incomeDto.getId() );
-        }
-        if ( incomeDto.getAmount() != null ) {
-            income.setAmount( new BigDecimal( incomeDto.getAmount() ) );
-        }
-        income.setRecurringType( refDataMapper.dtoToEntity( incomeDto.getRecurringType() ) );
-        income.setNotes( incomeDto.getNotes() );
-        if (incomeDto.getDueDateString() != null) {
-            income.setDueDate(DateUtil.getFormattedDate(incomeDto.getDueDateString()));
-        }
-
-        if (incomeDto.getStartDateString() != null) {
-            income.setStartDate(DateUtil.getFormattedDate(incomeDto.getStartDateString()));
-        }
-        if (incomeDto.getEndDateString() != null) {
-            income.setEndDate(DateUtil.getFormattedDate(incomeDto.getEndDateString()));
-        }
-        income.setMetaData((Map<String, Object>) gson.fromJson(incomeDto.getMetaDataChunk(), Map.class));
-        if (incomeDto.getDocumentDto() != null) {
-            income.setDocument(documentMapper.dtoToEntity(incomeDto.getDocumentDto()));
-        }
-
-        return income;
-    }
-
-    public IncomeDto entityToDto(Income income) {
-        if ( income == null ) {
-            return null;
-        }
-
-        IncomeDto incomeDto = new IncomeDto();
-
-        incomeDto.setTransactionType( refDataMapper.entityToDto( income.getEntryType() ) );
-        incomeDto.setId( income.getId() );
-        if ( income.getAmount() != null ) {
-            incomeDto.setAmount( income.getAmount().toString() );
-        }
-        incomeDto.setRecurringType( refDataMapper.entityToDto( income.getRecurringType() ) );
-        incomeDto.setNotes( income.getNotes() );
-        if (income.getDueDate() != null) {
-            incomeDto.setDueDateString(DateUtil.getFormattedDateString(income.getDueDate()));
-            incomeDto.setWeek(DateUtil.getFormattedDateString(income.getDueDate().with(DayOfWeek.MONDAY)));
-        }
-
-        if (income.getStartDate() != null) {
-            incomeDto.setStartDateString(DateUtil.getFormattedDateString(income.getStartDate()));
-            incomeDto.setWeek(DateUtil.getFormattedDateString(income.getStartDate().with(DayOfWeek.MONDAY)));
-        }
-        if (income.getEndDate() != null) {
-            incomeDto.setEndDateString(DateUtil.getFormattedDateString(income.getEndDate()));
-        }
-        incomeDto.setMetaDataChunk(gson.toJson(income.getMetaData(), Map.class));
-        if (income.getDocument() != null) {
-            incomeDto.setDocumentDto(documentMapper.entityToDto(income.getDocument()));
-        }
-
-        return incomeDto;
-    }
 }

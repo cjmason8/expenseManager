@@ -2,55 +2,21 @@ package au.com.mason.expensemanager.mapper;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.dto.DocumentDto;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class DocumentMapper implements BaseMapper<Document, DocumentDto> {
+@Mapper(componentModel = "spring", uses = MappingConverters.class)
+public interface DocumentMapper extends BaseMapper<Document, DocumentDto> {
 
-    private static Gson gson = new GsonBuilder().serializeNulls().create();
+	@Override
+	@Mapping(source = "folder", target = "isFolder")
+	@Mapping(source = "metaData", target = "metaDataChunk", qualifiedByName = "objectMapToJson")
+	DocumentDto entityToDto(Document document);
 
-    public Document dtoToEntity(DocumentDto documentDto) {
-        if ( documentDto == null ) {
-            return null;
-        }
+	@Override
+	@Mapping(source = "isFolder", target = "folder")
+	@Mapping(source = "metaDataChunk", target = "metaData", qualifiedByName = "jsonToObjectMap")
+	@Mapping(target = "archived", ignore = true)
+	Document dtoToEntity(DocumentDto documentDto);
 
-        Document document = new Document();
-
-        if ( documentDto.getId() != null ) {
-            document.setId( documentDto.getId() );
-        }
-        document.setFileName( documentDto.getFileName() );
-        document.setFolderPath( documentDto.getFolderPath() );
-        document.setOriginalFileName( documentDto.getOriginalFileName() );
-        if (!StringUtils.isEmpty(documentDto.getMetaDataChunk())) {
-            document.setMetaData((Map<String, Object>) gson.fromJson(documentDto.getMetaDataChunk(), Map.class));
-        }
-        document.setFolder(documentDto.getIsFolder());
-
-        return document;
-    }
-
-    public DocumentDto entityToDto(Document document) {
-        if ( document == null ) {
-            return null;
-        }
-
-        DocumentDto documentDto = new DocumentDto();
-
-        documentDto.setId( document.getId() );
-        documentDto.setFileName( document.getFileName() );
-        documentDto.setFolderPath( document.getFolderPath() );
-        documentDto.setOriginalFileName( document.getOriginalFileName() );
-        if (document.getMetaData() != null) {
-            documentDto.setMetaDataChunk(gson.toJson(document.getMetaData(), Map.class));
-        }
-        documentDto.setOriginalFileName(documentDto.getFileName());
-        documentDto.setIsFolder(document.isFolder());
-
-        return documentDto;
-    }
 }

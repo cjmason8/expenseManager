@@ -13,13 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
 public class DonationDao extends BaseDao<Donation> {
-	
+
 	private Gson gson = new GsonBuilder().serializeNulls().create();
 
 	public DonationDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
@@ -29,7 +30,7 @@ public class DonationDao extends BaseDao<Donation> {
 	public List<Donation> getAll() {
 		return entityManager.createNamedQuery(Donation.GET_ALL, Donation.class).getResultList();
 	}
-	
+
 	public List<Donation> findDonations(DonationSearchDto donationSearchDto) {
 		StringBuilder jpql = new StringBuilder("SELECT d FROM Donation d WHERE 1=1 ");
 		if (donationSearchDto.getCause() != null) {
@@ -40,11 +41,11 @@ public class DonationDao extends BaseDao<Donation> {
 				jpql.append("AND d.cause.description = :causeDescription ");
 			}
 		}
-		if (donationSearchDto.getStartDate() != null) {
-			jpql.append("AND d.dueDate >= to_date(:startDate, 'yyyy-mm-dd') ");
+		if (!StringUtils.isBlank(donationSearchDto.getStartDate())) {
+			jpql.append("AND d.dueDate >= :startDate ");
 		}
-		if (donationSearchDto.getEndDate() != null) {
-			jpql.append("AND d.dueDate <= to_date(:endDate, 'yyyy-mm-dd') ");
+		if (!StringUtils.isBlank(donationSearchDto.getEndDate())) {
+			jpql.append("AND d.dueDate <= :endDate ");
 		}
 		jpql.append("ORDER BY d.dueDate DESC, d.cause.description");
 
@@ -57,11 +58,11 @@ public class DonationDao extends BaseDao<Donation> {
 				query.setParameter("causeDescription", c.getDescription());
 			}
 		}
-		if (donationSearchDto.getStartDate() != null) {
-			query.setParameter("startDate", DateUtil.getFormattedDbDate(donationSearchDto.getStartDate()));
+		if (!StringUtils.isBlank(donationSearchDto.getStartDate())) {
+			query.setParameter("startDate", DateUtil.getFormattedDate(donationSearchDto.getStartDate()));
 		}
-		if (donationSearchDto.getEndDate() != null) {
-			query.setParameter("endDate", DateUtil.getFormattedDbDate(donationSearchDto.getEndDate()));
+		if (!StringUtils.isBlank(donationSearchDto.getEndDate())) {
+			query.setParameter("endDate", DateUtil.getFormattedDate(donationSearchDto.getEndDate()));
 		}
 
 		List<Donation> results = query.getResultList();

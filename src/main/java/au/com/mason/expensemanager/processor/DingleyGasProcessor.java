@@ -1,7 +1,7 @@
 package au.com.mason.expensemanager.processor;
 
 import au.com.mason.expensemanager.domain.RefData;
-import javax.mail.Message;
+import jakarta.mail.Message;
 import org.springframework.stereotype.Component;
 
 @Component
