@@ -3,15 +3,15 @@ package au.com.mason.expensemanager.dao;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Statics;
+import au.com.mason.expensemanager.dto.RefDataDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.util.DateUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,11 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 
 	public ExpenseDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(Expense.class, entityManager);
+	}
+
+	@Override
+	public Expense getById(long id) {
+		return super.getById(Long.valueOf(id));
 	}
 
 	public void delete(Expense expense) {
@@ -91,35 +96,52 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public List<Expense> findExpenses(SearchParamsDto searchParamsDto) {
-		String sql = "SELECT e.* FROM transactions e LEFT JOIN refdata r on e.entrytypeId = r.id "
-				+ "where transactiontype = 'EXPENSE' AND e.recurringtypeid IS NULL ";
-		Map<String, Object> parameters = new HashMap<>();
+		// JPQL only: Hibernate 6 still treats native SQL with EXISTS/subqueries on other tables as duplicate "id" aliases.
+		StringBuilder jpql = new StringBuilder("SELECT e FROM Expense e WHERE e.recurringType IS NULL ");
 		if (searchParamsDto.getTransactionType() != null) {
-			sql += "AND lower(r.description) = lower(:transactionTypeDescription) ";
-			parameters.put("transactionTypeDescription", searchParamsDto.getTransactionType().getDescription());
+			RefDataDto tt = searchParamsDto.getTransactionType();
+			if (tt.getId() != null) {
+				jpql.append("AND e.entryType.id = :entryTypeId ");
+			} else if (tt.getDescription() != null) {
+				jpql.append("AND lower(e.entryType.description) = lower(:entryTypeDescription) ");
+			}
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getKeyWords())) {
-			sql += "AND lower(e.notes) LIKE lower(:keyWords) ";
-			parameters.put("keyWords", "%" + searchParamsDto.getKeyWords() + "%");
+			jpql.append("AND lower(e.notes) LIKE lower(:keyWords) ");
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getStartDateString())) {
-			sql += "AND e.duedate >= :startDate ";
-			parameters.put("startDate", DateUtil.getFormattedDate(searchParamsDto.getStartDateString()));
+			jpql.append("AND e.dueDate >= :startDate ");
 		}
 		if (!StringUtils.isEmpty(searchParamsDto.getEndDateString())) {
-			sql += "AND e.duedate <= :endDate ";
-			parameters.put("endDate", DateUtil.getFormattedDate(searchParamsDto.getEndDateString()));
+			jpql.append("AND e.dueDate <= :endDate ");
 		}
-		sql += "ORDER BY e.duedate DESC,r.description";
-		Query query = entityManager.createNativeQuery(sql, Expense.class);
-		parameters.forEach(query::setParameter);
+		jpql.append("ORDER BY e.dueDate DESC, e.entryType.description");
+
+		TypedQuery<Expense> query = entityManager.createQuery(jpql.toString(), Expense.class);
+		if (searchParamsDto.getTransactionType() != null) {
+			RefDataDto tt = searchParamsDto.getTransactionType();
+			if (tt.getId() != null) {
+				query.setParameter("entryTypeId", tt.getId());
+			} else if (tt.getDescription() != null) {
+				query.setParameter("entryTypeDescription", tt.getDescription());
+			}
+		}
+		if (!StringUtils.isEmpty(searchParamsDto.getKeyWords())) {
+			query.setParameter("keyWords", "%" + searchParamsDto.getKeyWords() + "%");
+		}
+		if (!StringUtils.isEmpty(searchParamsDto.getStartDateString())) {
+			query.setParameter("startDate", DateUtil.getFormattedDate(searchParamsDto.getStartDateString()));
+		}
+		if (!StringUtils.isEmpty(searchParamsDto.getEndDateString())) {
+			query.setParameter("endDate", DateUtil.getFormattedDate(searchParamsDto.getEndDateString()));
+		}
+
 		List<Expense> results = query.getResultList();
 		if (!StringUtils.isEmpty(searchParamsDto.getMetaDataChunk())) {
 			return filterByMetadata(searchParamsDto, results);
 		}
 
 		return results.stream().limit(Statics.MAX_RESULTS.getIntValue()).collect(Collectors.toList());
-
 	}
 
 	public List<Expense> getForRecurring(Expense recurringExpense) {

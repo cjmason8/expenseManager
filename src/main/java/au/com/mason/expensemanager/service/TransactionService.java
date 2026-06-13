@@ -1,8 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -10,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.TransactionDao;
+import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RecurringUnit;
 import au.com.mason.expensemanager.domain.Transaction;
 import au.com.mason.expensemanager.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 
 @Component
 public abstract class TransactionService<V extends Transaction, D extends TransactionDao<V>> {
@@ -36,26 +35,50 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	}
 	
 	public V addTransaction(V expense) throws Exception {
-		
-		if (expense.getDocument() != null && expense.getDocument().getOriginalFileName() != null) {
-			updateDocument(expense);
-		}
-		else {
-			expense.setDocument(null);
-		}
-		
+		attachDocumentForCreate(expense);
 		createTransaction(expense);
 		handleRecurring(expense);
-		
 		return expense;
 	}
 
-	private void updateDocument(V expense) throws IOException, Exception {
-		if (!expense.getDocument().getOriginalFileName().equals(expense.getDocument().getFileName())) {
-			Files.move(Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getOriginalFileName()),
-					Paths.get(expense.getDocument().getFolderPath() + "/" + expense.getDocument().getFileName()));
-			
-			expense.getDocument();
+	private void attachDocumentForCreate(V transaction) throws Exception {
+		Document doc = transaction.getDocument();
+		if (!isDocumentAttached(doc)) {
+			transaction.setDocument(null);
+			return;
+		}
+		transaction.setDocument(resolveDocument(doc));
+	}
+
+	private void attachDocumentForUpdate(V transaction) throws Exception {
+		Document doc = transaction.getDocument();
+		if (!isDocumentAttached(doc)) {
+			return;
+		}
+		transaction.setDocument(resolveDocument(doc));
+	}
+
+	private boolean isDocumentAttached(Document doc) {
+		return doc != null && (doc.getId() != null || StringUtils.isNotBlank(doc.getFileName()));
+	}
+
+	private Document resolveDocument(Document doc) throws Exception {
+		if (doc.getId() != null) {
+			doc = documentService.getById(doc.getId());
+		}
+		if (StringUtils.isBlank(doc.getOriginalFileName()) && StringUtils.isNotBlank(doc.getFileName())) {
+			doc.setOriginalFileName(doc.getFileName());
+		}
+		syncDocumentDisplayName(doc);
+		return doc;
+	}
+
+	private void syncDocumentDisplayName(Document doc) throws Exception {
+		if (doc == null || StringUtils.isBlank(doc.getOriginalFileName()) || StringUtils.isBlank(doc.getFileName())) {
+			return;
+		}
+		if (!doc.getOriginalFileName().equals(doc.getFileName())) {
+			documentService.updateDocument(doc);
 		}
 	}
 
@@ -118,15 +141,9 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	}
 	
 	public V updateTransaction(V expense) throws Exception {
-		
-		if (expense.getDocument() != null && expense.getDocument().getOriginalFileName() != null) {
-			updateDocument(expense);
-		}
-
+		attachDocumentForUpdate(expense);
 		transactionDao.update(expense);
-		
 		handleRecurringForUpdate(expense);
-		
 		return expense;
 	}
 

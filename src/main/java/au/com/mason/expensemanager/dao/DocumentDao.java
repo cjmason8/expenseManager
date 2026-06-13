@@ -5,6 +5,7 @@ import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,12 +51,15 @@ public class DocumentDao extends MetaDataDao<Document> {
 			return new ArrayList<Document>();
 		}
 
-		String sql = "SELECT * FROM documents ";
+		String jpql = "FROM Document d ";
 		if (!StringUtils.isEmpty(searchParamsDto.getKeyWords())) {
-			sql += "WHERE lower(fileName) LIKE '%" + searchParamsDto.getKeyWords().toLowerCase() + "%' ";
+			jpql += "WHERE lower(d.fileName) LIKE lower(:keyWords) ";
 		}
-		Query query = entityManager.createNativeQuery(sql, Document.class);
-		List<Document> results = query.getResultList();
+		TypedQuery<Document> tq = entityManager.createQuery(jpql, Document.class);
+		if (!StringUtils.isEmpty(searchParamsDto.getKeyWords())) {
+			tq.setParameter("keyWords", "%" + searchParamsDto.getKeyWords() + "%");
+		}
+		List<Document> results = tq.getResultList();
 		
 		if (!StringUtils.isEmpty(searchParamsDto.getMetaDataChunk())) {
 			return filterByMetadata(searchParamsDto, results);

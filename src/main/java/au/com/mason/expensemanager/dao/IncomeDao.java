@@ -17,6 +17,11 @@ public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income>
 		super(Income.class, entityManager);
 	}
 
+	@Override
+	public Income getById(long id) {
+		return super.getById(Long.valueOf(id));
+	}
+
 	public List<Income> getAllRecurring(boolean includeAll) {
 		String sql = "from Income where recurringType IS NOT NULL AND deleted = false";
 		if (!includeAll) {

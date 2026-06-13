@@ -91,7 +91,8 @@ public final class MappingConverters {
 	@Named("hasDocumentFileName")
 	@Condition
 	public static boolean hasDocumentFileName(DocumentDto documentDto) {
-		return documentDto != null && documentDto.getFileName() != null;
+		return documentDto != null
+				&& (documentDto.getId() != null || StringUtils.isNotBlank(documentDto.getFileName()));
 	}
 
 }
