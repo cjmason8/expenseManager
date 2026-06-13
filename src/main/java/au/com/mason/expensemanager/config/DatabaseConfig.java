@@ -23,9 +23,9 @@ public class DatabaseConfig {
 	
 	@Autowired
 	private AwsSecretsService awsSecretsService;
-	
-	@Value("${env:local}")
-	private String environment;
+
+	@Value("${database.secret.name:local-database-credentials}")
+	private String databaseSecretName;
 
 	/**
 	 * DataSource definition for database connection. Settings are read from the
@@ -36,12 +36,8 @@ public class DatabaseConfig {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(System.getenv().get("DB_DRIVER"));
 		dataSource.setUrl(System.getenv().get("DB_URL"));
-		
-		String secretName = environment.equalsIgnoreCase("prd") 
-			? "prod-database-credentials" 
-			: "local-database-credentials";
-		dataSource.setUsername(awsSecretsService.getSecretValue(secretName, "USER_NAME"));
-		dataSource.setPassword(awsSecretsService.getSecretValue(secretName, "PASSWORD"));
+		dataSource.setUsername(awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"));
+		dataSource.setPassword(awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD"));
 		
 		return dataSource;
 	}

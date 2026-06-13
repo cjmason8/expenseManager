@@ -76,7 +76,7 @@ setup_logging() {
 		echo "CSV: $DOCUMENTS_CSV"
 		echo "Bucket: $AWS_S3_BUCKET"
 		echo "Region: $AWS_DEFAULT_REGION"
-		echo "Dry run: $DRY_RUN"
+		echo "Dry run: $DRY_RUN"Ser
 		echo ""
 	} > "$LOG_FILE"
 	exec > >(tee -a "$LOG_FILE") 2>&1
