@@ -10,10 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.regions.Region;
@@ -40,34 +36,20 @@ public class S3Service {
 	private final String bucket;
 
 	public S3Service(
-			@Value("${aws.s3.bucket}") String bucket,
-			@Value("${aws.s3.region}") String region,
-			@Value("${aws.s3.access-key:}") String accessKey,
-			@Value("${aws.s3.secret-key:}") String secretKey,
-			@Value("${aws.s3.session-token:}") String sessionToken,
+			AwsSecretsService awsSecretsService,
+			@Value("${aws.s3.bucket:}") String bucket,
+			@Value("${aws.s3.region:ap-southeast-2}") String region,
 			@Value("${aws.s3.endpoint:}") String endpointOverride,
 			@Value("${aws.s3.path-style-access:false}") boolean pathStyleAccess) {
 
 		if (StringUtils.isBlank(bucket)) {
-			throw new IllegalStateException("aws.s3.bucket must be set (e.g. via AWS_S3_BUCKET)");
+			throw new IllegalStateException("S3 bucket must be set via aws.s3.bucket / AWS_S3_BUCKET");
 		}
 		this.bucket = bucket.trim();
 
-		var builder = S3Client.builder().region(Region.of(region.trim()));
-
-		if (StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
-			if (StringUtils.isNotBlank(sessionToken)) {
-				builder.credentialsProvider(StaticCredentialsProvider.create(AwsSessionCredentials.create(
-						accessKey.trim(), secretKey.trim(), sessionToken.trim())));
-			}
-			else {
-				builder.credentialsProvider(StaticCredentialsProvider.create(
-						AwsBasicCredentials.create(accessKey.trim(), secretKey.trim())));
-			}
-		}
-		else {
-			builder.credentialsProvider(DefaultCredentialsProvider.create());
-		}
+		var builder = S3Client.builder()
+				.region(Region.of(region.trim()))
+				.credentialsProvider(awsSecretsService.getCredentialsProvider());
 
 		if (StringUtils.isNotBlank(endpointOverride)) {
 			builder.endpointOverride(URI.create(endpointOverride.trim()));
@@ -77,6 +59,7 @@ public class S3Service {
 		}
 
 		this.s3Client = builder.build();
+		LOGGER.info("S3 client initialized for bucket {} in region {}", this.bucket, region);
 	}
 
 	public byte[] getObjectAsBytes(String key) {
@@ -325,8 +308,8 @@ public class S3Service {
 		String hint = "";
 		if (e.statusCode() == 403) {
 			hint = " Typical fix: IAM with s3:PutObject and s3:GetObject on arn:aws:s3:::" + bucket
-					+ "/* (HeadObject requires GetObject permission on the key). If using temporary credentials, set aws.s3.session-token (AWS_SESSION_TOKEN). "
-					+ "Match aws.s3.region to the bucket region; verify bucket policy and the IAM user/role.";
+					+ "/* (HeadObject requires GetObject permission on the key). Verify credentials in AWS Secrets Manager"
+					+ " and match aws.s3.region to the bucket region.";
 		}
 		return new IllegalStateException("S3 " + operation + " failed for s3://" + bucket + "/" + objectKey + ": " + detail + "." + hint, e);
 	}

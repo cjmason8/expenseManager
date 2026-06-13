@@ -98,7 +98,7 @@ public class Document implements Metadata {
 	 * Parent folder key within the bucket (S3 prefix of this document, no trailing slash).
 	 */
 	public String getFolderPath() {
-		return S3Keys.normalize(folderPath);
+		return S3Keys.toUiFolderPath(folderPath);
 	}
 
 	public void setFolderPath(String folderPath) {
@@ -118,7 +118,7 @@ public class Document implements Metadata {
 	 */
 	@Transient
 	public String getFilePath() {
-		String parent = S3Keys.normalize(folderPath);
+		String parent = S3Keys.toBucketPrefix(folderPath);
 		if (parent == null) {
 			return null;
 		}

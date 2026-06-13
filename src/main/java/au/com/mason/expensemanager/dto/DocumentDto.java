@@ -38,7 +38,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	}
 	
 	public String getFolderPath() {
-		return S3Keys.normalize(folderPath);
+		return S3Keys.toUiFolderPath(folderPath);
 	}
 
 	public void setFolderPath(String folderPath) {
@@ -62,7 +62,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	}
 	
 	public String getFilePath() {
-		String parent = S3Keys.normalize(folderPath);
+		String parent = S3Keys.toBucketPrefix(folderPath);
 		if (parent == null) {
 			return null;
 		}

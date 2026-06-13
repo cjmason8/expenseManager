@@ -1,11 +1,10 @@
 package au.com.mason.expensemanager.service;
 
-import java.io.File;
-import java.io.IOException;
+import au.com.mason.expensemanager.dao.DocumentDao;
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.util.S3Keys;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,17 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
-import au.com.mason.expensemanager.dao.DocumentDao;
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.util.S3Keys;
 
 @Component
 public class DocumentService {
@@ -51,8 +43,9 @@ public class DocumentService {
 	public Document updateDocument(Document document) {
 		if (document.isFolder() && document.getOriginalFileName() != null
 				&& !document.getOriginalFileName().equals(document.getFileName())) {
-			String oldKey = S3Keys.join(document.getFolderPath(), document.getOriginalFileName());
-			String newKey = S3Keys.join(document.getFolderPath(), document.getFileName());
+			String parentPrefix = S3Keys.toBucketPrefix(document.getFolderPath());
+			String oldKey = S3Keys.join(parentPrefix, document.getOriginalFileName());
+			String newKey = S3Keys.join(parentPrefix, document.getFileName());
 			s3Service.renamePrefix(oldKey, newKey);
 			documentDao.updateDirectoryPaths(oldKey, newKey);
 		}
@@ -63,86 +56,106 @@ public class DocumentService {
 
 	public Document createDocument(String path, String type, MultipartFile file) throws Exception {
 		byte[] bytes = file.getBytes();
-		String parentFolderKey = S3Keys.join(S3Keys.join(docsRoot, "expenseManager"), type);
-		if (path != null) {
-			parentFolderKey = toBucketKey(path);
-		}
+		String uploadType = normalizeUploadType(type);
+		String parentFolderPath = resolveFolderPath(path, uploadType);
 
 		Document document = new Document();
-		document.setFileName(file.getOriginalFilename());
-		document.setFolderPath(parentFolderKey);
-		if (type.equals("documents")) {
+		String originalName = file.getOriginalFilename();
+		document.setFileName(originalName);
+		document.setOriginalFileName(originalName);
+		document.setFolderPath(parentFolderPath);
+		if (uploadType.equals("documents")) {
 			setMetadata(path, document);
 		}
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(parentFolderKey, saved.getId(), bytes, file.getContentType());
+		s3Service.putObjectWithFolders(
+				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), bytes, file.getContentType());
+		saved.setOriginalFileName(originalName);
 		return saved;
 	}
 
+	private static String normalizeUploadType(String type) {
+		if (type == null || type.isBlank() || "undefined".equalsIgnoreCase(type) || "null".equalsIgnoreCase(type)) {
+			throw new IllegalArgumentException("Document upload requires a type (expenses, incomes, donations, or documents)");
+		}
+		return type.trim();
+	}
+
 	public Document createDocumentFromEmailForExpense(byte[] file, String fileName) throws Exception {
-		String parentFolderKey = S3Keys.join(S3Keys.join(docsRoot, "expenseManager"), "expenses");
+		String parentFolderPath = "/docs/expenseManager/expenses";
 
 		Document document = new Document();
 		document.setFileName(fileName);
-		document.setFolderPath(parentFolderKey);
+		document.setFolderPath(parentFolderPath);
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(parentFolderKey, saved.getId(), file, "application/octet-stream");
+		s3Service.putObjectWithFolders(
+				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file, "application/octet-stream");
 		return saved;
 	}
 
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath,
 			Map<String, Object> metaData) throws Exception {
-		String parentFolderKey = S3Keys.join(S3Keys.join(docsRoot, IP_FOLDER_PATH), folderPath.replaceFirst("^/+", ""));
+		String parentFolderPath = S3Keys.toUiFolderPath(
+				"/docs/expenseManager/filofax/IPs/" + folderPath.replaceFirst("^/+", ""));
 
 		Document document = new Document();
 		document.setMetaData(metaData);
 		document.setFileName(fileName);
-		document.setFolderPath(S3Keys.normalize(parentFolderKey));
+		document.setFolderPath(parentFolderPath);
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(document.getFolderPath(), saved.getId(), file, "application/octet-stream");
+		s3Service.putObjectWithFolders(
+				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file, "application/octet-stream");
 		return saved;
+	}
+
+	private String resolveFolderPath(String path, String type) {
+		String defaultPath = "/docs/expenseManager/" + type;
+		if (path == null || path.isBlank()) {
+			return defaultPath;
+		}
+		return S3Keys.toUiFolderPath(path);
 	}
 
 	private void setMetadata(String path, Document document) {
 		if (path == null) {
 			return;
 		}
-		String keyPath = toBucketKey(path);
-		int lastSlash = keyPath.lastIndexOf('/');
+		String uiPath = S3Keys.toUiFolderPath(path);
+		int lastSlash = uiPath.lastIndexOf('/');
 		if (lastSlash < 0) {
 			return;
 		}
-		String parentFolderKey = keyPath.substring(0, lastSlash);
-		String parentFolderName = keyPath.substring(lastSlash + 1);
+		String parentFolderPath = uiPath.substring(0, lastSlash);
+		String parentFolderName = uiPath.substring(lastSlash + 1);
 
-		Document parent = documentDao.getFolder(parentFolderKey, parentFolderName);
+		Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
 		document.setMetaData(parent.getMetaData());
 	}
 
 	public Document createDirectory(Document directory) {
-		String parentKey;
+		String parentPath;
 		if (directory.getFolderPath().contains("root")) {
 			String rel = directory.getFolderPath().replace("root", "").replaceAll("^/+", "");
-			parentKey = S3Keys.join(S3Keys.join(docsRoot, "expenseManager/filofax"), rel);
+			parentPath = S3Keys.toUiFolderPath("/docs/expenseManager/filofax/" + rel);
 		}
 		else {
-			parentKey = S3Keys.normalize(directory.getFolderPath());
+			parentPath = S3Keys.toUiFolderPath(directory.getFolderPath());
 		}
 
 		String folderName = directory.getFileName();
-		String newFolderKey = S3Keys.join(parentKey, folderName);
+		String newFolderKey = S3Keys.join(S3Keys.toBucketPrefix(parentPath), folderName);
 		s3Service.ensureFolderPrefix(newFolderKey);
 
-		int li = parentKey.lastIndexOf('/');
-		String parentFolderPath = li < 0 ? "" : parentKey.substring(0, li);
-		String parentFolderName = li < 0 ? parentKey : parentKey.substring(li + 1);
+		int li = parentPath.lastIndexOf('/');
+		String parentFolderPath = li < 0 ? "" : parentPath.substring(0, li);
+		String parentFolderName = li < 0 ? parentPath : parentPath.substring(li + 1);
 
 		Document document = new Document();
 		document.setFileName(folderName);
-		document.setFolderPath(parentKey);
+		document.setFolderPath(parentPath);
 		setMetaData(directory, parentFolderPath, parentFolderName, document);
 		document.setFolder(true);
 
@@ -165,7 +178,7 @@ public class DocumentService {
 	public void deleteDocument(Document document) {
 		if (document.isFolder()) {
 			s3Service.deleteAllUnderPrefix(document.getFilePath());
-			documentDao.deleteDirectory(S3Keys.join(document.getFolderPath(), document.getFileName()));
+			documentDao.deleteDirectory(S3Keys.join(S3Keys.toBucketPrefix(document.getFolderPath()), document.getFileName()));
 		}
 		else {
 			s3Service.deleteObject(document.getFilePath());
@@ -178,17 +191,46 @@ public class DocumentService {
 	}
 
 	public List<Document> getAll(String folder, boolean includeArchived) throws Exception {
-		return documentDao.getAll(toBucketKey(folder), includeArchived);
+		Map<UUID, Document> uniqueDocuments = new LinkedHashMap<>();
+		for (String candidateFolderPath : getFolderPathCandidates(folder)) {
+			List<Document> documents = documentDao.getAll(candidateFolderPath, includeArchived);
+			documents.forEach(doc -> uniqueDocuments.put(doc.getId(), doc));
+		}
+		return new ArrayList<>(uniqueDocuments.values());
+	}
+
+	private Set<String> getFolderPathCandidates(String folder) {
+		Set<String> candidates = new LinkedHashSet<>();
+		if (folder == null || folder.isBlank()) {
+			return candidates;
+		}
+		addFolderPathVariants(candidates, folder);
+		addFolderPathVariants(candidates, S3Keys.toUiFolderPath(folder));
+		addFolderPathVariants(candidates, S3Keys.toBucketPrefix(folder));
+		return candidates;
+	}
+
+	private static void addFolderPathVariants(Set<String> candidates, String path) {
+		if (path == null || path.isBlank()) {
+			return;
+		}
+		candidates.add(path);
+		if (path.endsWith("/")) {
+			candidates.add(path.substring(0, path.length() - 1));
+		}
+		else {
+			candidates.add(path + "/");
+		}
 	}
 
 	public void moveFiles(String destinationParentFolderKey, UUID[] files) {
-		String destParent = S3Keys.normalize(destinationParentFolderKey);
+		String destParent = S3Keys.toUiFolderPath(destinationParentFolderKey);
 		Arrays.asList(files).forEach(fileId -> {
 			Document file = documentDao.getById(fileId);
 			if (file.isFolder()) {
 				throw new UnsupportedOperationException("moving folders is not supported");
 			}
-			String destKey = S3Keys.join(destParent, file.getId().toString());
+			String destKey = S3Keys.join(S3Keys.toBucketPrefix(destParent), file.getId().toString());
 			s3Service.moveObject(file.getFilePath(), destKey);
 			file.setFolderPath(destParent);
 			documentDao.update(file);
@@ -199,19 +241,15 @@ public class DocumentService {
 	 * Moves a file object’s S3 key to {@code newParentFolderKey}/{@code document.getId()}} and updates the entity.
 	 */
 	public void moveDocumentToParentFolder(Document document, String newParentFolderKey) {
-		String destParent = S3Keys.normalize(newParentFolderKey);
-		String destKey = S3Keys.join(destParent, document.getId().toString());
+		String destParent = S3Keys.toUiFolderPath(newParentFolderKey);
+		String destKey = S3Keys.join(S3Keys.toBucketPrefix(destParent), document.getId().toString());
 		s3Service.moveObject(document.getFilePath(), destKey);
 		document.setFolderPath(destParent);
 		documentDao.update(document);
 	}
 
-	/** Maps UI paths ({@code /docs/...}) and raw keys to a normalized key under the bucket. */
+	/** Maps UI / DB folder paths to an S3 key prefix within the bucket. */
 	public String toBucketKey(String uiPathOrKey) {
-		if (uiPathOrKey == null) {
-			return null;
-		}
-		String p = uiPathOrKey.replace("/docs", docsRoot).replace("\\", "/");
-		return S3Keys.normalize(p);
+		return S3Keys.toBucketPrefix(uiPathOrKey);
 	}
 }

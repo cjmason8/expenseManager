@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.DonationDao;
+import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Donation;
 import au.com.mason.expensemanager.dto.DonationSearchDto;
+import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class DonationService {
@@ -27,8 +29,8 @@ public class DonationService {
 	
 	public Donation createDonation(Donation donation) throws Exception {
 		
-		if (donation.getDocument() != null && donation.getDocument().getOriginalFileName() != null) {
-			updateDocument(donation);
+		if (donation.getDocument() != null && isDocumentAttached(donation.getDocument())) {
+			donation.setDocument(documentService.getById(donation.getDocument().getId()));
 		}
 		else {
 			donation.setDocument(null);
@@ -59,6 +61,10 @@ public class DonationService {
 	
 	public List<Donation> findDonations(DonationSearchDto donationSearchDto) throws Exception {
 		return donationDao.findDonations(donationSearchDto);
+	}
+
+	private static boolean isDocumentAttached(Document doc) {
+		return doc != null && (doc.getId() != null || StringUtils.isNotBlank(doc.getFileName()));
 	}
 	
 }

@@ -27,9 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RentalPaymentServiceTest {
 
-	private static final String EXPECTED_STATEMENTS_PREFIX = S3Keys.join(
-			S3Keys.join(S3Keys.join(S3Keys.join("tmp/test-docs", DocumentService.IP_FOLDER_PATH), "Wodonga"), "2023-2024"),
-			"Statements");
+	private static final String EXPECTED_STATEMENTS_PREFIX =
+			"/docs/expenseManager/filofax/IPs/Wodonga/2023-2024/Statements";
 
 	@Mock
 	private RentalPaymentDao rentalPaymentDao;

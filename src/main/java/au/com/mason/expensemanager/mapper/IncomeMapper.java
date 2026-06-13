@@ -30,7 +30,7 @@ public interface IncomeMapper extends BaseMapper<Income, IncomeDto> {
 	@Mapping(source = "startDateString", target = "startDate", qualifiedByName = "stringToLocalDate")
 	@Mapping(source = "endDateString", target = "endDate", qualifiedByName = "stringToLocalDate")
 	@Mapping(source = "metaDataChunk", target = "metaData", qualifiedByName = "jsonToObjectMap")
-	@Mapping(source = "documentDto", target = "document")
+	@Mapping(source = "documentDto", target = "document", conditionQualifiedByName = "hasDocumentFileName")
 	@Mapping(target = "deleted", ignore = true)
 	@Mapping(target = "documentationFilePath", ignore = true)
 	@Mapping(target = "recurringTransaction", ignore = true)

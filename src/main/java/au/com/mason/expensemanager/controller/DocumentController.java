@@ -77,8 +77,8 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	@PostMapping(value = "/documents/move", consumes = { "application/json" })
 	String moveFiles(@RequestBody MoveFilesDto moveFilesDto) {
 		LOGGER.info("entering DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
-		String destParent = S3Keys.join(S3Keys.join(docsRoot, "expenseManager/filofax"),
-				moveFilesDto.getDirectoryTo().replaceFirst("^/+", ""));
+		String destParent = S3Keys.toUiFolderPath(
+				"/docs/expenseManager/filofax/" + moveFilesDto.getDirectoryTo().replaceFirst("^/+", ""));
 		documentService.moveFiles(destParent, moveFilesDto.getFileIds());
 		LOGGER.info("leaving DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
 
@@ -115,8 +115,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	String updateFile(@RequestBody DocumentDto document, @PathVariable UUID id) throws Exception {
 
 		LOGGER.info("entering DocumentController updateFile - " + id);
-		String resolvedFolderPath = documentService.toBucketKey(document.getFolderPath());
-		document.setFolderPath(resolvedFolderPath);
+		document.setFolderPath(S3Keys.toUiFolderPath(document.getFolderPath()));
 
 		documentService.updateDocument(convertToEntity(document));
 

@@ -66,9 +66,8 @@ public class RentalPaymentService {
 		String financialYear = (month <= 6) ? (year - 1) + "-" + year : year + "-" + (year + 1);
 		String propertyName = PROPERTIES.get(rentalPayment.getProperty());
 
-		String destParent = S3Keys.join(
-				S3Keys.join(S3Keys.join(S3Keys.join(docsRoot, DocumentService.IP_FOLDER_PATH), propertyName), financialYear),
-				"Statements");
+		String destParent = S3Keys.toUiFolderPath(String.format(
+				"/docs/expenseManager/filofax/IPs/%s/%s/Statements", propertyName, financialYear));
 
 		documentService.moveDocumentToParentFolder(rentalPayment.getDocument(), destParent);
 		rentalPayment.getDocument().setMetaData(Map.of(

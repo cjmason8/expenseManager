@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -25,6 +26,7 @@ public class AwsSecretsService {
 	private static final Logger LOGGER = LogManager.getLogger(AwsSecretsService.class);
 
 	private SecretsManagerClient secretsManagerClient;
+	private AwsCredentialsProvider credentialsProvider;
 	private final Gson gson = new Gson();
 
 	@Value("${aws.secrets.region:ap-southeast-2}")
@@ -39,32 +41,27 @@ public class AwsSecretsService {
 	@Value("${aws.secrets.session-token:}")
 	private String sessionToken;
 
-	@Value("${aws.secrets.enabled:true}")
-	private boolean enabled;
-
 	@PostConstruct
 	public void init() {
-		if (!enabled) {
-			LOGGER.info("AWS Secrets Manager is disabled");
-			return;
-		}
-
 		var builder = SecretsManagerClient.builder().region(Region.of(region.trim()));
 
 		if (StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
 			if (StringUtils.isNotBlank(sessionToken)) {
-				builder.credentialsProvider(StaticCredentialsProvider.create(AwsSessionCredentials.create(
-						accessKey.trim(), secretKey.trim(), sessionToken.trim())));
+				credentialsProvider = StaticCredentialsProvider.create(AwsSessionCredentials.create(
+						accessKey.trim(), secretKey.trim(), sessionToken.trim()));
+				builder.credentialsProvider(credentialsProvider);
 				LOGGER.info("Using AWS session credentials for Secrets Manager");
 			}
 			else {
-				builder.credentialsProvider(StaticCredentialsProvider.create(
-						AwsBasicCredentials.create(accessKey.trim(), secretKey.trim())));
+				credentialsProvider = StaticCredentialsProvider.create(
+						AwsBasicCredentials.create(accessKey.trim(), secretKey.trim()));
+				builder.credentialsProvider(credentialsProvider);
 				LOGGER.info("Using AWS basic credentials for Secrets Manager");
 			}
 		}
 		else {
-			builder.credentialsProvider(DefaultCredentialsProvider.create());
+			credentialsProvider = DefaultCredentialsProvider.create();
+			builder.credentialsProvider(credentialsProvider);
 			LOGGER.info("Using default AWS credentials provider for Secrets Manager");
 		}
 
@@ -88,10 +85,6 @@ public class AwsSecretsService {
 	 * @throws SecretsManagerException if the secret cannot be retrieved
 	 */
 	public String getSecretString(String secretName) {
-		if (!enabled) {
-			throw new IllegalStateException("AWS Secrets Manager is disabled");
-		}
-
 		try {
 			GetSecretValueRequest request = GetSecretValueRequest.builder()
 					.secretId(secretName)
@@ -141,12 +134,8 @@ public class AwsSecretsService {
 		return secretMap.get(key);
 	}
 
-	/**
-	 * Checks if AWS Secrets Manager is enabled.
-	 *
-	 * @return true if enabled, false otherwise
-	 */
-	public boolean isEnabled() {
-		return enabled;
+	public AwsCredentialsProvider getCredentialsProvider() {
+		return credentialsProvider;
 	}
+
 }
