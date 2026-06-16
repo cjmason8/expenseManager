@@ -7,8 +7,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import au.com.mason.expensemanager.dto.ErrorDto;
 
@@ -16,6 +18,19 @@ import au.com.mason.expensemanager.dto.ErrorDto;
 public class ExceptionHandlerController {
 
 	private static Logger LOGGER = LogManager.getLogger(ExceptionHandlerController.class);
+
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<ErrorDto> methodNotSupportedHandler(HttpServletRequest request,
+			HttpRequestMethodNotSupportedException e) {
+		LOGGER.debug("Method not supported - {} {}", e.getMethod(), request.getServletPath());
+		return new ResponseEntity<>(new ErrorDto(e.getMessage(), null), HttpStatus.METHOD_NOT_ALLOWED);
+	}
+
+	@ExceptionHandler(NoHandlerFoundException.class)
+	public ResponseEntity<ErrorDto> notFoundHandler(HttpServletRequest request, NoHandlerFoundException e) {
+		LOGGER.debug("No handler found - {}", request.getServletPath());
+		return new ResponseEntity<>(new ErrorDto(e.getMessage(), null), HttpStatus.NOT_FOUND);
+	}
 
     @ExceptionHandler(value = {Exception.class, RuntimeException.class})
     public ResponseEntity<ErrorDto> defaultErrorHandler(HttpServletRequest request, Exception e) {

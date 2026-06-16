@@ -61,16 +61,19 @@ class RentalPaymentServiceTest {
 	}
 
 	@Test
-	void getAll_delegatesToDaoAndReturnsResult() throws Exception {
-		LocalDate start = LocalDate.of(2024, 1, 1);
-		LocalDate end = LocalDate.of(2024, 12, 31);
-		List<RentalPayment> expected = List.of(new RentalPayment());
-		when(rentalPaymentDao.getAll("WODONGA", start, end)).thenReturn(expected);
+	void getAll_filtersByFinancialYearEnd() {
+		RentalPayment inYear = createMinimalRentalPayment();
+		inYear.setStatementFrom(LocalDate.of(2024, 3, 1));
 
-		List<RentalPayment> result = rentalPaymentService.getAll("WODONGA", start, end);
+		RentalPayment outYear = createMinimalRentalPayment();
+		outYear.setStatementFrom(LocalDate.of(2023, 3, 1));
 
-		assertEquals(expected, result);
-		verify(rentalPaymentDao).getAll("WODONGA", start, end);
+		when(rentalPaymentDao.getByProperty("WODONGA")).thenReturn(List.of(inYear, outYear));
+
+		List<RentalPayment> result = rentalPaymentService.getAll("WODONGA", 2024);
+
+		assertEquals(List.of(inYear), result);
+		verify(rentalPaymentDao).getByProperty("WODONGA");
 	}
 
 	@Test

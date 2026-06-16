@@ -2,6 +2,7 @@ package au.com.mason.expensemanager.service;
 
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
+import au.com.mason.expensemanager.util.RentalPaymentFinancialYear;
 import au.com.mason.expensemanager.util.S3Keys;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -85,8 +86,10 @@ public class RentalPaymentService {
 		return rentalPaymentDao.getById(id);
 	}
 
-	public List<RentalPayment> getAll(String property, LocalDate startDate, LocalDate endDate) throws Exception {
-		return rentalPaymentDao.getAll(property, startDate, endDate);
+	public List<RentalPayment> getAll(String property, int financialYearEnd) {
+		return rentalPaymentDao.getByProperty(property).stream()
+				.filter(payment -> RentalPaymentFinancialYear.financialYearEnd(payment) == financialYearEnd)
+				.toList();
 	}
 
 }

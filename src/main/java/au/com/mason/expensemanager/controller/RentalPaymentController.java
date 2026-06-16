@@ -6,8 +6,8 @@ import au.com.mason.expensemanager.dto.RentalPaymentInfoDto;
 import au.com.mason.expensemanager.dto.StatusResponseDto;
 import au.com.mason.expensemanager.mapper.RentalPaymentMapper;
 import au.com.mason.expensemanager.service.RentalPaymentService;
+import au.com.mason.expensemanager.util.RentalPaymentFinancialYear;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,27 +36,14 @@ public class RentalPaymentController extends BaseController<RentalPayment, Renta
 	@GetMapping(value = {"/rentalPayments/getByProperty/{property}/{year}", "/rentalPayments/getByProperty/{property}"}, produces = "application/json")
 	RentalPaymentInfoDto getRentalPayments(@PathVariable String property, @PathVariable(required=false) Integer year) throws Exception {
 		LOGGER.info("entering RentalPaymentController getRentalPayment");
-		LocalDate startDate;
-		LocalDate endDate;
-		if (year == null) {
-			if (LocalDate.now().getMonth().getValue() <= 6) {
-				startDate = LocalDate.of(LocalDate.now().getYear() - 1, 7, 1);
-				endDate = LocalDate.of(LocalDate.now().getYear(), 6, 30);
-			}
-			else {
-				startDate = LocalDate.of(LocalDate.now().getYear(), 7, 1);
-				endDate = LocalDate.of(LocalDate.now().getYear() + 1, 6, 30);
-			}
-		}
-		else {
-			startDate = LocalDate.of(year - 1, 7, 1);
-			endDate = LocalDate.of(year, 6, 30);
-		}
-		
-		List<RentalPayment> results = rentalPaymentService.getAll(property, startDate, endDate);
-		
-		Integer prevYear = endDate.getYear() - 1;;
-		Integer nextYear = endDate.getYear() + 1;
+		int financialYearEnd = year != null
+				? year
+				: RentalPaymentFinancialYear.defaultFinancialYearEnd(LocalDate.now());
+
+		List<RentalPayment> results = rentalPaymentService.getAll(property, financialYearEnd);
+
+		Integer prevYear = financialYearEnd - 1;
+		Integer nextYear = financialYearEnd + 1;
 		LOGGER.info("leaving RentalPaymentController getRentalPayments");
 
 		return new RentalPaymentInfoDto(convertList(results), prevYear, nextYear);
