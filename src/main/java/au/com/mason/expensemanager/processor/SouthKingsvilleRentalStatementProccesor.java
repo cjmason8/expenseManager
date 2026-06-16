@@ -55,7 +55,7 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 			for (int i = 0; i < count; i++) {
 				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
 				if (bodyPart.isMimeType("text/html")) {
-				} else if (bodyPart.getContentType().startsWith("APPLICATION/PDF")) {
+				} else if (isPdfAttachment(bodyPart)) {
 					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
 					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 					
@@ -128,6 +128,11 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 				}
 			}
 		}
+	}
+
+	private boolean isPdfAttachment(BodyPart bodyPart) throws Exception {
+		return bodyPart.isMimeType("application/pdf")
+				|| bodyPart.getContentType().toUpperCase().startsWith("APPLICATION/PDF");
 	}
 
 }
