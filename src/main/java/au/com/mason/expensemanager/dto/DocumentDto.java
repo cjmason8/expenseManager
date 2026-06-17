@@ -1,8 +1,9 @@
 package au.com.mason.expensemanager.dto;
 
-import au.com.mason.expensemanager.util.S3Keys;
 import java.util.Comparator;
 import java.util.UUID;
+
+import au.com.mason.expensemanager.util.S3Keys;
 
 public class DocumentDto implements Comparator<DocumentDto>, Comparable<DocumentDto> {
 
@@ -12,7 +13,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	private boolean isFolder;
 	private String metaDataChunk;
 	private String folderPath;
-	
+
 	public UUID getId() {
 		return id;
 	}
@@ -24,19 +25,19 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	public String getFileName() {
 		return fileName;
 	}
-	
+
 	public void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
-	
+
 	public boolean getIsFolder() {
 		return isFolder;
 	}
-	
+
 	public void setIsFolder(boolean isFolder) {
 		this.isFolder = isFolder;
 	}
-	
+
 	public String getFolderPath() {
 		return S3Keys.toUiFolderPath(folderPath);
 	}
@@ -52,7 +53,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	public void setMetaDataChunk(String metaDataChunk) {
 		this.metaDataChunk = metaDataChunk;
 	}
-	
+
 	public String getOriginalFileName() {
 		return originalFileName;
 	}
@@ -60,7 +61,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	public void setOriginalFileName(String originalFileName) {
 		this.originalFileName = originalFileName;
 	}
-	
+
 	public String getFilePath() {
 		String parent = S3Keys.toBucketPrefix(folderPath);
 		if (parent == null) {
@@ -79,11 +80,9 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	public int compareTo(DocumentDto o) {
 		if (o.getIsFolder() == isFolder) {
 			return fileName.toLowerCase().compareTo(o.getFileName().toLowerCase());
-		}
-		else if (o.getIsFolder()) {
+		} else if (o.getIsFolder()) {
 			return 1;
-		}
-		else {
+		} else {
 			return -1;
 		}
 	}
@@ -92,13 +91,11 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	public int compare(DocumentDto o1, DocumentDto o2) {
 		if (o1.getIsFolder() == o2.getIsFolder()) {
 			return o2.getFileName().toLowerCase().compareTo(o1.getFileName().toLowerCase());
-		}
-		else if (o1.getIsFolder()) {
+		} else if (o1.getIsFolder()) {
 			return 1;
-		}
-		else {
+		} else {
 			return -1;
 		}
 	}
-	
+
 }

@@ -1,7 +1,8 @@
 package au.com.mason.expensemanager.controller;
 
-import au.com.mason.expensemanager.mapper.BaseMapper;
 import java.util.List;
+
+import au.com.mason.expensemanager.mapper.BaseMapper;
 
 public abstract class BaseController<V, F> {
 

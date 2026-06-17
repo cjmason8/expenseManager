@@ -79,8 +79,8 @@ The `DatabaseConfig` class uses AWS Secrets Manager for database credentials, au
 private String environment;
 
 public DataSource dataSource() {
-    String secretName = environment.equalsIgnoreCase("prd") 
-        ? "prod-database-credentials" 
+    String secretName = environment.equalsIgnoreCase("prd")
+        ? "prod-database-credentials"
         : "local-database-credentials";
     dataSource.setUsername(awsSecretsService.getSecretValue(secretName, "USER_NAME"));
     dataSource.setPassword(awsSecretsService.getSecretValue(secretName, "PASSWORD"));
@@ -112,22 +112,22 @@ public DataSource dataSource() {
 ```java
 @Service
 public class DatabaseConfigService {
-    
+
     @Autowired
     private AwsSecretsService awsSecretsService;
-    
+
     public void configureDatabaseFromSecrets() {
         // Retrieve entire secret as JSON
         Map<String, String> dbCredentials = awsSecretsService.getSecretAsMap("prod/expensemanager/database");
-        
+
         String dbHost = dbCredentials.get("host");
         String dbUser = dbCredentials.get("username");
         String dbPassword = dbCredentials.get("password");
         String dbName = dbCredentials.get("database");
-        
+
         // Use credentials to configure database connection
     }
-    
+
     // Or retrieve specific value
     public String getDatabasePassword() {
         return awsSecretsService.getSecretValue("prod/expensemanager/database", "password");
@@ -140,10 +140,10 @@ public class DatabaseConfigService {
 ```java
 @Service
 public class ExternalApiService {
-    
+
     @Autowired
     private AwsSecretsService awsSecretsService;
-    
+
     public String getApiKey() {
         // For a simple string secret
         return awsSecretsService.getSecretString("prod/expensemanager/api-key");
@@ -156,13 +156,13 @@ public class ExternalApiService {
 ```java
 @Service
 public class ConfigService {
-    
+
     @Autowired
     private AwsSecretsService awsSecretsService;
-    
+
     @Value("${database.password:}")
     private String localDbPassword;
-    
+
     public String getDatabasePassword() {
         if (awsSecretsService.isEnabled()) {
             return awsSecretsService.getSecretValue("prod/expensemanager/database", "password");

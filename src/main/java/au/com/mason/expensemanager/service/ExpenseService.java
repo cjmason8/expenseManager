@@ -14,13 +14,13 @@ import au.com.mason.expensemanager.domain.Transaction;
 
 @Component
 public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
-	
+
 	@Autowired
 	private IncomeService incomeService;
-	
+
 	@Autowired
 	private TransactionDao<Expense> expenseDao;
-	
+
 	@Override
 	Expense createTransaction() {
 		return new Expense();
@@ -33,12 +33,12 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 			createRecurringTransactions(localDate, currentRecurringTransaction);
 		}
 	}
-	
+
 	@Override
 	public int getPastDate(LocalDate startOfWeek) throws Exception {
 		return getPastDateList(startOfWeek).size() + incomeService.getPastDateList(startOfWeek).size();
 	}
-	
+
 	public List<Expense> getUnpaidBeforeWeek(LocalDate startOfWeek) throws Exception {
 		return expenseDao.getUnpaidBeforeWeek(startOfWeek);
 	}
@@ -47,31 +47,31 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 	int countForWeekForAll(LocalDate startOfWeek) throws Exception {
 		return countForWeek(startOfWeek) + incomeService.countForWeek(startOfWeek);
 	}
-	
+
 	public Expense payExpense(Long id) throws Exception {
 		Expense expense = expenseDao.getById(id);
 		expense.setPaid(true);
-		
+
 		expenseDao.update(expense);
-		
+
 		return expense;
 	}
-	
+
 	public Expense unPayExpense(Long id) throws Exception {
 		Expense expense = expenseDao.getById(id);
 		expense.setPaid(false);
-		
+
 		expenseDao.update(expense);
-		
+
 		return expense;
 	}
-	
+
 	public List<Expense> getAll() throws Exception {
 		return expenseDao.getAll();
 	}
-	
+
 	public List<Expense> findExpense(RefData entryType) {
 		return expenseDao.findExpenses(entryType);
 	}
-	
+
 }

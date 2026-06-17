@@ -1,0 +1,58 @@
+{
+  "name": "expensemanager-format",
+  "version": 1,
+  "description": "Code style and Maven format profile for the expensemanager codebase.",
+  "maven": {
+    "spotlessVersion": "3.7.0",
+    "intellijIdea": {
+      "reloadMavenProject": true,
+      "location": "Maven tool window → Plugins → spotless → format / format-check",
+      "note": "Double-click an execution to run it. Use Lifecycle → compile afterwards to show compiler warnings."
+    },
+    "commands": {
+      "format": "mvn spotless:apply@format compiler:compile",
+      "formatCheck": "mvn spotless:check@format-check compiler:compile",
+      "spotlessApply": "mvn spotless:apply@format",
+      "spotlessCheck": "mvn spotless:check@format-check"
+    }
+  },
+  "java": {
+    "includes": [
+      "src/main/java/**/*.java",
+      "src/test/java/**/*.java"
+    ],
+    "formatter": {
+      "engine": "eclipse-jdt",
+      "configFile": "config/formatter/eclipse-java-format.xml",
+      "jdtVersion": "4.26"
+    },
+    "imports": {
+      "orderFile": "config/formatter/java.importorder",
+      "removeUnused": true,
+      "expandWildcards": true,
+      "wildcardsLast": false
+    }
+  },
+  "other": {
+    "includes": [
+      "pom.xml",
+      "**/*.xml",
+      "**/*.properties",
+      "**/*.md",
+      "**/*.sh"
+    ],
+    "trimTrailingWhitespace": true,
+    "endWithNewline": true,
+    "indent": {
+      "spaces": 2
+    }
+  },
+  "compilerWarnings": {
+    "showWarnings": true,
+    "showDeprecation": true,
+    "lint": [
+      "all",
+      "-processing"
+    ]
+  }
+}

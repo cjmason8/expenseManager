@@ -21,7 +21,7 @@ public class ExceptionHandlerController {
 
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
 	public ResponseEntity<ErrorDto> methodNotSupportedHandler(HttpServletRequest request,
-			HttpRequestMethodNotSupportedException e) {
+		HttpRequestMethodNotSupportedException e) {
 		LOGGER.debug("Method not supported - {} {}", e.getMethod(), request.getServletPath());
 		return new ResponseEntity<>(new ErrorDto(e.getMessage(), null), HttpStatus.METHOD_NOT_ALLOWED);
 	}
@@ -32,13 +32,15 @@ public class ExceptionHandlerController {
 		return new ResponseEntity<>(new ErrorDto(e.getMessage(), null), HttpStatus.NOT_FOUND);
 	}
 
-    @ExceptionHandler(value = {Exception.class, RuntimeException.class})
-    public ResponseEntity<ErrorDto> defaultErrorHandler(HttpServletRequest request, Exception e) {
-    	
-    	if (!e.getMessage().contains("No static resource")) {
-            LOGGER.error("Unhandled Exception - " + request.getServletPath(), e);
-        }
-    	
-    	return new ResponseEntity<>(new ErrorDto(ExceptionUtils.getRootCauseMessage(e), ExceptionUtils.getStackTrace(e)), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+	@ExceptionHandler(value = {Exception.class, RuntimeException.class})
+	public ResponseEntity<ErrorDto> defaultErrorHandler(HttpServletRequest request, Exception e) {
+
+		if (!e.getMessage().contains("No static resource")) {
+			LOGGER.error("Unhandled Exception - " + request.getServletPath(), e);
+		}
+
+		return new ResponseEntity<>(
+			new ErrorDto(ExceptionUtils.getRootCauseMessage(e), ExceptionUtils.getStackTrace(e)),
+			HttpStatus.INTERNAL_SERVER_ERROR);
+	}
 }

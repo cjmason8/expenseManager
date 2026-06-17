@@ -10,6 +10,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public class AuthenticateResponseDto {
-    private String status;
-    private String user;
+	private String status;
+	private String user;
 }

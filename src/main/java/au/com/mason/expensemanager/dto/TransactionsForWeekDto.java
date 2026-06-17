@@ -20,27 +20,27 @@ public class TransactionsForWeekDto {
 		for (IncomeDto income : this.incomes) {
 			incomeTotal = incomeTotal.add(new BigDecimal(income.getAmount()));
 		}
-		
+
 		for (ExpenseDto expense : this.expenses) {
 			expenseTotal = expenseTotal.add(new BigDecimal(expense.getAmount()));
 		}
-		
+
 		if (this.unpaidExpenses != null) {
 			for (ExpenseDto unpaidExpense : this.unpaidExpenses) {
 				unpaidExpenseTotal = unpaidExpenseTotal.add(new BigDecimal(unpaidExpense.getAmount()));
 			}
 		}
-		
+
 		difference = incomeTotal.subtract(expenseTotal);
 	}
 
 	public List<ExpenseDto> getExpenses() {
 		return expenses;
 	}
-	
+
 	public List<IncomeDto> getIncomes() {
 		return incomes;
-	}	
+	}
 
 	public String getPreviousWeek() {
 		return previousWeek;
@@ -113,5 +113,5 @@ public class TransactionsForWeekDto {
 	public void setUnpaidExpenseTotal(BigDecimal unpaidExpenseTotal) {
 		this.unpaidExpenseTotal = unpaidExpenseTotal;
 	}
-	
+
 }

@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.dto.RefDataDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.dto.RefDataDto;
 
 @Mapper(componentModel = "spring", uses = MappingConverters.class)
 public interface RefDataMapper extends BaseMapper<RefData, RefDataDto> {

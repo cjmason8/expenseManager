@@ -1,5 +1,9 @@
 package au.com.mason.expensemanager.domain;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Map;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
@@ -11,19 +15,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name="transactions")
+@Table(name = "transactions")
 @DiscriminatorColumn(name = "transactionType")
 @Getter
 @Setter

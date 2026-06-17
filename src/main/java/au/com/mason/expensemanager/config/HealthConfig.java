@@ -16,7 +16,7 @@ public class HealthConfig {
 	public HealthIndicator dbHealthIndicator(DataSource dataSource) {
 		DataSourceHealthIndicator indicator = new DataSourceHealthIndicator(dataSource);
 		indicator.setQuery("select count(*) from users");
-		
+
 		return indicator;
 	}
 }

@@ -6,32 +6,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NamedQueries(
-		value = {
-				@NamedQuery(
-						name = Expense.GET_ALL_RECURRING,
-						query = "from Expense where recurringType IS NOT NULL AND deleted = false ORDER BY entryType.description"),
-				@NamedQuery(
-						name = Expense.GET_RECURRING,
-						query = "from Expense where recurringType IS NOT NULL AND deleted = false AND (endDate is NULL OR endDate >= :endDate) ORDER BY entryType.description"),
-				@NamedQuery(
-						name = Expense.GET_ALL,
-						query = "from Expense ORDER BY dueDate DESC,entryType.type"),
-				@NamedQuery(
-						name = Expense.GET_FOR_WEEK,
-						query = "from Expense where recurringType IS NULL AND dueDate >= :weekStartDate AND dueDate <= :weekLaterFromStartDate AND deleted = false ORDER BY dueDate,entryType.type"),
-				@NamedQuery(
-						name = Expense.GET_UNPAID_BEFORE_WEEK,
-						query = "from Expense where recurringType IS NULL AND dueDate < :weekStartDate AND paid = false ORDER BY dueDate,entryType.type"),
-				@NamedQuery(
-						name = Expense.GET_PAST_DATE,
-						query = "from Expense where recurringType IS NULL AND dueDate > :date"),
-		})
+@NamedQueries(value = {
+	@NamedQuery(name = Expense.GET_ALL_RECURRING, query = "from Expense where recurringType IS NOT NULL AND deleted = false ORDER BY entryType.description"),
+	@NamedQuery(name = Expense.GET_RECURRING, query = "from Expense where recurringType IS NOT NULL AND deleted = false AND (endDate is NULL OR endDate >= :endDate) ORDER BY entryType.description"),
+	@NamedQuery(name = Expense.GET_ALL, query = "from Expense ORDER BY dueDate DESC,entryType.type"),
+	@NamedQuery(name = Expense.GET_FOR_WEEK, query = "from Expense where recurringType IS NULL AND dueDate >= :weekStartDate AND dueDate <= :weekLaterFromStartDate AND deleted = false ORDER BY dueDate,entryType.type"),
+	@NamedQuery(name = Expense.GET_UNPAID_BEFORE_WEEK, query = "from Expense where recurringType IS NULL AND dueDate < :weekStartDate AND paid = false ORDER BY dueDate,entryType.type"),
+	@NamedQuery(name = Expense.GET_PAST_DATE, query = "from Expense where recurringType IS NULL AND dueDate > :date"),})
 @Entity
 @DiscriminatorValue("EXPENSE")
 @Getter

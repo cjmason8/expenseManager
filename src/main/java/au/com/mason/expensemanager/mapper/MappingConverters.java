@@ -1,16 +1,19 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.RefDataType;
-import au.com.mason.expensemanager.dto.DocumentDto;
-import au.com.mason.expensemanager.util.DateUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Condition;
 import org.mapstruct.Named;
+
+import au.com.mason.expensemanager.domain.RefDataType;
+import au.com.mason.expensemanager.dto.DocumentDto;
+import au.com.mason.expensemanager.util.DateUtil;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public final class MappingConverters {
 
@@ -92,7 +95,7 @@ public final class MappingConverters {
 	@Condition
 	public static boolean hasDocumentFileName(DocumentDto documentDto) {
 		return documentDto != null
-				&& (documentDto.getId() != null || StringUtils.isNotBlank(documentDto.getFileName()));
+			&& (documentDto.getId() != null || StringUtils.isNotBlank(documentDto.getFileName()));
 	}
 
 }

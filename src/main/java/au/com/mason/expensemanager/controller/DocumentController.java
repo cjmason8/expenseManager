@@ -1,26 +1,11 @@
 package au.com.mason.expensemanager.controller;
 
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.domain.Donation;
-import au.com.mason.expensemanager.domain.Expense;
-import au.com.mason.expensemanager.domain.Income;
-import au.com.mason.expensemanager.dto.DocumentDto;
-import au.com.mason.expensemanager.dto.DocumentListDto;
-import au.com.mason.expensemanager.dto.MoveFilesDto;
-import au.com.mason.expensemanager.dto.StatusResponseDto;
-import au.com.mason.expensemanager.mapper.DocumentMapper;
-import au.com.mason.expensemanager.service.DocumentService;
-import au.com.mason.expensemanager.service.DonationService;
-import au.com.mason.expensemanager.service.ExpenseService;
-import au.com.mason.expensemanager.service.IncomeService;
-import au.com.mason.expensemanager.service.S3Service;
-import au.com.mason.expensemanager.util.S3Keys;
-import jakarta.annotation.PostConstruct;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.annotation.PostConstruct;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +25,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.domain.Income;
+import au.com.mason.expensemanager.dto.DocumentDto;
+import au.com.mason.expensemanager.dto.DocumentListDto;
+import au.com.mason.expensemanager.dto.MoveFilesDto;
+import au.com.mason.expensemanager.mapper.DocumentMapper;
+import au.com.mason.expensemanager.service.DocumentService;
+import au.com.mason.expensemanager.service.DonationService;
+import au.com.mason.expensemanager.service.ExpenseService;
+import au.com.mason.expensemanager.service.IncomeService;
+import au.com.mason.expensemanager.service.S3Service;
+import au.com.mason.expensemanager.util.S3Keys;
 
 @RestController
 public class DocumentController extends BaseController<Document, DocumentDto> {
@@ -74,20 +74,20 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 
 	private static final Logger LOGGER = LogManager.getLogger(DocumentController.class);
 
-	@PostMapping(value = "/documents/move", consumes = { "application/json" })
+	@PostMapping(value = "/documents/move", consumes = {"application/json"})
 	String moveFiles(@RequestBody MoveFilesDto moveFilesDto) {
 		LOGGER.info("entering DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
-		String destParent = S3Keys.toUiFolderPath(
-				"/docs/expenseManager/filofax/" + moveFilesDto.getDirectoryTo().replaceFirst("^/+", ""));
+		String destParent = S3Keys
+			.toUiFolderPath("/docs/expenseManager/filofax/" + moveFilesDto.getDirectoryTo().replaceFirst("^/+", ""));
 		documentService.moveFiles(destParent, moveFilesDto.getFileIds());
 		LOGGER.info("leaving DocumentController moveFiles for - " + moveFilesDto.getDirectoryTo());
 
 		return "{\"folderPath\":\"" + destParent + "\"}";
 	}
 
-	@PostMapping(value = "/documents/upload", consumes = { "multipart/form-data" }, produces = "application/json")
+	@PostMapping(value = "/documents/upload", consumes = {"multipart/form-data"}, produces = "application/json")
 	DocumentDto uploadFile(@RequestPart("uploadFile") MultipartFile file, @RequestParam String type,
-			@RequestParam(required = false) String path) throws Exception {
+		@RequestParam(required = false) String path) throws Exception {
 
 		LOGGER.info("entering DocumentController uploadFile");
 
@@ -110,8 +110,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
 
-	@RequestMapping(value = "/documents/{id}", method = RequestMethod.PUT, produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+	@RequestMapping(value = "/documents/{id}", method = RequestMethod.PUT, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
 	String updateFile(@RequestBody DocumentDto document, @PathVariable UUID id) throws Exception {
 
 		LOGGER.info("entering DocumentController updateFile - " + id);
@@ -124,8 +123,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
 	}
 
-	@GetMapping(value = "/documents/{id}/archive", produces = "application/json",
-			consumes = "application/json", headers = "Accept=application/json")
+	@GetMapping(value = "/documents/{id}/archive", produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
 	String archiveFolder(@PathVariable UUID id) throws Exception {
 
 		LOGGER.info("entering DocumentController archiveFolder - " + id);
@@ -223,7 +221,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	public List<DocumentDto> getFiles(@RequestBody DocumentListDto documentListDto) throws Exception {
 		LOGGER.info("entering DocumentController getFiles - " + documentListDto.getFolderPath());
 		List<DocumentDto> documents = convertList(
-				documentService.getAll(documentListDto.getFolderPath(), documentListDto.getIncludeArchived()));
+			documentService.getAll(documentListDto.getFolderPath(), documentListDto.getIncludeArchived()));
 
 		Collections.sort(documents);
 
@@ -242,8 +240,7 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		}
 		if (path.endsWith("jpg") || path.endsWith("jpeg")) {
 			mediaType = "image/jpeg";
-		}
-		else if (path.endsWith("xls") || path.endsWith("xlsx")) {
+		} else if (path.endsWith("xls") || path.endsWith("xlsx")) {
 			mediaType = "application/vnd.ms-excel";
 		}
 		return mediaType;
@@ -253,12 +250,10 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		if (type.equals("donations")) {
 			Donation donation = donationService.getById(id);
 			return donation.getDocument().getFilePath();
-		}
-		else if (type.equals("expenses")) {
+		} else if (type.equals("expenses")) {
 			Expense expense = expenseService.getById(id);
 			return expense.getDocument().getFilePath();
-		}
-		else if (type.equals("incomes")) {
+		} else if (type.equals("incomes")) {
 			Income income = incomeService.getById(id);
 			return income.getDocument().getFilePath();
 		}
@@ -269,11 +264,9 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 	private String getFileNameHint(Long id, String type) throws Exception {
 		if (type.equals("donations")) {
 			return donationService.getById(id).getDocument().getFileName();
-		}
-		else if (type.equals("expenses")) {
+		} else if (type.equals("expenses")) {
 			return expenseService.getById(id).getDocument().getFileName();
-		}
-		else if (type.equals("incomes")) {
+		} else if (type.equals("incomes")) {
 			return incomeService.getById(id).getDocument().getFileName();
 		}
 		return "";

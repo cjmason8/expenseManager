@@ -1,13 +1,16 @@
 package au.com.mason.expensemanager.dao;
 
-import au.com.mason.expensemanager.domain.Income;
+import java.time.LocalDate;
+import java.util.List;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
-import java.time.LocalDate;
-import java.util.List;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+
+import au.com.mason.expensemanager.domain.Income;
 
 @Repository
 @Transactional
@@ -38,9 +41,8 @@ public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income>
 	}
 
 	public List<Income> getForWeek(LocalDate weekStartDate) {
-		Query query = entityManager.createQuery(
-				"from Income where recurringType IS NULL AND dueDate >= :weekStartDate "
-						+ "AND dueDate <= :weekEndDate ORDER BY dueDate,entryType.type");
+		Query query = entityManager.createQuery("from Income where recurringType IS NULL AND dueDate >= :weekStartDate "
+			+ "AND dueDate <= :weekEndDate ORDER BY dueDate,entryType.type");
 		query.setParameter("weekStartDate", weekStartDate);
 		query.setParameter("weekEndDate", weekStartDate.plusDays(6));
 
@@ -48,16 +50,15 @@ public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income>
 	}
 
 	public List<Income> getPastDate(LocalDate date) {
-		Query query = entityManager.createQuery(
-				"from Income where recurringType IS NULL AND dueDate > :date");
+		Query query = entityManager.createQuery("from Income where recurringType IS NULL AND dueDate > :date");
 		query.setParameter("date", date);
 
 		return query.getResultList();
 	}
 
 	public List<Income> getPastDate(LocalDate date, Income recurringIncome) {
-		Query query = entityManager.createQuery(
-				"from Income where dueDate > :date and recurringTransaction = :recurringTransaction");
+		Query query = entityManager
+			.createQuery("from Income where dueDate > :date and recurringTransaction = :recurringTransaction");
 		query.setParameter("date", date);
 		query.setParameter("recurringTransaction", recurringIncome);
 
@@ -72,11 +73,11 @@ public class IncomeDao extends BaseDao<Income> implements TransactionDao<Income>
 	}
 
 	public void deleteTransactions(Long recurringTransactionId) {
-		entityManager.createQuery(
+		entityManager
+			.createQuery(
 				"delete from Income where recurringTransaction.id = :recurringTransactionId AND dueDate > :today")
-				.setParameter("recurringTransactionId", recurringTransactionId)
-				.setParameter("today", LocalDate.now())
-				.executeUpdate();
+			.setParameter("recurringTransactionId", recurringTransactionId).setParameter("today", LocalDate.now())
+			.executeUpdate();
 	}
 
 }

@@ -1,8 +1,10 @@
 package au.com.mason.expensemanager.processor;
 
-import au.com.mason.expensemanager.domain.RefData;
 import jakarta.mail.Message;
+
 import org.springframework.stereotype.Component;
+
+import au.com.mason.expensemanager.domain.RefData;
 
 @Component
 public class DingleyGasProcessor extends LumoProcessor {

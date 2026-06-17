@@ -11,11 +11,11 @@ public class RentalPaymentDto {
 	private String adminFee;
 	private String otherFee;
 	private DocumentDto documentDto;
-	
+
 	public Long getId() {
 		return id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -83,5 +83,5 @@ public class RentalPaymentDto {
 	public void setDocumentDto(DocumentDto documentDto) {
 		this.documentDto = documentDto;
 	}
-	
+
 }

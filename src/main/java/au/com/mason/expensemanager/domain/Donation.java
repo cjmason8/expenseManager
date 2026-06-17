@@ -1,5 +1,8 @@
 package au.com.mason.expensemanager.domain;
 
+import java.time.LocalDate;
+import java.util.Map;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -12,23 +15,20 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
-import java.time.LocalDate;
-import java.util.Map;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-@NamedQueries(
-		value = {
-				@NamedQuery(
-						name = Donation.GET_ALL,
-						query = "FROM Donation ORDER BY dueDate DESC, cause.description"),
-		})
+import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@NamedQueries(value = {
+	@NamedQuery(name = Donation.GET_ALL, query = "FROM Donation ORDER BY dueDate DESC, cause.description"),})
 @Entity
-@Table(name="donations")
+@Table(name = "donations")
 @Getter
 @Setter
 @NoArgsConstructor

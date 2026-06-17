@@ -10,5 +10,5 @@ import lombok.Setter;
 @Setter
 @Getter
 public class StatusResponseDto {
-    private String status;
+	private String status;
 }

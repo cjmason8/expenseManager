@@ -1,5 +1,13 @@
 package au.com.mason.expensemanager.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import au.com.mason.expensemanager.dao.DocumentDao;
 import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.Document;
@@ -11,12 +19,6 @@ import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.dto.SearchResultsDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
 import au.com.mason.expensemanager.mapper.ExpenseMapper;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 public class SearchService {
@@ -41,7 +43,8 @@ public class SearchService {
 			documentDtos.add(documentMapper.entityToDto(document));
 		}
 
-		int paidExpensesSize = expenses.stream().filter(expense -> expense.getPaid()).collect(Collectors.toList()).size();
+		int paidExpensesSize = expenses.stream().filter(expense -> expense.getPaid()).collect(Collectors.toList())
+			.size();
 		String[] labels = new String[paidExpensesSize];
 		BigDecimal[] data = new BigDecimal[paidExpensesSize];
 		int count = 0;
@@ -56,14 +59,13 @@ public class SearchService {
 		String description = null;
 		if (searchParamsDto.getTransactionType() == null) {
 			description = searchParamsDto.getMetaDataChunk();
-		}
-		else {
+		} else {
 			description = searchParamsDto.getTransactionType().getDescription();
 		}
 		GraphDto graphDto = new GraphDto(description, data);
 
 		return new SearchResultsDto(expenseMapper.entityListToDto(expenses), documentDtos,
-				new ExpenseGraphDto((String[]) labels, new GraphDto[] {graphDto}));
+			new ExpenseGraphDto((String[]) labels, new GraphDto[]{graphDto}));
 	}
 
 }

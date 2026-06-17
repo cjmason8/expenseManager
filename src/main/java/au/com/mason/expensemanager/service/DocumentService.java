@@ -1,9 +1,5 @@
 package au.com.mason.expensemanager.service;
 
-import au.com.mason.expensemanager.dao.DocumentDao;
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.util.S3Keys;
-import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,10 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+
+import au.com.mason.expensemanager.dao.DocumentDao;
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.util.S3Keys;
 
 @Component
 public class DocumentService {
@@ -42,7 +45,7 @@ public class DocumentService {
 
 	public Document updateDocument(Document document) {
 		if (document.isFolder() && document.getOriginalFileName() != null
-				&& !document.getOriginalFileName().equals(document.getFileName())) {
+			&& !document.getOriginalFileName().equals(document.getFileName())) {
 			String parentPrefix = S3Keys.toBucketPrefix(document.getFolderPath());
 			String oldKey = S3Keys.join(parentPrefix, document.getOriginalFileName());
 			String newKey = S3Keys.join(parentPrefix, document.getFileName());
@@ -69,15 +72,16 @@ public class DocumentService {
 		}
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(
-				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), bytes, file.getContentType());
+		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), bytes,
+			file.getContentType());
 		saved.setOriginalFileName(originalName);
 		return saved;
 	}
 
 	private static String normalizeUploadType(String type) {
 		if (type == null || type.isBlank() || "undefined".equalsIgnoreCase(type) || "null".equalsIgnoreCase(type)) {
-			throw new IllegalArgumentException("Document upload requires a type (expenses, incomes, donations, or documents)");
+			throw new IllegalArgumentException(
+				"Document upload requires a type (expenses, incomes, donations, or documents)");
 		}
 		return type.trim();
 	}
@@ -90,15 +94,15 @@ public class DocumentService {
 		document.setFolderPath(parentFolderPath);
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(
-				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file, "application/octet-stream");
+		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file,
+			"application/octet-stream");
 		return saved;
 	}
 
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath,
-			Map<String, Object> metaData) throws Exception {
-		String parentFolderPath = S3Keys.toUiFolderPath(
-				"/docs/expenseManager/filofax/IPs/" + folderPath.replaceFirst("^/+", ""));
+		Map<String, Object> metaData) throws Exception {
+		String parentFolderPath = S3Keys
+			.toUiFolderPath("/docs/expenseManager/filofax/IPs/" + folderPath.replaceFirst("^/+", ""));
 
 		Document document = new Document();
 		document.setMetaData(metaData);
@@ -106,8 +110,8 @@ public class DocumentService {
 		document.setFolderPath(parentFolderPath);
 
 		Document saved = documentDao.create(document);
-		s3Service.putObjectWithFolders(
-				S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file, "application/octet-stream");
+		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file,
+			"application/octet-stream");
 		return saved;
 	}
 
@@ -140,8 +144,7 @@ public class DocumentService {
 		if (directory.getFolderPath().contains("root")) {
 			String rel = directory.getFolderPath().replace("root", "").replaceAll("^/+", "");
 			parentPath = S3Keys.toUiFolderPath("/docs/expenseManager/filofax/" + rel);
-		}
-		else {
+		} else {
 			parentPath = S3Keys.toUiFolderPath(directory.getFolderPath());
 		}
 
@@ -162,8 +165,7 @@ public class DocumentService {
 		return documentDao.create(document);
 	}
 
-	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName,
-			Document document) {
+	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName, Document document) {
 		Map<String, Object> metaData = new HashMap<>();
 		if (!parentFolderName.equals("filofax")) {
 			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
@@ -178,9 +180,9 @@ public class DocumentService {
 	public void deleteDocument(Document document) {
 		if (document.isFolder()) {
 			s3Service.deleteAllUnderPrefix(document.getFilePath());
-			documentDao.deleteDirectory(S3Keys.join(S3Keys.toBucketPrefix(document.getFolderPath()), document.getFileName()));
-		}
-		else {
+			documentDao
+				.deleteDirectory(S3Keys.join(S3Keys.toBucketPrefix(document.getFolderPath()), document.getFileName()));
+		} else {
 			s3Service.deleteObject(document.getFilePath());
 		}
 		documentDao.deleteById(document.getId());
@@ -217,8 +219,7 @@ public class DocumentService {
 		candidates.add(path);
 		if (path.endsWith("/")) {
 			candidates.add(path.substring(0, path.length() - 1));
-		}
-		else {
+		} else {
 			candidates.add(path + "/");
 		}
 	}
@@ -238,7 +239,8 @@ public class DocumentService {
 	}
 
 	/**
-	 * Moves a file object’s S3 key to {@code newParentFolderKey}/{@code document.getId()}} and updates the entity.
+	 * Moves a file object’s S3 key to
+	 * {@code newParentFolderKey}/{@code document.getId()}} and updates the entity.
 	 */
 	public void moveDocumentToParentFolder(Document document, String newParentFolderKey) {
 		String destParent = S3Keys.toUiFolderPath(newParentFolderKey);

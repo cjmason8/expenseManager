@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.dto.DocumentDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.dto.DocumentDto;
 
 @Mapper(componentModel = "spring", uses = MappingConverters.class)
 public interface DocumentMapper extends BaseMapper<Document, DocumentDto> {

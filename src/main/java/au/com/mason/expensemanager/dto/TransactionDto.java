@@ -18,19 +18,19 @@ public class TransactionDto {
 	public Long getId() {
 		return id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	public RefDataDto getTransactionType() {
 		return transactionType;
 	}
-	
+
 	public void setTransactionType(RefDataDto transactionType) {
 		this.transactionType = transactionType;
 	}
-	
+
 	public String getAmount() {
 		return amount;
 	}

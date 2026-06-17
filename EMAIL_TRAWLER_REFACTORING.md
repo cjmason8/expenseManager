@@ -58,7 +58,7 @@ private final RefDataService refDataService;
 private final NotificationService notificationService;
 
 @Autowired
-public EmailTrawler(AwsSecretsService awsSecretsService, 
+public EmailTrawler(AwsSecretsService awsSecretsService,
                     RefDataService refDataService,
                     NotificationService notificationService) {
     this.awsSecretsService = awsSecretsService;
@@ -77,7 +77,7 @@ private static final String MAIL_PROTOCOL = "imaps";
 private static final String INBOX_FOLDER = "INBOX";
 
 private static final List<String> BLACKLISTED_EMAILS = List.of(
-    "tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com", 
+    "tripadvisor", "roses", "puzzles", "youtube", "messages.telstra.com",
     "storm", "marvel", "paypal", "tennis", "mightymunch"
 );
 ```
@@ -98,7 +98,7 @@ private void createUnhandledNotification(String) // Notification creation
 private void closeResources(Folder, Store)       // Cleanup
 ```
 
-**Benefits:** 
+**Benefits:**
 - Each method has single responsibility
 - Easier to test individual components
 - Better error isolation
@@ -112,7 +112,7 @@ private void closeResources(Folder, Store)       // Cleanup
 public void check() {
     Store store = null;
     Folder emailFolder = null;
-    
+
     try {
         // ... processing ...
     } catch (Exception e) {
@@ -130,7 +130,7 @@ private void closeResources(Folder folder, Store store) {
     } catch (MessagingException e) {
         LOGGER.warn("Error closing folder", e);
     }
-    
+
     try {
         if (store != null && store.isConnected()) {
             store.close();
@@ -159,7 +159,7 @@ private Session createEmailSession() {
 }
 ```
 
-**Benefits:** 
+**Benefits:**
 - Thread-safe
 - Configurable timeouts (prevents hanging)
 - Better error handling
@@ -199,13 +199,13 @@ private boolean isBlacklisted(Message message) throws MessagingException {
     if (fromAddress == null) {
         return false;
     }
-    
+
     String lowerCaseFrom = fromAddress.toLowerCase();
     return BLACKLISTED_EMAILS.stream().anyMatch(lowerCaseFrom::contains);
 }
 ```
 
-**Benefits:** 
+**Benefits:**
 - Blacklist created once (static constant)
 - Proper null checking
 - Case-insensitive matching
@@ -222,7 +222,7 @@ private boolean matchRACVComprehensive(Message, ...)     // Car insurance
 private boolean matchRACVHomeInsurance(Message, ...)     // Home insurance
 ```
 
-**Benefits:** 
+**Benefits:**
 - Each method handles one type of matching
 - Easier to add new RACV types
 - Better testability
@@ -237,11 +237,11 @@ private boolean bodyContains(Message message, String phrase) {
     if (!message.isMimeType("multipart/*")) {
         return false;
     }
-    
+
     try {
         MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
         int count = mimeMultipart.getCount();
-        
+
         for (int i = 0; i < count; i++) {
             BodyPart bodyPart = mimeMultipart.getBodyPart(i);
             if (bodyPart.isMimeType("text/html") || bodyPart.isMimeType("text/plain")) {
@@ -256,12 +256,12 @@ private boolean bodyContains(Message message, String phrase) {
     } catch (Exception e) {
         LOGGER.warn("Error reading message body", e);
     }
-    
+
     return false;
 }
 ```
 
-**Benefits:** 
+**Benefits:**
 - Handles both HTML and plain text
 - Type-safe content extraction
 - Better error handling

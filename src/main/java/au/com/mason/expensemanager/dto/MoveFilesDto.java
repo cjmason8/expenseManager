@@ -6,7 +6,7 @@ public class MoveFilesDto {
 
 	private String directoryTo;
 	private UUID[] fileIds;
-	
+
 	public String getDirectoryTo() {
 		return directoryTo;
 	}
@@ -22,5 +22,5 @@ public class MoveFilesDto {
 	public void setFileIds(UUID[] fileIds) {
 		this.fileIds = fileIds;
 	}
-	
+
 }

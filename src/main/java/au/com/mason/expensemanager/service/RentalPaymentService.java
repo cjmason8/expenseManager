@@ -1,32 +1,30 @@
 package au.com.mason.expensemanager.service;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import au.com.mason.expensemanager.dao.RentalPaymentDao;
 import au.com.mason.expensemanager.domain.RentalPayment;
 import au.com.mason.expensemanager.util.RentalPaymentFinancialYear;
 import au.com.mason.expensemanager.util.S3Keys;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 @Service
 public class RentalPaymentService {
 
-	private static final Map<String, String> PROPERTIES = Map.of(
-			"WODONGA", "Wodonga",
-			"STH_KINGSVILLE", "South Kingsville"
-	);
+	private static final Map<String, String> PROPERTIES = Map.of("WODONGA", "Wodonga", "STH_KINGSVILLE",
+		"South Kingsville");
 
 	private String docsRoot;
 	private final RentalPaymentDao rentalPaymentDao;
 	private final DocumentService documentService;
 
-	public RentalPaymentService(@Value("${docs.location}") String docsRoot,
-			RentalPaymentDao rentalPaymentDao,
-			DocumentService documentService) {
+	public RentalPaymentService(@Value("${docs.location}") String docsRoot, RentalPaymentDao rentalPaymentDao,
+		DocumentService documentService) {
 		this.docsRoot = S3Keys.normalize(docsRoot);
 		this.rentalPaymentDao = rentalPaymentDao;
 		this.documentService = documentService;
@@ -39,10 +37,8 @@ public class RentalPaymentService {
 			rentalPayment.setDocument(null);
 		}
 
-		if (rentalPayment.getDocument() != null
-				&& rentalPayment.getDocument().getOriginalFileName() != null
-				&& !Objects.equals(rentalPayment.getDocument().getFileName(),
-						existingRentalPayment.getDocument().getFileName())) {
+		if (rentalPayment.getDocument() != null && rentalPayment.getDocument().getOriginalFileName() != null && !Objects
+			.equals(rentalPayment.getDocument().getFileName(), existingRentalPayment.getDocument().getFileName())) {
 			moveAndUpdateDocument(rentalPayment);
 		}
 
@@ -67,13 +63,11 @@ public class RentalPaymentService {
 		String financialYear = (month <= 6) ? (year - 1) + "-" + year : year + "-" + (year + 1);
 		String propertyName = PROPERTIES.get(rentalPayment.getProperty());
 
-		String destParent = S3Keys.toUiFolderPath(String.format(
-				"/docs/expenseManager/filofax/IPs/%s/%s/Statements", propertyName, financialYear));
+		String destParent = S3Keys.toUiFolderPath(
+			String.format("/docs/expenseManager/filofax/IPs/%s/%s/Statements", propertyName, financialYear));
 
 		documentService.moveDocumentToParentFolder(rentalPayment.getDocument(), destParent);
-		rentalPayment.getDocument().setMetaData(Map.of(
-				"property", propertyName,
-				"year", financialYear));
+		rentalPayment.getDocument().setMetaData(Map.of("property", propertyName, "year", financialYear));
 
 		documentService.updateDocument(rentalPayment.getDocument());
 	}
@@ -88,8 +82,7 @@ public class RentalPaymentService {
 
 	public List<RentalPayment> getAll(String property, int financialYearEnd) {
 		return rentalPaymentDao.getByProperty(property).stream()
-				.filter(payment -> RentalPaymentFinancialYear.financialYearEnd(payment) == financialYearEnd)
-				.toList();
+			.filter(payment -> RentalPaymentFinancialYear.financialYearEnd(payment) == financialYearEnd).toList();
 	}
 
 }

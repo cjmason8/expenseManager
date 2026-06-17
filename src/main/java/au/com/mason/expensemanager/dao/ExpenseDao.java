@@ -1,22 +1,25 @@
 package au.com.mason.expensemanager.dao;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Repository;
+
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.RefDataDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.util.DateUtil;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Transactional;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Repository;
 
 @Repository
 @Transactional
@@ -87,8 +90,8 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public List<Expense> getPastDate(LocalDate date, Expense recurringExpense) {
-		Query query = entityManager.createQuery(
-				"from Expense where dueDate > :date and recurringTransaction = :recurringTransaction");
+		Query query = entityManager
+			.createQuery("from Expense where dueDate > :date and recurringTransaction = :recurringTransaction");
 		query.setParameter("date", date);
 		query.setParameter("recurringTransaction", recurringExpense);
 
@@ -96,7 +99,8 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public List<Expense> findExpenses(SearchParamsDto searchParamsDto) {
-		// JPQL only: Hibernate 6 still treats native SQL with EXISTS/subqueries on other tables as duplicate "id" aliases.
+		// JPQL only: Hibernate 6 still treats native SQL with EXISTS/subqueries on
+		// other tables as duplicate "id" aliases.
 		StringBuilder jpql = new StringBuilder("SELECT e FROM Expense e WHERE e.recurringType IS NULL ");
 		if (searchParamsDto.getTransactionType() != null) {
 			RefDataDto tt = searchParamsDto.getTransactionType();
@@ -152,16 +156,16 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public void deleteTransactions(Long recurringTransactionId) {
-		entityManager.createQuery(
+		entityManager
+			.createQuery(
 				"delete from Expense where recurringTransaction.id = :recurringTransactionId AND dueDate > :today")
-				.setParameter("recurringTransactionId", recurringTransactionId)
-				.setParameter("today", LocalDate.now())
-				.executeUpdate();
+			.setParameter("recurringTransactionId", recurringTransactionId).setParameter("today", LocalDate.now())
+			.executeUpdate();
 	}
 
 	public List<Expense> findExpenses(RefData entryType) {
 		Query query = entityManager.createQuery(
-				"from Expense where entryType = :entryType AND paid = false AND recurringType is null order by dueDate");
+			"from Expense where entryType = :entryType AND paid = false AND recurringType is null order by dueDate");
 		query.setParameter("entryType", entryType);
 
 		return query.getResultList();

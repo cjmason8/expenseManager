@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.util;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.hc.client5.http.utils.Base64;
 
 public class DecryptionUtility {
@@ -18,8 +19,7 @@ public class DecryptionUtility {
 			byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
 
 			return new String(original);
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 			return null;
 		}

@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.domain.converter;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 @Converter
 public class TimestampLocalDateConverter implements AttributeConverter<LocalDate, Timestamp> {

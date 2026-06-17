@@ -10,10 +10,10 @@
             </Policies>
         </RollingFile>
         <GELF name="gelfAppender" server="161.97.133.187" port="12201" hostName="161.97.133.187" protocol="TCP">
-        	<PatternLayout>
+          <PatternLayout>
                 <pattern>{\"application\":\"Expense Manager\",\"Env\":\"$${env:ENV}\",\"dateTime\":\"%d{yyyy-MM-dd HH:mm:ss}\", \"msg\":\"%-5p %c{1}:%L - %m\"}%n</pattern>
             </PatternLayout>
-	    </GELF>
+      </GELF>
     </Appenders>
     <Loggers>
         <Root level="info" additivity="false">

@@ -198,23 +198,23 @@ private String gmailOAuthSecretName;
 
 private Credential getCredentialsFromSecrets(final NetHttpTransport httpTransport) throws IOException {
     Map<String, String> oauthCreds = awsSecretsService.getSecretAsMap(gmailOAuthSecretName);
-    
+
     String clientId = oauthCreds.get("client_id");
     String clientSecret = oauthCreds.get("client_secret");
     String refreshToken = oauthCreds.get("refresh_token");
-    
+
     GoogleClientSecrets.Details details = new GoogleClientSecrets.Details()
             .setClientId(clientId)
             .setClientSecret(clientSecret);
     GoogleClientSecrets clientSecrets = new GoogleClientSecrets().setInstalled(details);
-    
+
     GoogleCredential credential = new GoogleCredential.Builder()
             .setTransport(httpTransport)
             .setJsonFactory(JSON_FACTORY)
             .setClientSecrets(clientSecrets)
             .build();
     credential.setRefreshToken(refreshToken);
-    
+
     return credential;
 }
 ```
@@ -250,19 +250,19 @@ import au.com.mason.expensemanager.service.RefDataService;
 
 @Component
 public class GmailEmailTrawler {
-    
+
     private static final Logger LOGGER = LogManager.getLogger(GmailEmailTrawler.class);
     private static final String USER_ID = "me";
-    
+
     @Autowired
     private Gmail gmailService;
-    
+
     @Autowired
     private RefDataService refDataService;
-    
+
     @Autowired
     private NotificationService notificationService;
-    
+
     public void check() {
         try {
             // Query for unread messages
@@ -271,16 +271,16 @@ public class GmailEmailTrawler {
                     .list(USER_ID)
                     .setQ(query)
                     .execute();
-            
+
             List<Message> messages = response.getMessages();
             if (messages == null || messages.isEmpty()) {
                 LOGGER.info("No unread messages found.");
                 return;
             }
-            
+
             LOGGER.info("Found {} unread messages", messages.size());
             List<RefData> refDatas = refDataService.getAllWithEmailKey();
-            
+
             for (Message messageStub : messages) {
                 try {
                     // Fetch full message
@@ -288,19 +288,19 @@ public class GmailEmailTrawler {
                             .get(USER_ID, messageStub.getId())
                             .setFormat("raw")
                             .execute();
-                    
+
                     // Convert to MimeMessage for easier parsing
                     MimeMessage mimeMessage = convertToMimeMessage(fullMessage);
-                    
+
                     // Check blacklist
                     if (isBlacklisted(mimeMessage)) {
                         markAsRead(fullMessage.getId());
                         continue;
                     }
-                    
+
                     String subject = mimeMessage.getSubject();
                     LOGGER.info("Processing: {}", subject);
-                    
+
                     // Find matching processor
                     boolean foundIt = false;
                     for (RefData refData : refDatas) {
@@ -312,59 +312,59 @@ public class GmailEmailTrawler {
                             break;
                         }
                     }
-                    
+
                     if (!foundIt) {
                         Notification notification = new Notification();
                         notification.setMessage("Unhandled Email: " + subject);
                         notificationService.create(notification);
                     }
-                    
+
                     // Mark as read
                     markAsRead(fullMessage.getId());
-                    
+
                 } catch (Exception e) {
                     LOGGER.error("Error processing message: {}", messageStub.getId(), e);
                 }
             }
-            
+
         } catch (Exception e) {
             LOGGER.error("Error checking Gmail", e);
         }
     }
-    
+
     private MimeMessage convertToMimeMessage(Message message) throws Exception {
         byte[] emailBytes = Base64.getUrlDecoder().decode(message.getRaw());
         Session session = Session.getDefaultInstance(new java.util.Properties());
         return new MimeMessage(session, new ByteArrayInputStream(emailBytes));
     }
-    
+
     private void markAsRead(String messageId) throws Exception {
         ModifyMessageRequest modifyRequest = new ModifyMessageRequest()
                 .setRemoveLabelIds(Collections.singletonList("UNREAD"));
         gmailService.users().messages().modify(USER_ID, messageId, modifyRequest).execute();
     }
-    
+
     private boolean isBlacklisted(MimeMessage message) throws Exception {
-        List<String> blacklist = List.of("tripadvisor", "roses", "puzzles", "youtube", 
+        List<String> blacklist = List.of("tripadvisor", "roses", "puzzles", "youtube",
                 "messages.telstra.com", "storm", "marvel", "paypal", "tennis", "mightymunch");
-        
-        String from = message.getFrom() != null && message.getFrom().length > 0 
-                ? message.getFrom()[0].toString() 
+
+        String from = message.getFrom() != null && message.getFrom().length > 0
+                ? message.getFrom()[0].toString()
                 : "";
-        
+
         return blacklist.stream().anyMatch(from.toLowerCase()::contains);
     }
-    
+
     private boolean refDataMatch(MimeMessage message, RefData refData) throws Exception {
         // Port your existing refDataMatch logic here
         // The MimeMessage API is similar to javax.mail.Message
         String subject = message.getSubject();
         String body = getBodyContent(message);
-        
+
         // Your existing matching logic...
         return subject != null && subject.contains(refData.getEmailKey());
     }
-    
+
     private String getBodyContent(MimeMessage message) throws Exception {
         Object content = message.getContent();
         if (content instanceof String) {

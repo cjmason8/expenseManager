@@ -14,18 +14,18 @@ import au.com.mason.expensemanager.robot.EmailTrawler;
 @Profile("production")
 @Component
 public class ScheduledTasks {
-	
+
 	private static Logger LOGGER = LogManager.getLogger(ScheduledTasks.class);
-	
-    @Autowired
+
+	@Autowired
 	private EmailTrawler emailTrawler;
 
-    @Scheduled(cron = "0 0 */4 * * *")
-    public void runEmailTrawler() {
-    	LOGGER.info("starting runEmailTrawler" + new Date());
-    	
-    	emailTrawler.check();
-    	
-    	LOGGER.info("ending runEmailTrawler" + new Date());
-    }
+	@Scheduled(cron = "0 0 */4 * * *")
+	public void runEmailTrawler() {
+		LOGGER.info("starting runEmailTrawler" + new Date());
+
+		emailTrawler.check();
+
+		LOGGER.info("ending runEmailTrawler" + new Date());
+	}
 }

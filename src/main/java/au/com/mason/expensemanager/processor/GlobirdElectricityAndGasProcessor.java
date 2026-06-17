@@ -1,21 +1,24 @@
 package au.com.mason.expensemanager.processor;
 
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.pdf.PdfReader;
-import au.com.mason.expensemanager.util.CollectionUtil;
-import org.eclipse.angus.mail.util.BASE64DecoderStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
 import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMultipart;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.angus.mail.util.BASE64DecoderStream;
 import org.springframework.stereotype.Component;
+
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.pdf.PdfReader;
+import au.com.mason.expensemanager.util.CollectionUtil;
 
 @Component
 public class GlobirdElectricityAndGasProcessor extends Processor {
@@ -35,7 +38,8 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 			boolean foundAmountDue = false;
 			for (int i = 0; i < count; i++) {
 				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-				if (bodyPart.getContentType().startsWith("APPLICATION/PDF") && bodyPart.getFileName().startsWith("Invoice")) {
+				if (bodyPart.getContentType().startsWith("APPLICATION/PDF")
+					&& bodyPart.getFileName().startsWith("Invoice")) {
 					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
 					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
 
@@ -43,15 +47,14 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 					List<String> lines = CollectionUtil.splitAndConvert(content, "\n");
 					for (String line : lines) {
 						if (line.startsWith("Issue Date")) {
-							issueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1), DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-						}
-						else if (line.startsWith("Due Date")) {
-							dueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1), DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-						}
-						else if (line.startsWith("Amount Due")) {
+							issueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1),
+								DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+						} else if (line.startsWith("Due Date")) {
+							dueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1),
+								DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+						} else if (line.startsWith("Amount Due")) {
 							foundAmountDue = true;
-						}
-						else if (foundAmountDue) {
+						} else if (foundAmountDue) {
 							amount = line.substring(1);
 							break;
 						}
@@ -64,8 +67,7 @@ public class GlobirdElectricityAndGasProcessor extends Processor {
 						dueDate = issueDate.plusMonths(1).withDayOfMonth(10);
 						notes = "Amount due is zero due to credit, therefore due date is fake.";
 						amount = BigDecimal.ZERO.toString();
-					}
-					else {
+					} else {
 						fileName = "Globird - " + formatter.format(dueDate) + ".pdf";
 					}
 					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);

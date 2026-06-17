@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public class GraphDto {
 	private String label;
 	private BigDecimal[] data;
-	
+
 	public GraphDto(String label, BigDecimal[] data) {
 		this.label = label;
 		this.data = data;
@@ -22,5 +22,5 @@ public class GraphDto {
 	public void setData(BigDecimal[] data) {
 		this.data = data;
 	}
-	
+
 }

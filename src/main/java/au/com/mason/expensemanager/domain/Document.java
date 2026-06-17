@@ -1,7 +1,8 @@
 package au.com.mason.expensemanager.domain;
 
-import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
-import au.com.mason.expensemanager.util.S3Keys;
+import java.util.Map;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,26 +12,20 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import java.util.Map;
-import java.util.UUID;
+
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-@NamedQueries(
-		value = {
-				@NamedQuery(
-						name = Document.GET_ALL_BY_FOLDER_PATH,
-						query = "FROM Document WHERE folderPath = :folderPath AND isArchived = false"),
-				@NamedQuery(
-						name = Document.GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED,
-						query = "FROM Document WHERE folderPath = :folderPath"),
-				@NamedQuery(
-						name = Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME,
-						query = "FROM Document WHERE folderPath = :folderPath AND fileName = :fileName"),
-		})
+import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
+import au.com.mason.expensemanager.util.S3Keys;
+
+@NamedQueries(value = {
+	@NamedQuery(name = Document.GET_ALL_BY_FOLDER_PATH, query = "FROM Document WHERE folderPath = :folderPath AND isArchived = false"),
+	@NamedQuery(name = Document.GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED, query = "FROM Document WHERE folderPath = :folderPath"),
+	@NamedQuery(name = Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME, query = "FROM Document WHERE folderPath = :folderPath AND fileName = :fileName"),})
 @Entity
-@Table(name="documents")
+@Table(name = "documents")
 public class Document implements Metadata {
 
 	public static final String GET_ALL_BY_FOLDER_PATH = "Document.Repository.GetAllByFolderPath";
@@ -95,7 +90,8 @@ public class Document implements Metadata {
 	}
 
 	/**
-	 * Parent folder key within the bucket (S3 prefix of this document, no trailing slash).
+	 * Parent folder key within the bucket (S3 prefix of this document, no trailing
+	 * slash).
 	 */
 	public String getFolderPath() {
 		return S3Keys.toUiFolderPath(folderPath);
@@ -114,7 +110,8 @@ public class Document implements Metadata {
 	}
 
 	/**
-	 * Full S3 object key: for files {@code folderPath + "/" + id}; for folders {@code folderPath + "/" + fileName}.
+	 * Full S3 object key: for files {@code folderPath + "/" + id}; for folders
+	 * {@code folderPath + "/" + fileName}.
 	 */
 	@Transient
 	public String getFilePath() {

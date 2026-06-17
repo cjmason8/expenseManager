@@ -1,14 +1,6 @@
 package au.com.mason.expensemanager.processor;
 
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpClient.Redirect;
-import java.net.http.HttpClient.Version;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -21,10 +13,9 @@ import jakarta.mail.internet.MimeMultipart;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.angus.mail.util.BASE64DecoderStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import org.eclipse.angus.mail.util.BASE64DecoderStream;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Notification;
@@ -58,69 +49,70 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 				} else if (isPdfAttachment(bodyPart)) {
 					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
 					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
-					
+
 					RentalPayment rentalPayment = new RentalPayment();
-					
+
 					rentalPayment.setProperty("STH_KINGSVILLE");
-		        	
+
 					String content = PdfReader.extract(byteArray);
-					
+
 					BigDecimal[] paymentToOwner = new BigDecimal[1];
 					CollectionUtil.splitAndConvert(content, "\n").stream().forEach(line -> {
 						if (line.startsWith("Money In")) {
-							rentalPayment.setTotalRent(new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", ""))); 
-						} 
-						else if (line.indexOf("Management fee") != -1) {
-							rentalPayment.setManagementFee(new BigDecimal(line.substring(line.indexOf("*") + 3).replace(",", ""))); 
-						} 
-						else if (line.indexOf("Accounting Fee") != -1) { 
-							rentalPayment.setAdminFee(new BigDecimal(line.substring(line.indexOf("*") + 3).replace(",", ""))); 
-						} 
-					else if (line.indexOf("Rent paid to") != -1) { 
-						String endDatePart = line.substring(13, line.indexOf("(") - 1);
-						String endDate = endDatePart.substring(0, 10);
-						int index = 20; 
-						if (line.indexOf("moved in") != -1) {
-							index = 10; 
-						} 
-						
-						String startDatePart = line.substring(line.indexOf("(") + index, line.indexOf(")")); 
-						String startDate = startDatePart.substring(0, 10);
-						DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-						rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
-						rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter)); 
-					} else if (line.indexOf("You Received") != -1) { 
-							paymentToOwner[0] = new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", "")); 
-						} 
+							rentalPayment
+								.setTotalRent(new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", "")));
+						} else if (line.indexOf("Management fee") != -1) {
+							rentalPayment.setManagementFee(
+								new BigDecimal(line.substring(line.indexOf("*") + 3).replace(",", "")));
+						} else if (line.indexOf("Accounting Fee") != -1) {
+							rentalPayment
+								.setAdminFee(new BigDecimal(line.substring(line.indexOf("*") + 3).replace(",", "")));
+						} else if (line.indexOf("Rent paid to") != -1) {
+							String endDatePart = line.substring(13, line.indexOf("(") - 1);
+							String endDate = endDatePart.substring(0, 10);
+							int index = 20;
+							if (line.indexOf("moved in") != -1) {
+								index = 10;
+							}
+
+							String startDatePart = line.substring(line.indexOf("(") + index, line.indexOf(")"));
+							String startDate = startDatePart.substring(0, 10);
+							DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+							rentalPayment.setStatementFrom(LocalDate.parse(startDate, dateFormatter));
+							rentalPayment.setStatementTo(LocalDate.parse(endDate, dateFormatter));
+						} else if (line.indexOf("You Received") != -1) {
+							paymentToOwner[0] = new BigDecimal(line.substring(line.indexOf("$") + 1).replace(",", ""));
+						}
 					});
 
 					if (paymentToOwner[0].compareTo(rentalPayment.getPaymentToOwner()) != 0) {
 						Notification unbalancedRemtalNotification = new Notification();
-						unbalancedRemtalNotification.setMessage("There was an unbalanced Rental Payment for South Kingsville " +
-								rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
-						notificationService.create(unbalancedRemtalNotification); 
+						unbalancedRemtalNotification
+							.setMessage("There was an unbalanced Rental Payment for South Kingsville "
+								+ rentalPayment.getStatementFrom() + " to " + rentalPayment.getStatementTo());
+						notificationService.create(unbalancedRemtalNotification);
 					}
 
-					String fileName = message.getSubject().substring(0, message.getSubject().indexOf("from") - 1) + ".pdf"; 
-					int month = rentalPayment.getStatementTo().getMonth().getValue(); 
-					String year = String.valueOf(rentalPayment.getStatementTo().getYear()); 
+					String fileName = message.getSubject().substring(0, message.getSubject().indexOf("from") - 1)
+						+ ".pdf";
+					int month = rentalPayment.getStatementTo().getMonth().getValue();
+					String year = String.valueOf(rentalPayment.getStatementTo().getYear());
 					String folder = "";
-					if (month <= 6) { 
-						folder = (Integer.valueOf(year) - 1) + "-" + year; 
-					} 
-					else {
-						folder = year + "-" + (Integer.valueOf(year) + 1); 
-					} 
-					
-					Map<String, Object> metaData = new HashMap<>(); 
+					if (month <= 6) {
+						folder = (Integer.valueOf(year) - 1) + "-" + year;
+					} else {
+						folder = year + "-" + (Integer.valueOf(year) + 1);
+					}
+
+					Map<String, Object> metaData = new HashMap<>();
 					metaData.put("property", "South Kingsville");
-					metaData.put("year", folder); 
+					metaData.put("year", folder);
 					Document document = documentService.createDocumentForRentalStatement(byteArray, fileName,
 						"/South Kingsville/" + folder + "/Statements", metaData);
 					rentalPayment.setDocument(document);
 
 					Notification notification = new Notification();
-					notification.setMessage("Uploaded South Kingsville rental statement - " + fileName); 
+					notification.setMessage("Uploaded South Kingsville rental statement - " + fileName);
 					LOGGER.info("Uploaded South Kingsville rental statement - " + fileName);
 
 					rentalPaymentService.createRentalPayment(rentalPayment);
@@ -132,7 +124,7 @@ public class SouthKingsvilleRentalStatementProccesor extends Processor {
 
 	private boolean isPdfAttachment(BodyPart bodyPart) throws Exception {
 		return bodyPart.isMimeType("application/pdf")
-				|| bodyPart.getContentType().toUpperCase().startsWith("APPLICATION/PDF");
+			|| bodyPart.getContentType().toUpperCase().startsWith("APPLICATION/PDF");
 	}
 
 }

@@ -20,7 +20,7 @@ import au.com.mason.expensemanager.service.AwsSecretsService;
 @Configuration
 @EnableTransactionManagement
 public class DatabaseConfig {
-	
+
 	@Autowired
 	private AwsSecretsService awsSecretsService;
 
@@ -38,7 +38,7 @@ public class DatabaseConfig {
 		dataSource.setUrl(System.getenv().get("DB_URL"));
 		dataSource.setUsername(awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"));
 		dataSource.setPassword(awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD"));
-		
+
 		return dataSource;
 	}
 
@@ -62,7 +62,7 @@ public class DatabaseConfig {
 		Properties additionalProperties = new Properties();
 		additionalProperties.put("hibernate.dialect", System.getenv().get("HIBERNATE_DIALECT"));
 		additionalProperties.put("hibernate.hbm2ddl.auto", System.getenv().get("HIBERNATE_HBM2DDL_AUTO"));
-		//additionalProperties.put("hibernate.temp.use_jdbc_metadata_defaults", false);
+		// additionalProperties.put("hibernate.temp.use_jdbc_metadata_defaults", false);
 		entityManagerFactory.setJpaProperties(additionalProperties);
 
 		return entityManagerFactory;
@@ -79,11 +79,10 @@ public class DatabaseConfig {
 	}
 
 	/**
-	 * PersistenceExceptionTranslationPostProcessor is a bean post processor
-	 * which adds an advisor to any bean annotated with Repository so that any
+	 * PersistenceExceptionTranslationPostProcessor is a bean post processor which
+	 * adds an advisor to any bean annotated with Repository so that any
 	 * platform-specific exceptions are caught and then rethrown as one Spring's
-	 * unchecked data access exceptions (i.e. a subclass of
-	 * DataAccessException).
+	 * unchecked data access exceptions (i.e. a subclass of DataAccessException).
 	 */
 	@Bean
 	public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {

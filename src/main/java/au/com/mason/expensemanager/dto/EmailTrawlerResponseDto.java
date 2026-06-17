@@ -10,5 +10,5 @@ import lombok.Setter;
 @Setter
 @Getter
 public class EmailTrawlerResponseDto {
-    private String success;
+	private String success;
 }

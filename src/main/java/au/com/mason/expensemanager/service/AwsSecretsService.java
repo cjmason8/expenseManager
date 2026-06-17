@@ -1,14 +1,17 @@
 package au.com.mason.expensemanager.service;
 
-import com.google.gson.Gson;
+import java.util.Map;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
@@ -47,19 +50,17 @@ public class AwsSecretsService {
 
 		if (StringUtils.isNotBlank(accessKey) && StringUtils.isNotBlank(secretKey)) {
 			if (StringUtils.isNotBlank(sessionToken)) {
-				credentialsProvider = StaticCredentialsProvider.create(AwsSessionCredentials.create(
-						accessKey.trim(), secretKey.trim(), sessionToken.trim()));
+				credentialsProvider = StaticCredentialsProvider
+					.create(AwsSessionCredentials.create(accessKey.trim(), secretKey.trim(), sessionToken.trim()));
 				builder.credentialsProvider(credentialsProvider);
 				LOGGER.info("Using AWS session credentials for Secrets Manager");
-			}
-			else {
-				credentialsProvider = StaticCredentialsProvider.create(
-						AwsBasicCredentials.create(accessKey.trim(), secretKey.trim()));
+			} else {
+				credentialsProvider = StaticCredentialsProvider
+					.create(AwsBasicCredentials.create(accessKey.trim(), secretKey.trim()));
 				builder.credentialsProvider(credentialsProvider);
 				LOGGER.info("Using AWS basic credentials for Secrets Manager");
 			}
-		}
-		else {
+		} else {
 			credentialsProvider = DefaultCredentialsProvider.create();
 			builder.credentialsProvider(credentialsProvider);
 			LOGGER.info("Using default AWS credentials provider for Secrets Manager");
@@ -80,23 +81,22 @@ public class AwsSecretsService {
 	/**
 	 * Retrieves a secret value from AWS Secrets Manager.
 	 *
-	 * @param secretName the name or ARN of the secret
+	 * @param secretName
+	 *            the name or ARN of the secret
 	 * @return the secret string value
-	 * @throws SecretsManagerException if the secret cannot be retrieved
+	 * @throws SecretsManagerException
+	 *             if the secret cannot be retrieved
 	 */
 	public String getSecretString(String secretName) {
 		try {
-			GetSecretValueRequest request = GetSecretValueRequest.builder()
-					.secretId(secretName)
-					.build();
+			GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(secretName).build();
 
 			GetSecretValueResponse response = secretsManagerClient.getSecretValue(request);
 			String secret = response.secretString();
 
 			LOGGER.info("Successfully retrieved secret: {}", secretName);
 			return secret;
-		}
-		catch (SecretsManagerException e) {
+		} catch (SecretsManagerException e) {
 			LOGGER.error("Failed to retrieve secret: {} - {}", secretName, e.getMessage());
 			throw e;
 		}
@@ -105,17 +105,18 @@ public class AwsSecretsService {
 	/**
 	 * Retrieves a secret and parses it as JSON into a Map.
 	 *
-	 * @param secretName the name or ARN of the secret
+	 * @param secretName
+	 *            the name or ARN of the secret
 	 * @return a map containing the secret's key-value pairs
-	 * @throws SecretsManagerException if the secret cannot be retrieved
+	 * @throws SecretsManagerException
+	 *             if the secret cannot be retrieved
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, String> getSecretAsMap(String secretName) {
 		String secretString = getSecretString(secretName);
 		try {
 			return gson.fromJson(secretString, Map.class);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			LOGGER.error("Failed to parse secret as JSON: {}", secretName, e);
 			throw new IllegalStateException("Secret is not valid JSON: " + secretName, e);
 		}
@@ -124,10 +125,13 @@ public class AwsSecretsService {
 	/**
 	 * Retrieves a specific key from a JSON secret.
 	 *
-	 * @param secretName the name or ARN of the secret
-	 * @param key the key to extract from the JSON secret
+	 * @param secretName
+	 *            the name or ARN of the secret
+	 * @param key
+	 *            the key to extract from the JSON secret
 	 * @return the value associated with the key, or null if not found
-	 * @throws SecretsManagerException if the secret cannot be retrieved
+	 * @throws SecretsManagerException
+	 *             if the secret cannot be retrieved
 	 */
 	public String getSecretValue(String secretName, String key) {
 		Map<String, String> secretMap = getSecretAsMap(secretName);

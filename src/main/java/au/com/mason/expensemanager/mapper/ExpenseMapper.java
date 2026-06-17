@@ -1,13 +1,15 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.Expense;
-import au.com.mason.expensemanager.dto.ExpenseDto;
-import au.com.mason.expensemanager.util.DateUtil;
 import java.time.DayOfWeek;
+
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+
+import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.dto.ExpenseDto;
+import au.com.mason.expensemanager.util.DateUtil;
 
 @Mapper(componentModel = "spring", uses = {RefDataMapper.class, DocumentMapper.class, MappingConverters.class})
 public interface ExpenseMapper extends BaseMapper<Expense, ExpenseDto> {

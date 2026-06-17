@@ -10,23 +10,23 @@ public class DonationSearchDto {
 	public RefDataDto getCause() {
 		return cause;
 	}
-	
+
 	public void setCause(RefDataDto cause) {
 		this.cause = cause;
 	}
-	
+
 	public String getStartDate() {
 		return startDate;
 	}
-	
+
 	public void setStartDate(String startDate) {
 		this.startDate = startDate;
 	}
-	
+
 	public String getEndDate() {
 		return endDate;
 	}
-	
+
 	public void setEndDate(String endDate) {
 		this.endDate = endDate;
 	}
@@ -38,5 +38,5 @@ public class DonationSearchDto {
 	public void setMetaDataChunk(String metaDataChunk) {
 		this.metaDataChunk = metaDataChunk;
 	}
-	
+
 }

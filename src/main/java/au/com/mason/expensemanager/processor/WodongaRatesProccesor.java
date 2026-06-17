@@ -11,9 +11,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.stereotype.Component;
-
 import org.eclipse.angus.mail.util.BASE64DecoderStream;
+import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
@@ -55,7 +54,7 @@ public class WodongaRatesProccesor extends Processor {
 					byteArray = IOUtils.toByteArray(base64DecoderStream);
 				}
 			}
-			
+
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 			String fileName = "WodongaRates-" + formatter.format(dueDate) + ".pdf";
 			document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
@@ -86,7 +85,7 @@ public class WodongaRatesProccesor extends Processor {
 					String content = PdfReader.extract(byteArray);
 					final String reqParam = firstInstalmentAmount;
 					String reqLine = CollectionUtil.splitAndConvert(content, "\n").stream()
-							.filter(line -> line.startsWith("$" + reqParam)).findFirst().get();
+						.filter(line -> line.startsWith("$" + reqParam)).findFirst().get();
 					String[] instalmentAmounts = reqLine.split(" ");
 
 					Instalment[] instalments = new Instalment[4];
@@ -111,7 +110,7 @@ public class WodongaRatesProccesor extends Processor {
 
 					Arrays.asList(instalments).stream().forEach(item -> {
 						createExpense(refData, item.getDueDate(), item.getDocument(), item.getNotes(),
-								item.getAmount());
+							item.getAmount());
 					});
 				}
 			}

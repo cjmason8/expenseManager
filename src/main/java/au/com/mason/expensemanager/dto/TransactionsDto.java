@@ -15,9 +15,9 @@ public class TransactionsDto {
 	public List<ExpenseDto> getExpenses() {
 		return expenses;
 	}
-	
+
 	public List<IncomeDto> getIncomes() {
 		return incomes;
-	}	
-	
+	}
+
 }

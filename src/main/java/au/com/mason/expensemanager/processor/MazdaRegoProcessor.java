@@ -9,5 +9,5 @@ public class MazdaRegoProcessor extends VicRoadsProcessor {
 	String getFilePrefix() {
 		return "MazdaRego";
 	}
-	
+
 }

@@ -1,6 +1,7 @@
 package au.com.mason.expensemanager.domain;
 
-import au.com.mason.expensemanager.processor.EmailProcessor;
+import java.util.Map;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,27 +13,22 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.util.Map;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-@NamedQueries(
-		value = {
-				@NamedQuery(
-						name = RefData.GET_ALL_BY_TYPE,
-						query = "FROM RefData WHERE type = :type ORDER BY type, description"),
-				@NamedQuery(
-						name = RefData.GET_ALL,
-						query = "FROM RefData WHERE deleted = false ORDER BY type, description"),
-				@NamedQuery(
-						name = RefData.GET_ALL_WITH_EMAIL_KEY,
-						query = "FROM RefData WHERE emailKey IS NOT NULL"),
-		})
+import au.com.mason.expensemanager.processor.EmailProcessor;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@NamedQueries(value = {
+	@NamedQuery(name = RefData.GET_ALL_BY_TYPE, query = "FROM RefData WHERE type = :type ORDER BY type, description"),
+	@NamedQuery(name = RefData.GET_ALL, query = "FROM RefData WHERE deleted = false ORDER BY type, description"),
+	@NamedQuery(name = RefData.GET_ALL_WITH_EMAIL_KEY, query = "FROM RefData WHERE emailKey IS NOT NULL"),})
 @Entity
-@Table(name="refdata")
+@Table(name = "refdata")
 @Getter
 @Setter
 @NoArgsConstructor

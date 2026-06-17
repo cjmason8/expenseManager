@@ -1,5 +1,8 @@
 package au.com.mason.expensemanager.domain;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,15 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+
 import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="rentalpayments")
+@Table(name = "rentalpayments")
 @Getter
 @Setter
 @NoArgsConstructor

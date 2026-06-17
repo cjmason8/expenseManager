@@ -2,9 +2,11 @@ package au.com.mason.expensemanager.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import au.com.mason.expensemanager.domain.RentalPayment;
 import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
+
+import au.com.mason.expensemanager.domain.RentalPayment;
 
 class RentalPaymentFinancialYearTest {
 

@@ -1,7 +1,8 @@
 package au.com.mason.expensemanager.util;
 
 /**
- * Normalizes and joins S3 object key segments (no leading slash, no duplicate slashes).
+ * Normalizes and joins S3 object key segments (no leading slash, no duplicate
+ * slashes).
  */
 public final class S3Keys {
 
@@ -35,7 +36,8 @@ public final class S3Keys {
 	}
 
 	/**
-	 * Normalizes a UI / DB folder path ({@code /docs/...}). Preserves the leading {@code /docs} prefix.
+	 * Normalizes a UI / DB folder path ({@code /docs/...}). Preserves the leading
+	 * {@code /docs} prefix.
 	 */
 	public static String toUiFolderPath(String path) {
 		if (path == null || path.isBlank()) {
@@ -65,7 +67,8 @@ public final class S3Keys {
 	}
 
 	/**
-	 * Maps a UI / DB folder path to an S3 key prefix (path within the bucket, no leading slash).
+	 * Maps a UI / DB folder path to an S3 key prefix (path within the bucket, no
+	 * leading slash).
 	 */
 	public static String toBucketPrefix(String path) {
 		String uiPath = toUiFolderPath(path);

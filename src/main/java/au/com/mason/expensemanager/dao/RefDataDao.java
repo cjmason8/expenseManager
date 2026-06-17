@@ -1,22 +1,25 @@
 package au.com.mason.expensemanager.dao;
 
-import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.domain.RefDataType;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+
+import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.domain.RefDataType;
 
 @Repository
 @Transactional
 public class RefDataDao extends BaseDao<RefData> {
-	
+
 	public RefDataDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(RefData.class, entityManager);
 	}
@@ -27,17 +30,17 @@ public class RefDataDao extends BaseDao<RefData> {
 		query.setParameter("type", RefDataType.valueOf(type));
 		return query.getResultList();
 	}
-	
+
 	public List<RefData> getAll() {
 		Query query = entityManager.createNamedQuery(RefData.GET_ALL, RefData.class);
 
 		return query.getResultList();
-	}	
-	
+	}
+
 	public List<RefData> getAllWithEmailKey() {
 		return entityManager.createNamedQuery(RefData.GET_ALL_WITH_EMAIL_KEY, RefData.class).getResultList();
 	}
-	
+
 	public List<RefData> findRefDatas(RefData refData) {
 		StringBuilder jpql = new StringBuilder("FROM RefData r WHERE r.deleted = false ");
 		if (refData.getType() != null) {
@@ -57,7 +60,8 @@ public class RefDataDao extends BaseDao<RefData> {
 		}
 		List<RefData> list = query.getResultList();
 		if (refData.getMetaData() != null && !refData.getMetaData().isEmpty()) {
-			list = list.stream().filter(r -> refDataMatchesMetaData(r, refData.getMetaData())).collect(Collectors.toList());
+			list = list.stream().filter(r -> refDataMatchesMetaData(r, refData.getMetaData()))
+				.collect(Collectors.toList());
 		}
 		return list;
 	}
@@ -73,5 +77,5 @@ public class RefDataDao extends BaseDao<RefData> {
 		}
 		return true;
 	}
-	
+
 }

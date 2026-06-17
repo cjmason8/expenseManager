@@ -20,22 +20,23 @@ import au.com.mason.expensemanager.service.NotificationService;
 import au.com.mason.expensemanager.util.DateUtil;
 
 public abstract class Processor {
-	
+
 	private static Logger LOGGER = LogManager.getLogger(Processor.class);
-	
+
 	@Autowired
 	protected ExpenseService expenseService;
-	
+
 	@Autowired
 	protected DocumentService documentService;
-	
+
 	@Autowired
 	protected NotificationService notificationService;
-	
+
 	protected boolean checkWithinBoundary(LocalDate dueDate, Expense expense) {
-		return expense.getDueDate().isAfter(dueDate.minusDays(10)) && expense.getDueDate().isBefore(dueDate.plusDays(10));
+		return expense.getDueDate().isAfter(dueDate.minusDays(10))
+			&& expense.getDueDate().isBefore(dueDate.plusDays(10));
 	}
-	
+
 	protected void addExpense(LocalDate dueDate, BigDecimal amount, Document document, Expense expense) {
 		expense.setDueDate(dueDate);
 		expense.setAmount(amount);
@@ -43,17 +44,19 @@ public abstract class Processor {
 			expense.setDocument(document);
 		}
 		expenseService.update(expense);
-		
+
 		Notification notification = new Notification();
 		notification.setExpense(expense);
 		notification.setMessage("Updated expense with new details");
-		
-		LOGGER.info("updated new expense for " + expense.getEntryType().getDescription() + " and due date" + expense.getDueDate() +" and id " + expense.getId());
-		
+
+		LOGGER.info("updated new expense for " + expense.getEntryType().getDescription() + " and due date"
+			+ expense.getDueDate() + " and id " + expense.getId());
+
 		notificationService.create(notification);
 	}
-	
-	protected void updateExpense(RefData refData, LocalDate dueDate, String amount, Document document, String notes) throws Exception {
+
+	protected void updateExpense(RefData refData, LocalDate dueDate, String amount, Document document, String notes)
+		throws Exception {
 		expenseService.initialiseWeek(DateUtil.getMonday(dueDate), null);
 		expenseService.initialiseWeek(DateUtil.getMonday(dueDate.minusDays(7)), null);
 		expenseService.initialiseWeek(DateUtil.getMonday(dueDate.plusDays(7)), null);
@@ -70,17 +73,16 @@ public abstract class Processor {
 		BigDecimal reqAmount = new BigDecimal(amount.replace("$", "").replace(",", ""));
 		if (expenses.size() == 0 || reqExpense == null) {
 			createExpense(refData, dueDate, document, notes, reqAmount);
-		}
-		else {
+		} else {
 			if (notes != null) {
 				reqExpense.setNotes(notes);
 			}
 			addExpense(dueDate, reqAmount, document, reqExpense);
-		}		
+		}
 	}
 
 	protected void createExpense(RefData refData, LocalDate dueDate, Document document, String notes,
-			BigDecimal reqAmount) {
+		BigDecimal reqAmount) {
 		Expense newExpense = new Expense();
 		newExpense.setDueDate(dueDate);
 		newExpense.setAmount(reqAmount);
@@ -90,19 +92,21 @@ public abstract class Processor {
 		newExpense.setEntryType(refData);
 		newExpense.setNotes(notes);
 		expenseService.create(newExpense);
-		
+
 		Notification notification = new Notification();
 		notification.setExpense(newExpense);
 		notification.setMessage("Created new expense");
-		
-		LOGGER.info("created new expense for " + newExpense.getEntryType().getDescription() + " and due date" + newExpense.getDueDate() +" and id " + newExpense.getId());
-		
+
+		LOGGER.info("created new expense for " + newExpense.getEntryType().getDescription() + " and due date"
+			+ newExpense.getDueDate() + " and id " + newExpense.getId());
+
 		notificationService.create(notification);
 	}
-	
-	protected void updateExpense(RefData refData, LocalDate dueDate, String amount, Document document) throws Exception {
+
+	protected void updateExpense(RefData refData, LocalDate dueDate, String amount, Document document)
+		throws Exception {
 		updateExpense(refData, dueDate, amount, document, null);
 	}
-	
+
 	public abstract void execute(Message message, RefData refData) throws Exception;
 }

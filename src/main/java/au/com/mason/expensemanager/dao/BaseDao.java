@@ -1,16 +1,16 @@
 package au.com.mason.expensemanager.dao;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.transaction.Transactional;
 import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 
 @Transactional
 public class BaseDao<T> {
 
 	private final Class<T> className;
 	protected EntityManager entityManager;
-	
+
 	public BaseDao(Class<T> className, EntityManager entityManager) {
 		this.className = className;
 		this.entityManager = entityManager;
@@ -42,7 +42,6 @@ public class BaseDao<T> {
 	public T update(T item) {
 		return entityManager.merge(item);
 	}
-
 
 	public List findAll() {
 		return entityManager.createQuery("FROM " + className.getName()).getResultList();

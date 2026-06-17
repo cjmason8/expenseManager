@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.RentalPayment;
-import au.com.mason.expensemanager.dto.RentalPaymentDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import au.com.mason.expensemanager.domain.RentalPayment;
+import au.com.mason.expensemanager.dto.RentalPaymentDto;
 
 @Mapper(componentModel = "spring", uses = {DocumentMapper.class, MappingConverters.class})
 public interface RentalPaymentMapper extends BaseMapper<RentalPayment, RentalPaymentDto> {

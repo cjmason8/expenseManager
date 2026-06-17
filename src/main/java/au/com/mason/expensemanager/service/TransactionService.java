@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,29 +12,28 @@ import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RecurringUnit;
 import au.com.mason.expensemanager.domain.Transaction;
 import au.com.mason.expensemanager.util.DateUtil;
-import org.apache.commons.lang3.StringUtils;
 
 @Component
 public abstract class TransactionService<V extends Transaction, D extends TransactionDao<V>> {
-	
+
 	@Autowired
 	protected D transactionDao;
-	
+
 	@Autowired
 	protected DocumentService documentService;
-	
+
 	public List<V> getAllRecurring(boolean includeAll) throws Exception {
 		return transactionDao.getAllRecurring(includeAll);
 	}
-	
+
 	public List<V> getForWeek(LocalDate startOfWeek) throws Exception {
 		return transactionDao.getForWeek(startOfWeek);
 	}
-	
+
 	public V getById(Long id) throws Exception {
 		return transactionDao.getById(id);
 	}
-	
+
 	public V addTransaction(V expense) throws Exception {
 		attachDocumentForCreate(expense);
 		createTransaction(expense);
@@ -91,26 +91,25 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 			newExpenseForStartDate.setDueDate(expense.getStartDate());
 			newExpenseForStartDate.setNotes(expense.getNotes());
 			newExpenseForStartDate.setRecurringTransaction(expense);
-			
+
 			createTransaction(newExpenseForStartDate);
 			createSubsequentWeeks(expense);
 		}
 	}
-	
+
 	private void createTransaction(V expense) throws Exception {
 		if (expense.getRecurringType() == null) {
-			initialiseWeek(DateUtil.getMonday(expense.getDueDate()), expense.getRecurringTransaction());	
+			initialiseWeek(DateUtil.getMonday(expense.getDueDate()), expense.getRecurringTransaction());
 		}
-		
+
 		transactionDao.create(expense);
 	}
-	
+
 	private void createSubsequentWeeks(V newExpense) throws Exception {
-		RecurringUnit recurringUnit = 
-				RecurringUnit.valueOf(newExpense.getRecurringType().getDescriptionUpper());
-		
+		RecurringUnit recurringUnit = RecurringUnit.valueOf(newExpense.getRecurringType().getDescriptionUpper());
+
 		LocalDate dueDate = newExpense.getStartDate().plus(recurringUnit.getUnits(), recurringUnit.getUnitType());
-		
+
 		while (getPastDate(DateUtil.getMonday(dueDate)) > 0) {
 			if (countForWeekForAll(DateUtil.getMonday(dueDate)) > 0) {
 				V newExpenseForSubsequent = createTransaction();
@@ -120,26 +119,26 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 				newExpenseForSubsequent.setDueDate(dueDate);
 				newExpenseForSubsequent.setNotes(newExpense.getNotes());
 				newExpenseForSubsequent.setRecurringTransaction(newExpense);
-				
+
 				transactionDao.create(newExpenseForSubsequent);
 			}
-			
+
 			dueDate = dueDate.plus(recurringUnit.getUnits(), recurringUnit.getUnitType());
-			
+
 			if (newExpense.getEndDate() != null && dueDate.isAfter(newExpense.getEndDate())) {
 				break;
 			}
 		}
 	}
-	
+
 	public V update(V transaction) {
 		return transactionDao.update(transaction);
 	}
-	
+
 	public V create(V transaction) {
 		return transactionDao.create(transaction);
 	}
-	
+
 	public V updateTransaction(V expense) throws Exception {
 		attachDocumentForUpdate(expense);
 		transactionDao.update(expense);
@@ -152,11 +151,11 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 			List<V> expenses = transactionDao.getPastDate(LocalDate.now(), updatedExpense);
 			for (V expense : expenses) {
 				expense.setAmount(updatedExpense.getAmount());
-				transactionDao.update(expense);			
+				transactionDao.update(expense);
 			}
 		}
 	}
-	
+
 	public void deleteTransaction(Long id) {
 		V expense = transactionDao.getById(id);
 		if (expense.getRecurringType() != null) {
@@ -164,19 +163,17 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 			if (transactionDao.getForRecurring(expense).size() > 0) {
 				expense.setDeleted(true);
 				transactionDao.update(expense);
-			}
-			else {
+			} else {
 				transactionDao.delete(expense);
 			}
-		}
-		else {
+		} else {
 			transactionDao.delete(expense);
 		}
 	}
-	
+
 	public void createRecurringTransactions(LocalDate startOfWeek, Transaction currentRecurringExpense) {
 		List<V> recurringExpenses = transactionDao.getAllRecurring(true);
-		
+
 		for (V recurringExpense : recurringExpenses) {
 			if (currentRecurringExpense != null && recurringExpense.getId() == currentRecurringExpense.getId()) {
 				continue;
@@ -184,11 +181,11 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 
 			LocalDate dueDate = recurringExpense.getStartDate();
 			while (DateUtil.getMonday(dueDate).isBefore(startOfWeek)) {
-				RecurringUnit recurringUnit = 
-						RecurringUnit.valueOf(recurringExpense.getRecurringType().getDescriptionUpper());
+				RecurringUnit recurringUnit = RecurringUnit
+					.valueOf(recurringExpense.getRecurringType().getDescriptionUpper());
 				dueDate = dueDate.plus(recurringUnit.getUnits(), recurringUnit.getUnitType());
 			}
-			
+
 			if (DateUtil.getMonday(dueDate).isEqual(startOfWeek) && checkEndDate(recurringExpense, dueDate)) {
 				V newExpense = createTransaction();
 				newExpense.setEntryType(recurringExpense.getEntryType());
@@ -197,30 +194,30 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 				newExpense.setRecurringTransaction(recurringExpense);
 				newExpense.setMetaData(recurringExpense.getMetaData());
 				newExpense.setNotes(recurringExpense.getNotes());
-				
+
 				transactionDao.create(newExpense);
 			}
 		}
 	}
-	
+
 	private boolean checkEndDate(V recurringExpense, LocalDate dueDate) {
 		return recurringExpense.getEndDate() == null || dueDate.isBefore(recurringExpense.getEndDate());
 	}
-	
+
 	public int countForWeek(LocalDate startOfWeek) throws Exception {
 		return transactionDao.getForWeek(startOfWeek).size();
 	}
-	
+
 	public List<V> getPastDateList(LocalDate date) {
 		return transactionDao.getPastDate(date);
 	}
-	
+
 	abstract int countForWeekForAll(LocalDate startOfWeek) throws Exception;
-	
+
 	abstract V createTransaction();
-	
+
 	abstract void initialiseWeek(LocalDate localDate, Transaction currentRecurringTransaction) throws Exception;
-	
+
 	abstract int getPastDate(LocalDate date) throws Exception;
-	
+
 }

@@ -10,18 +10,13 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 
-import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
-import jakarta.mail.internet.MimeMultipart;
 
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.pdf.PdfReader;
-import au.com.mason.expensemanager.util.CollectionUtil;
 
 @Component
 public class SouthKingsvilleWaterProccesor extends Processor {
@@ -38,14 +33,15 @@ public class SouthKingsvilleWaterProccesor extends Processor {
 			String url = urlContent.substring(urlContent.lastIndexOf("https"), urlContent.lastIndexOf("style") - 2);
 			String dateContent = body.substring(body.indexOf("Pay by") + 13);
 			dateContent = dateContent.substring(0, dateContent.indexOf("</span"));
-			dueDate = LocalDate.parse(dateContent.substring(dateContent.lastIndexOf(">") + 1), DateTimeFormatter.ofPattern("dd LLL yyyy"));
+			dueDate = LocalDate.parse(dateContent.substring(dateContent.lastIndexOf(">") + 1),
+				DateTimeFormatter.ofPattern("dd LLL yyyy"));
 			amount = body.substring(body.indexOf("$") + 1, body.indexOf("<", body.indexOf("$")));
 
 			HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS)
-					.build();
+				.build();
 
-			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofMinutes(1))
-					.GET().build();
+			HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofMinutes(1)).GET()
+				.build();
 
 			HttpResponse<byte[]> response = client.send(request, BodyHandlers.ofByteArray());
 

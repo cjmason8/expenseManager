@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.Notification;
-import au.com.mason.expensemanager.dto.NotificationDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import au.com.mason.expensemanager.domain.Notification;
+import au.com.mason.expensemanager.dto.NotificationDto;
 
 @Mapper(componentModel = "spring", uses = {ExpenseMapper.class, MappingConverters.class})
 public interface NotificationMapper extends BaseMapper<Notification, NotificationDto> {

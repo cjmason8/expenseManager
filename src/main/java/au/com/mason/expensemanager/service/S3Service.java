@@ -5,17 +5,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.annotation.PreDestroy;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
-import jakarta.annotation.PreDestroy;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
@@ -35,27 +38,21 @@ public class S3Service {
 	private final S3Client s3Client;
 	private final String bucket;
 
-	public S3Service(
-			AwsSecretsService awsSecretsService,
-			@Value("${aws.s3.bucket:}") String bucket,
-			@Value("${aws.s3.region:ap-southeast-2}") String region,
-			@Value("${aws.s3.endpoint:}") String endpointOverride,
-			@Value("${aws.s3.path-style-access:false}") boolean pathStyleAccess) {
+	public S3Service(AwsSecretsService awsSecretsService, @Value("${aws.s3.bucket:}") String bucket,
+		@Value("${aws.s3.region:ap-southeast-2}") String region, @Value("${aws.s3.endpoint:}") String endpointOverride,
+		@Value("${aws.s3.path-style-access:false}") boolean pathStyleAccess) {
 
 		if (StringUtils.isBlank(bucket)) {
 			throw new IllegalStateException("S3 bucket must be set via aws.s3.bucket / AWS_S3_BUCKET");
 		}
 		this.bucket = bucket.trim();
 
-		var builder = S3Client.builder()
-				.region(Region.of(region.trim()))
-				.credentialsProvider(awsSecretsService.getCredentialsProvider());
+		var builder = S3Client.builder().region(Region.of(region.trim()))
+			.credentialsProvider(awsSecretsService.getCredentialsProvider());
 
 		if (StringUtils.isNotBlank(endpointOverride)) {
 			builder.endpointOverride(URI.create(endpointOverride.trim()));
-			builder.serviceConfiguration(S3Configuration.builder()
-					.pathStyleAccessEnabled(pathStyleAccess)
-					.build());
+			builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(pathStyleAccess).build());
 		}
 
 		this.s3Client = builder.build();
@@ -65,11 +62,10 @@ public class S3Service {
 	public byte[] getObjectAsBytes(String key) {
 		String k = normalizeKey(key);
 		try {
-			return s3Client.getObject(
-					GetObjectRequest.builder().bucket(bucket).key(k).build(),
-					ResponseTransformer.toBytes()).asByteArray();
-		}
-		catch (S3Exception e) {
+			return s3Client
+				.getObject(GetObjectRequest.builder().bucket(bucket).key(k).build(), ResponseTransformer.toBytes())
+				.asByteArray();
+		} catch (S3Exception e) {
 			throw s3Failure("GetObject", k, e);
 		}
 	}
@@ -86,17 +82,14 @@ public class S3Service {
 			return;
 		}
 		ensureFolderMarkersForKey(dst);
-		s3Client.copyObject(CopyObjectRequest.builder()
-				.sourceBucket(bucket)
-				.sourceKey(src)
-				.destinationBucket(bucket)
-				.destinationKey(dst)
-				.build());
+		s3Client.copyObject(CopyObjectRequest.builder().sourceBucket(bucket).sourceKey(src).destinationBucket(bucket)
+			.destinationKey(dst).build());
 		s3Client.deleteObject(r -> r.bucket(bucket).key(src));
 	}
 
 	/**
-	 * Lists and deletes every object whose key starts with {@code prefix + "/"} or equals {@code prefix}.
+	 * Lists and deletes every object whose key starts with {@code prefix + "/"} or
+	 * equals {@code prefix}.
 	 */
 	public void deleteAllUnderPrefix(String prefix) {
 		String p = normalizeKey(prefix);
@@ -111,7 +104,8 @@ public class S3Service {
 	}
 
 	/**
-	 * Copies every object under {@code oldPrefix} to the same relative path under {@code newPrefix}, then deletes the old keys.
+	 * Copies every object under {@code oldPrefix} to the same relative path under
+	 * {@code newPrefix}, then deletes the old keys.
 	 */
 	public void renamePrefix(String oldPrefix, String newPrefix) {
 		String op = normalizeKey(oldPrefix);
@@ -123,12 +117,8 @@ public class S3Service {
 		for (String key : keys) {
 			String destKey = mapKeyUnderRename(key, op, np);
 			ensureFolderMarkersForKey(destKey);
-			s3Client.copyObject(CopyObjectRequest.builder()
-					.sourceBucket(bucket)
-					.sourceKey(key)
-					.destinationBucket(bucket)
-					.destinationKey(destKey)
-					.build());
+			s3Client.copyObject(CopyObjectRequest.builder().sourceBucket(bucket).sourceKey(key)
+				.destinationBucket(bucket).destinationKey(destKey).build());
 			s3Client.deleteObject(r -> r.bucket(bucket).key(key));
 		}
 	}
@@ -155,9 +145,7 @@ public class S3Service {
 		String childPrefix = p + "/";
 		String continuationToken = null;
 		do {
-			var reqBuilder = ListObjectsV2Request.builder()
-					.bucket(bucket)
-					.prefix(childPrefix);
+			var reqBuilder = ListObjectsV2Request.builder().bucket(bucket).prefix(childPrefix);
 			if (continuationToken != null) {
 				reqBuilder.continuationToken(continuationToken);
 			}
@@ -166,14 +154,12 @@ public class S3Service {
 				keys.add(obj.key());
 			}
 			continuationToken = resp.isTruncated() ? resp.nextContinuationToken() : null;
-		}
-		while (continuationToken != null);
+		} while (continuationToken != null);
 
 		try {
 			s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(childPrefix).build());
 			keys.add(childPrefix);
-		}
-		catch (S3Exception e) {
+		} catch (S3Exception e) {
 			if (e.statusCode() != 404) {
 				throw e;
 			}
@@ -181,8 +167,7 @@ public class S3Service {
 		try {
 			s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(p).build());
 			keys.add(p);
-		}
-		catch (S3Exception e) {
+		} catch (S3Exception e) {
 			if (e.statusCode() != 404) {
 				throw e;
 			}
@@ -201,15 +186,14 @@ public class S3Service {
 			for (int j = i; j < Math.min(i + batch, keys.size()); j++) {
 				ids.add(ObjectIdentifier.builder().key(keys.get(j)).build());
 			}
-			s3Client.deleteObjects(DeleteObjectsRequest.builder()
-					.bucket(bucket)
-					.delete(Delete.builder().objects(ids).build())
-					.build());
+			s3Client.deleteObjects(
+				DeleteObjectsRequest.builder().bucket(bucket).delete(Delete.builder().objects(ids).build()).build());
 		}
 	}
 
 	/**
-	 * Ensures folder marker keys exist for every segment of {@code objectKey} (excluding the final segment).
+	 * Ensures folder marker keys exist for every segment of {@code objectKey}
+	 * (excluding the final segment).
 	 */
 	public void ensureFolderMarkersForKey(String objectKey) {
 		String k = normalizeKey(objectKey);
@@ -234,31 +218,24 @@ public class S3Service {
 	}
 
 	/**
-	 * Uploads bytes to {@code {folderPrefix}/{objectId}}. Ensures each segment of {@code folderPrefix}
-	 * exists as an S3 “folder” (zero-byte key ending in /) when missing.
+	 * Uploads bytes to {@code {folderPrefix}/{objectId}}. Ensures each segment of
+	 * {@code folderPrefix} exists as an S3 “folder” (zero-byte key ending in /)
+	 * when missing.
 	 */
 	public void putObjectWithFolders(String folderPrefix, UUID objectId, byte[] data, String contentType) {
 		String normalizedPrefix = normalizeKey(folderPrefix);
 		try {
 			ensureFolderMarkers(normalizedPrefix);
 
-			String key = normalizedPrefix.isEmpty()
-					? objectId.toString()
-					: normalizedPrefix + "/" + objectId;
+			String key = normalizedPrefix.isEmpty() ? objectId.toString() : normalizedPrefix + "/" + objectId;
 
 			String resolvedContentType = StringUtils.isNotBlank(contentType) ? contentType : "application/octet-stream";
 
-			s3Client.putObject(
-					PutObjectRequest.builder()
-							.bucket(bucket)
-							.key(key)
-							.contentType(resolvedContentType)
-							.contentLength((long) data.length)
-							.build(),
-					RequestBody.fromBytes(data));
-		}
-		catch (S3Exception e) {
-			throw s3Failure("PutObject(upload)", normalizedPrefix.isEmpty() ? objectId.toString() : normalizedPrefix + "/" + objectId, e);
+			s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(resolvedContentType)
+				.contentLength((long) data.length).build(), RequestBody.fromBytes(data));
+		} catch (S3Exception e) {
+			throw s3Failure("PutObject(upload)",
+				normalizedPrefix.isEmpty() ? objectId.toString() : normalizedPrefix + "/" + objectId, e);
 		}
 	}
 
@@ -284,19 +261,15 @@ public class S3Service {
 	private void putFolderMarkerIfAbsent(String folderKey) {
 		try {
 			s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(folderKey).build());
-		}
-		catch (S3Exception e) {
+		} catch (S3Exception e) {
 			if (e.statusCode() == 404) {
 				try {
-					s3Client.putObject(
-							PutObjectRequest.builder().bucket(bucket).key(folderKey).build(),
-							RequestBody.fromBytes(new byte[0]));
-				}
-				catch (S3Exception putEx) {
+					s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(folderKey).build(),
+						RequestBody.fromBytes(new byte[0]));
+				} catch (S3Exception putEx) {
 					throw s3Failure("PutObject(folder marker)", folderKey, putEx);
 				}
-			}
-			else {
+			} else {
 				throw s3Failure("HeadObject(folder marker)", folderKey, e);
 			}
 		}
@@ -308,10 +281,11 @@ public class S3Service {
 		String hint = "";
 		if (e.statusCode() == 403) {
 			hint = " Typical fix: IAM with s3:PutObject and s3:GetObject on arn:aws:s3:::" + bucket
-					+ "/* (HeadObject requires GetObject permission on the key). Verify credentials in AWS Secrets Manager"
-					+ " and match aws.s3.region to the bucket region.";
+				+ "/* (HeadObject requires GetObject permission on the key). Verify credentials in AWS Secrets Manager"
+				+ " and match aws.s3.region to the bucket region.";
 		}
-		return new IllegalStateException("S3 " + operation + " failed for s3://" + bucket + "/" + objectKey + ": " + detail + "." + hint, e);
+		return new IllegalStateException(
+			"S3 " + operation + " failed for s3://" + bucket + "/" + objectKey + ": " + detail + "." + hint, e);
 	}
 
 	private static String formatS3Error(S3Exception e) {
@@ -325,8 +299,7 @@ public class S3Service {
 			if (StringUtils.isNotBlank(d.errorMessage())) {
 				sb.append(" — ").append(d.errorMessage());
 			}
-		}
-		else if (StringUtils.isNotBlank(e.getMessage())) {
+		} else if (StringUtils.isNotBlank(e.getMessage())) {
 			sb.append(" — ").append(e.getMessage());
 		}
 		if (StringUtils.isNotBlank(e.requestId())) {

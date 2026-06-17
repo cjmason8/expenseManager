@@ -8,8 +8,8 @@ import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 
 public interface TransactionDao<T> {
-	
-	public T create(T transation);	
+
+	public T create(T transation);
 	public void delete(T transation);
 	public List<T> getAllRecurring(boolean includeAll);
 	public T getById(long id);
@@ -19,7 +19,7 @@ public interface TransactionDao<T> {
 	public List<T> getPastDate(LocalDate date, T recurringTransation);
 	public List<T> getForRecurring(T recurringTransation);
 	public void deleteTransactions(Long recurringTransactionId);
-	
+
 	default List<T> getUnpaidBeforeWeek(LocalDate weekStartDate) {
 		// TODO Auto-generated method stub
 		return null;

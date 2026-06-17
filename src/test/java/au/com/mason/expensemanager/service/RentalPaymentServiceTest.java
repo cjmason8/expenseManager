@@ -5,30 +5,29 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import au.com.mason.expensemanager.dao.RentalPaymentDao;
-import au.com.mason.expensemanager.domain.Document;
-import au.com.mason.expensemanager.domain.RentalPayment;
-import au.com.mason.expensemanager.util.S3Keys;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import au.com.mason.expensemanager.dao.RentalPaymentDao;
+import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.RentalPayment;
+
 @ExtendWith(MockitoExtension.class)
 class RentalPaymentServiceTest {
 
-	private static final String EXPECTED_STATEMENTS_PREFIX =
-			"/docs/expenseManager/filofax/IPs/Wodonga/2023-2024/Statements";
+	private static final String EXPECTED_STATEMENTS_PREFIX = "/docs/expenseManager/filofax/IPs/Wodonga/2023-2024/Statements";
 
 	@Mock
 	private RentalPaymentDao rentalPaymentDao;

@@ -1,7 +1,8 @@
 package au.com.mason.expensemanager.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Enumeration;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,12 +19,12 @@ import au.com.mason.expensemanager.service.UserAuthenticationService;
 @RestController
 @CrossOrigin
 public class LoginController {
-	
+
 	@Autowired
 	private UserAuthenticationService userAuthenticationService;
-	
+
 	private static final Logger LOGGER = LogManager.getLogger(LoginController.class);
-	
+
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
 	String login(@RequestBody LoginInput loginInput) {
 		try {
@@ -31,30 +32,29 @@ public class LoginController {
 			String login = userAuthenticationService.login(loginInput);
 			LOGGER.info("leaving LoginController login - " + loginInput.getUserName());
 			return login;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			LOGGER.error("Error logging in", e);
 			return "{\"error\":\"" + e.getMessage() + "\"}";
 		}
-    }
-	
+	}
+
 	@RequestMapping(value = "/login", method = RequestMethod.GET, produces = "application/json")
 	String loginGet(HttpServletRequest request) {
 		LOGGER.error("Received invalid GET request for /login", new RuntimeException());
 		LOGGER.info("Method: " + request.getMethod());
 
 		Enumeration<String> headerNames = request.getHeaderNames();
-		while(headerNames.hasMoreElements()) {
-		  String headerName = headerNames.nextElement();
-		  LOGGER.info("Header Name - " + headerName + ", Value - " + request.getHeader(headerName));
+		while (headerNames.hasMoreElements()) {
+			String headerName = headerNames.nextElement();
+			LOGGER.info("Header Name - " + headerName + ", Value - " + request.getHeader(headerName));
 		}
 
-		Enumeration<String> params = request.getParameterNames(); 
-		while(params.hasMoreElements()){
-		 String paramName = params.nextElement();
-		 LOGGER.info("Parameter Name - "+paramName+", Value - "+request.getParameter(paramName));
+		Enumeration<String> params = request.getParameterNames();
+		while (params.hasMoreElements()) {
+			String paramName = params.nextElement();
+			LOGGER.info("Parameter Name - " + paramName + ", Value - " + request.getParameter(paramName));
 		}
-		
+
 		return "{\"error\":\"Invalid login\"}";
-    }
+	}
 }

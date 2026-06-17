@@ -12,19 +12,19 @@ public class DonationDto {
 	private String notes;
 	private DocumentDto documentDto;
 	private String metaDataChunk;
-	
+
 	public Long getId() {
 		return id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	public RefDataDto getCause() {
 		return cause;
 	}
-	
+
 	public void setCause(RefDataDto cause) {
 		this.cause = cause;
 	}

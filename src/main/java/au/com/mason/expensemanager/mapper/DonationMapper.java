@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.mapper;
 
-import au.com.mason.expensemanager.domain.Donation;
-import au.com.mason.expensemanager.dto.DonationDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.dto.DonationDto;
 
 @Mapper(componentModel = "spring", uses = {RefDataMapper.class, DocumentMapper.class, MappingConverters.class})
 public interface DonationMapper extends BaseMapper<Donation, DonationDto> {

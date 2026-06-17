@@ -1,9 +1,9 @@
 package au.com.mason.expensemanager.domain;
 
 public enum RefDataType {
-	
+
 	CAUSE("Cause"), EXPENSE_TYPE("Expense Type"), INCOME_TYPE("Income Type"), RECURRING_TYPE("Recurring Type");
-	
+
 	private String description;
 
 	private RefDataType(String description) {
@@ -17,5 +17,5 @@ public enum RefDataType {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 }

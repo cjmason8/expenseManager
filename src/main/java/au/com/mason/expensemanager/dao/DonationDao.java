@@ -1,21 +1,25 @@
 package au.com.mason.expensemanager.dao;
 
-import au.com.mason.expensemanager.domain.Donation;
-import au.com.mason.expensemanager.dto.DonationSearchDto;
-import au.com.mason.expensemanager.dto.RefDataDto;
-import au.com.mason.expensemanager.util.DateUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
+
+import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.dto.DonationSearchDto;
+import au.com.mason.expensemanager.dto.RefDataDto;
+import au.com.mason.expensemanager.util.DateUtil;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 @Repository
 @Transactional
@@ -68,9 +72,7 @@ public class DonationDao extends BaseDao<Donation> {
 		List<Donation> results = query.getResultList();
 		if (donationSearchDto.getMetaDataChunk() != null) {
 			Map<String, String> metaData = gson.fromJson(donationSearchDto.getMetaDataChunk(), Map.class);
-			results = results.stream()
-					.filter(d -> donationMatchesMetaData(d, metaData))
-					.collect(Collectors.toList());
+			results = results.stream().filter(d -> donationMatchesMetaData(d, metaData)).collect(Collectors.toList());
 		}
 		return results;
 	}

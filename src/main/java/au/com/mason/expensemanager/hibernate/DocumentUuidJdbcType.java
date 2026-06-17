@@ -4,6 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -13,8 +14,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
 /**
- * Reads {@code documents.id} / FK columns as {@link UUID}, or as legacy {@code bigint} by mapping
- * to the same deterministic UUID as {@code migration.sql} (until DB columns are migrated to uuid).
+ * Reads {@code documents.id} / FK columns as {@link UUID}, or as legacy
+ * {@code bigint} by mapping to the same deterministic UUID as
+ * {@code migration.sql} (until DB columns are migrated to uuid).
  */
 public final class DocumentUuidJdbcType implements JdbcType {
 
@@ -22,7 +24,8 @@ public final class DocumentUuidJdbcType implements JdbcType {
 
 	private static final JdbcType DELEGATE = UUIDJdbcType.INSTANCE;
 
-	private DocumentUuidJdbcType() {}
+	private DocumentUuidJdbcType() {
+	}
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -53,7 +56,8 @@ public final class DocumentUuidJdbcType implements JdbcType {
 			}
 
 			@Override
-			public X extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+			public X extract(CallableStatement statement, String paramName, WrapperOptions options)
+				throws SQLException {
 				return javaType.wrap(coerce(statement.getObject(paramName)), options);
 			}
 		};
