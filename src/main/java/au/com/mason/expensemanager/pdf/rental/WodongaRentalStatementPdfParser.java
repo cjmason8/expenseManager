@@ -64,8 +64,7 @@ public class WodongaRentalStatementPdfParser {
 			throw new IllegalStateException("Wodonga rental statement PDF missing required fields");
 		}
 
-		return new RentalStatementData(
-			totalRent, managementFee, adminFee, statementFrom, statementTo, paymentToOwner);
+		return new RentalStatementData(totalRent, managementFee, adminFee, statementFrom, statementTo, paymentToOwner);
 	}
 
 	private BigDecimal amountFromLine(String line) {

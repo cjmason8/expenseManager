@@ -67,8 +67,7 @@ public class SouthKingsvilleRatesProcessor extends Processor {
 			byte[] pdfBytes = EmailMessageParts.readBytes(bodyPart);
 			List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(pdfBytes);
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-			String fileName = "SouthKingsvilleRates-"
-				+ formatter.format(instalments.get(0).dueDate()) + ".pdf";
+			String fileName = "SouthKingsvilleRates-" + formatter.format(instalments.get(0).dueDate()) + ".pdf";
 			Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
 
 			updateExpense(refData, instalments.get(0).dueDate(), instalments.get(0).amount(), document);

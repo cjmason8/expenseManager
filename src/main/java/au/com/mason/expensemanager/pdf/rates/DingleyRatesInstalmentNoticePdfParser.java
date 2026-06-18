@@ -23,14 +23,12 @@ public class DingleyRatesInstalmentNoticePdfParser {
 	public RatesInstalmentNoticeData parse(byte[] pdfBytes) throws IOException {
 		PdfExtractor pdf = PdfExtractor.from(pdfTextExtractor, pdfBytes);
 
-		return pdf.lineContaining("Total Amount Due")
-			.map(line -> {
-				String remainder = line.replace("Total Amount Due ", "");
-				LocalDate dueDate = LocalDate.parse(remainder.substring(0, remainder.indexOf('$') - 1), DUE_DATE_FORMAT);
-				String amount = remainder.substring(remainder.indexOf('$') + 1);
-				return new RatesInstalmentNoticeData(dueDate, amount);
-			})
-			.orElseThrow(() -> new IllegalStateException("Dingley rates instalment PDF missing Total Amount Due"));
+		return pdf.lineContaining("Total Amount Due").map(line -> {
+			String remainder = line.replace("Total Amount Due ", "");
+			LocalDate dueDate = LocalDate.parse(remainder.substring(0, remainder.indexOf('$') - 1), DUE_DATE_FORMAT);
+			String amount = remainder.substring(remainder.indexOf('$') + 1);
+			return new RatesInstalmentNoticeData(dueDate, amount);
+		}).orElseThrow(() -> new IllegalStateException("Dingley rates instalment PDF missing Total Amount Due"));
 	}
 
 }

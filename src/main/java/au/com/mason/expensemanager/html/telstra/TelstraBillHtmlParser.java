@@ -17,8 +17,7 @@ public class TelstraBillHtmlParser {
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html);
 
-		String amount = extractor.amountAfterHtmlEntity("&#36;")
-			.orElseThrow(() -> missingField("amount"));
+		String amount = extractor.amountAfterHtmlEntity("&#36;").orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.dateAfterAnchorUntilTag("Debit on", 9, DUE_DATE_FORMAT)
 			.orElseThrow(() -> missingField("due date"));
 

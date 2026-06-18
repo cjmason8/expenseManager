@@ -19,13 +19,10 @@ public class WodongaRatesFirstNoticePdfParser {
 		this.pdfTextExtractor = pdfTextExtractor;
 	}
 
-	public List<RatesInstalmentData> parse(byte[] pdfBytes, String firstInstalmentAmount, int year)
-		throws IOException {
+	public List<RatesInstalmentData> parse(byte[] pdfBytes, String firstInstalmentAmount, int year) throws IOException {
 		PdfExtractor pdf = PdfExtractor.from(pdfTextExtractor, pdfBytes);
 
-		String reqLine = pdf.lines().stream()
-			.filter(line -> line.startsWith("$" + firstInstalmentAmount))
-			.findFirst()
+		String reqLine = pdf.lines().stream().filter(line -> line.startsWith("$" + firstInstalmentAmount)).findFirst()
 			.orElseThrow(() -> new IllegalStateException(
 				"Wodonga rates notice PDF missing instalment line for amount: " + firstInstalmentAmount));
 
@@ -35,14 +32,10 @@ public class WodongaRatesFirstNoticePdfParser {
 		}
 
 		List<RatesInstalmentData> instalments = new ArrayList<>();
-		instalments.add(new RatesInstalmentData(LocalDate.of(year, 9, 30),
-			instalmentAmounts[0].substring(1), 1));
-		instalments.add(new RatesInstalmentData(LocalDate.of(year, 11, 30),
-			instalmentAmounts[1].substring(1), 2));
-		instalments.add(new RatesInstalmentData(LocalDate.of(year + 1, 2, 28),
-			instalmentAmounts[2].substring(1), 3));
-		instalments.add(new RatesInstalmentData(LocalDate.of(year + 1, 5, 31),
-			instalmentAmounts[3].substring(1), 4));
+		instalments.add(new RatesInstalmentData(LocalDate.of(year, 9, 30), instalmentAmounts[0].substring(1), 1));
+		instalments.add(new RatesInstalmentData(LocalDate.of(year, 11, 30), instalmentAmounts[1].substring(1), 2));
+		instalments.add(new RatesInstalmentData(LocalDate.of(year + 1, 2, 28), instalmentAmounts[2].substring(1), 3));
+		instalments.add(new RatesInstalmentData(LocalDate.of(year + 1, 5, 31), instalmentAmounts[3].substring(1), 4));
 		return instalments;
 	}
 

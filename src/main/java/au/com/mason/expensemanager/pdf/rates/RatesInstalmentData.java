@@ -3,10 +3,7 @@ package au.com.mason.expensemanager.pdf.rates;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record RatesInstalmentData(
-		LocalDate dueDate,
-		String amount,
-		int instalmentNumber) {
+public record RatesInstalmentData(LocalDate dueDate, String amount, int instalmentNumber) {
 
 	public String notes() {
 		return switch (instalmentNumber) {

@@ -34,10 +34,8 @@ public class DingleyRatesFirstNoticePdfParser {
 			if (line.contains(firstInstalment)) {
 				foundFirst = true;
 			} else if (foundFirst && counter <= 3) {
-				instalments.add(new RatesInstalmentData(
-					instalmentDueDate(year, counter + 1),
-					line.replace("$", ""),
-					counter + 1));
+				instalments.add(
+					new RatesInstalmentData(instalmentDueDate(year, counter + 1), line.replace("$", ""), counter + 1));
 				counter++;
 			}
 		}

@@ -38,10 +38,9 @@ class DingleyWaterBillHtmlParserTest {
 
 	@Test
 	void parse_throwsWhenAmountMissing() {
-		IllegalStateException error = assertThrows(IllegalStateException.class,
-			() -> parser.parse("""
-				<html><tr><td>Date due</td><td align="right">15 March 2026</td></tr></html>
-				"""));
+		IllegalStateException error = assertThrows(IllegalStateException.class, () -> parser.parse("""
+			<html><tr><td>Date due</td><td align="right">15 March 2026</td></tr></html>
+			"""));
 
 		assertTrue(error.getMessage().contains("amount"));
 	}

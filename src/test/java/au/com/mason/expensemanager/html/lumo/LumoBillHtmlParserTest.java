@@ -30,10 +30,9 @@ class LumoBillHtmlParserTest {
 
 	@Test
 	void parse_throwsWhenAmountMissing() {
-		IllegalStateException error = assertThrows(IllegalStateException.class,
-			() -> parser.parse("""
-				<html><p>DUE DATE</p><td style="color:white">15 Jun 26</td></html>
-				"""));
+		IllegalStateException error = assertThrows(IllegalStateException.class, () -> parser.parse("""
+			<html><p>DUE DATE</p><td style="color:white">15 Jun 26</td></html>
+			"""));
 
 		assertTrue(error.getMessage().contains("amount"));
 	}

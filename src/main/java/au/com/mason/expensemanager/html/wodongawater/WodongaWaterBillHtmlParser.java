@@ -24,8 +24,7 @@ public class WodongaWaterBillHtmlParser {
 		String amount = extractor.textAfterZeroWidthMarker("Amount Due", AMOUNT_OFFSET_AFTER_ZWNJ)
 			.orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.textAfterZeroWidthMarker("Due Date", DUE_DATE_OFFSET_AFTER_ZWNJ)
-			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
-			.orElseThrow(() -> missingField("due date"));
+			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT)).orElseThrow(() -> missingField("due date"));
 
 		return new BillNoticeData(dueDate, amount);
 	}

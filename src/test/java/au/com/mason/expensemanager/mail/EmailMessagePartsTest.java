@@ -28,23 +28,22 @@ class EmailMessagePartsTest {
 
 	@Test
 	void firstMatchingAttachment_findsPdfPart() throws Exception {
-		byte[] pdfBytes = new byte[] { 1, 2, 3 };
+		byte[] pdfBytes = new byte[]{1, 2, 3};
 		var message = EmailMessagePartsTestSupport.multipartMessage("<html/>", pdfBytes, "APPLICATION/PDF");
 
-		assertArrayEquals(pdfBytes,
-			EmailMessageParts.firstMatchingAttachment(message, part -> {
-				try {
-					return EmailMessageParts.isPdfPart(part);
-				} catch (jakarta.mail.MessagingException e) {
-					throw new RuntimeException(e);
-				}
-			}).orElseThrow());
+		assertArrayEquals(pdfBytes, EmailMessageParts.firstMatchingAttachment(message, part -> {
+			try {
+				return EmailMessageParts.isPdfPart(part);
+			} catch (jakarta.mail.MessagingException e) {
+				throw new RuntimeException(e);
+			}
+		}).orElseThrow());
 	}
 
 	@Test
 	void lastNonHtmlAttachment_returnsFinalAttachment() throws Exception {
-		byte[] firstPdf = new byte[] { 1 };
-		byte[] lastPdf = new byte[] { 2, 3 };
+		byte[] firstPdf = new byte[]{1};
+		byte[] lastPdf = new byte[]{2, 3};
 		var message = EmailMessagePartsTestSupport.multipartMessage("<html/>", firstPdf, "APPLICATION/PDF");
 		MimeMultipart multipart = (MimeMultipart) message.getContent();
 		MimeBodyPart secondPdf = new MimeBodyPart();

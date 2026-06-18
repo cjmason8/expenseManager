@@ -29,8 +29,7 @@ public class SouthKingsvilleRentalStatementPdfParser {
 	public RentalStatementData parse(byte[] pdfBytes) throws IOException {
 		PdfExtractor pdf = PdfExtractor.from(pdfTextExtractor, pdfBytes);
 
-		BigDecimal totalRent = pdf.amountFromLineStartingWith("Money In")
-			.orElseThrow(() -> missingField("Money In"));
+		BigDecimal totalRent = pdf.amountFromLineStartingWith("Money In").orElseThrow(() -> missingField("Money In"));
 		BigDecimal managementFee = pdf.amountAfterAsteriskInLineContaining("Management fee")
 			.orElseThrow(() -> missingField("Management fee"));
 		BigDecimal adminFee = pdf.amountAfterAsteriskInLineContaining("Accounting Fee")
@@ -38,15 +37,13 @@ public class SouthKingsvilleRentalStatementPdfParser {
 		BigDecimal paymentToOwner = pdf.amountFromLineStartingWith("You Received")
 			.orElseThrow(() -> missingField("You Received"));
 
-		String rentPeriodLine = pdf.lineContaining("Rent paid to")
-			.orElseThrow(() -> missingField("Rent paid to"));
+		String rentPeriodLine = pdf.lineContaining("Rent paid to").orElseThrow(() -> missingField("Rent paid to"));
 		LocalDate statementTo = pdf.dateMatching(rentPeriodLine, RENT_PAID_TO, DATE_FORMAT)
 			.orElseThrow(() -> missingField("statement end date"));
 		LocalDate statementFrom = parseStatementFrom(rentPeriodLine)
 			.orElseThrow(() -> missingField("statement start date"));
 
-		return new RentalStatementData(
-			totalRent, managementFee, adminFee, statementFrom, statementTo, paymentToOwner);
+		return new RentalStatementData(totalRent, managementFee, adminFee, statementFrom, statementTo, paymentToOwner);
 	}
 
 	private Optional<LocalDate> parseStatementFrom(String rentPeriodLine) {

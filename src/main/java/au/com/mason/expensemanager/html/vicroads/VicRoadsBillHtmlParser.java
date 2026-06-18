@@ -17,8 +17,7 @@ public class VicRoadsBillHtmlParser {
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html);
 
-		String amount = extractor.amountAfterTag(">$")
-			.orElseThrow(() -> missingField("amount"));
+		String amount = extractor.amountAfterTag(">$").orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.dateAfterAnchorFollowingLabel("Due date", "em_black_link", 15, DUE_DATE_FORMAT)
 			.orElseThrow(() -> missingField("due date"));
 

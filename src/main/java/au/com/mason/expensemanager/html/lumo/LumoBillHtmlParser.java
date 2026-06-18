@@ -13,20 +13,15 @@ import au.com.mason.expensemanager.html.HtmlExtractor;
 @Component
 public class LumoBillHtmlParser {
 
-	private static final DateTimeFormatter DUE_DATE_FORMAT = new DateTimeFormatterBuilder()
-		.parseCaseInsensitive()
-		.appendPattern("d MMM yy")
-		.toFormatter()
-		.localizedBy(Locale.ENGLISH);
+	private static final DateTimeFormatter DUE_DATE_FORMAT = new DateTimeFormatterBuilder().parseCaseInsensitive()
+		.appendPattern("d MMM yy").toFormatter().localizedBy(Locale.ENGLISH);
 
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html);
 
-		String amount = extractor.amountAfter("TOTAL AMOUNT DUE")
-			.orElseThrow(() -> missingField("amount"));
+		String amount = extractor.amountAfter("TOTAL AMOUNT DUE").orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.textAfterAnchorFollowingLabel("DUE DATE", "white", 7)
-			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
-			.orElseThrow(() -> missingField("due date"));
+			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT)).orElseThrow(() -> missingField("due date"));
 
 		return new BillNoticeData(dueDate, amount);
 	}

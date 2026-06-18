@@ -32,8 +32,7 @@ class HtmlExtractorTest {
 	void dateAfterAnchorUntilTag_parsesLocalDate() {
 		HtmlExtractor html = HtmlExtractor.fromText("Debit on 15 Jun 2026</p>");
 
-		assertEquals(LocalDate.of(2026, 6, 15),
-			html.dateAfterAnchorUntilTag("Debit on", 9, DATE_FORMAT).orElseThrow());
+		assertEquals(LocalDate.of(2026, 6, 15), html.dateAfterAnchorUntilTag("Debit on", 9, DATE_FORMAT).orElseThrow());
 	}
 
 	@Test
@@ -81,8 +80,7 @@ class HtmlExtractorTest {
 			<span class="em_black_link">20 June 2026</span>
 			""");
 
-		assertEquals("20 June 2026",
-			html.textAfterAnchorFollowingLabel("Due date", "em_black_link", 15).orElseThrow());
+		assertEquals("20 June 2026", html.textAfterAnchorFollowingLabel("Due date", "em_black_link", 15).orElseThrow());
 	}
 
 	@Test

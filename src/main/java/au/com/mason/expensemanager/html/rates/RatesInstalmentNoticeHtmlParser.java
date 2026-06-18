@@ -18,11 +18,9 @@ public class RatesInstalmentNoticeHtmlParser {
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html);
 
-		var dueDate = extractor.textInCellAfterLabel("Due Date")
-			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
+		var dueDate = extractor.textInCellAfterLabel("Due Date").map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
 			.orElseThrow(() -> missingField("due date"));
-		String amount = extractor.textInCellAfterLabel("Amount Due")
-			.orElseThrow(() -> missingField("amount due"));
+		String amount = extractor.textInCellAfterLabel("Amount Due").orElseThrow(() -> missingField("amount due"));
 
 		return new BillNoticeData(dueDate, amount);
 	}

@@ -59,12 +59,8 @@ public class SouthKingsvilleRatesFirstNoticePdfParser {
 
 	private LocalDate[] parseDates(String line) {
 		String[] dateParts = line.split(" ");
-		return new LocalDate[] {
-			LocalDate.parse(dateParts[0], DATE_FORMAT),
-			LocalDate.parse(dateParts[1], DATE_FORMAT),
-			LocalDate.parse(dateParts[2], DATE_FORMAT),
-			LocalDate.parse(dateParts[3], DATE_FORMAT),
-		};
+		return new LocalDate[]{LocalDate.parse(dateParts[0], DATE_FORMAT), LocalDate.parse(dateParts[1], DATE_FORMAT),
+			LocalDate.parse(dateParts[2], DATE_FORMAT), LocalDate.parse(dateParts[3], DATE_FORMAT),};
 	}
 
 }

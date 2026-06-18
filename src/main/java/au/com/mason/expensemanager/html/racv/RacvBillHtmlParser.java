@@ -17,8 +17,7 @@ public class RacvBillHtmlParser {
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html);
 
-		String amount = extractor.amountAfterTag(">$")
-			.orElseThrow(() -> missingField("amount"));
+		String amount = extractor.amountAfterTag(">$").orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.dateAfterAnchorUntilTag(">Due", 5, DUE_DATE_FORMAT)
 			.orElseThrow(() -> missingField("due date"));
 

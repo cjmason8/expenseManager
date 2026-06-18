@@ -21,12 +21,10 @@ public class DingleyWaterBillHtmlParser {
 	public BillNoticeData parse(String html) {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html.replace("<wbr>", ""));
 
-		String amount = extractor.amountAfterFirstDollarSign()
-			.orElseThrow(() -> missingField("amount"));
-		var dueDate = extractor.textAfterAnchorFollowingLabel("Date due", DATE_DUE_OFFSET, "align=\"right\"",
-				DATE_CELL_OFFSET)
-			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
-			.orElseThrow(() -> missingField("due date"));
+		String amount = extractor.amountAfterFirstDollarSign().orElseThrow(() -> missingField("amount"));
+		var dueDate = extractor
+			.textAfterAnchorFollowingLabel("Date due", DATE_DUE_OFFSET, "align=\"right\"", DATE_CELL_OFFSET)
+			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT)).orElseThrow(() -> missingField("due date"));
 
 		return new BillNoticeData(dueDate, amount);
 	}

@@ -20,11 +20,9 @@ public class SouthKingsvilleWaterBillHtmlParser {
 
 		String downloadUrl = extractor.urlBeforeStyleEnd("View my bill")
 			.orElseThrow(() -> missingField("bill download url"));
-		String amount = extractor.amountAfterFirstDollarSign()
-			.orElseThrow(() -> missingField("amount"));
+		String amount = extractor.amountAfterFirstDollarSign().orElseThrow(() -> missingField("amount"));
 		var dueDate = extractor.textInClosingSpanAfterAnchor("Pay by", 13)
-			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT))
-			.orElseThrow(() -> missingField("due date"));
+			.map(value -> LocalDate.parse(value, DUE_DATE_FORMAT)).orElseThrow(() -> missingField("due date"));
 
 		return new BillDownloadNoticeData(dueDate, amount, downloadUrl);
 	}

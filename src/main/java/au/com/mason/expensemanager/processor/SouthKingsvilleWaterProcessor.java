@@ -36,8 +36,7 @@ public class SouthKingsvilleWaterProcessor extends Processor {
 		BillDownloadNoticeData bill = southKingsvilleWaterBillHtmlParser
 			.parse(EmailMessageParts.htmlBody(message).orElseThrow());
 
-		HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS)
-			.build();
+		HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).followRedirects(Redirect.ALWAYS).build();
 		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(bill.downloadUrl()))
 			.timeout(Duration.ofMinutes(1)).GET().build();
 		HttpResponse<byte[]> response = client.send(request, BodyHandlers.ofByteArray());

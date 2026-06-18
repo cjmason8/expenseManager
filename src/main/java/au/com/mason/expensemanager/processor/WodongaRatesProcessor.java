@@ -76,8 +76,8 @@ public class WodongaRatesProcessor extends Processor {
 			}
 		}
 
-		List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(
-			pdfBytes, firstNotice.firstInstalmentAmount(), firstNotice.year());
+		List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(pdfBytes,
+			firstNotice.firstInstalmentAmount(), firstNotice.year());
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		String fileName = "WodongaRates-" + formatter.format(instalments.get(0).dueDate()) + ".pdf";
 		Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);

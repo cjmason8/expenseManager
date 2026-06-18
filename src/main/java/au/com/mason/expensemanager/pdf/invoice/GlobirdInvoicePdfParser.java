@@ -32,12 +32,10 @@ public class GlobirdInvoicePdfParser {
 
 		LocalDate dueDate = pdf.dateAtEndOfLineStartingWith("Due Date", DATE_FORMAT)
 			.orElseThrow(() -> missingField("Due Date"));
-		String amount = pdf.lineAfterContaining("Amount Due")
-			.flatMap(line -> {
-				String value = line.startsWith("$") ? line.substring(1) : line;
-				return value.isBlank() ? java.util.Optional.empty() : java.util.Optional.of(value);
-			})
-			.orElseThrow(() -> missingField("Amount Due"));
+		String amount = pdf.lineAfterContaining("Amount Due").flatMap(line -> {
+			String value = line.startsWith("$") ? line.substring(1) : line;
+			return value.isBlank() ? java.util.Optional.empty() : java.util.Optional.of(value);
+		}).orElseThrow(() -> missingField("Amount Due"));
 
 		return new GlobirdInvoiceData(issueDate, dueDate, amount, false);
 	}

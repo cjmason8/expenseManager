@@ -21,8 +21,7 @@ public final class EmailMessageParts {
 	}
 
 	public static boolean isMultipart(Message message) throws MessagingException {
-		return message.isMimeType("multipart/*")
-			|| message.getContentType().toUpperCase().startsWith("MULTIPART/");
+		return message.isMimeType("multipart/*") || message.getContentType().toUpperCase().startsWith("MULTIPART/");
 	}
 
 	public static boolean isPlainText(Message message) throws MessagingException {
@@ -30,8 +29,7 @@ public final class EmailMessageParts {
 	}
 
 	public static boolean isHtml(Message message) throws MessagingException {
-		return message.isMimeType("text/html")
-			|| message.getContentType().toUpperCase().startsWith("TEXT/HTML");
+		return message.isMimeType("text/html") || message.getContentType().toUpperCase().startsWith("TEXT/HTML");
 	}
 
 	public static Optional<String> htmlBody(Message message) throws MessagingException, IOException {
@@ -49,8 +47,7 @@ public final class EmailMessageParts {
 	}
 
 	public static boolean isHtmlPart(BodyPart bodyPart) throws MessagingException {
-		return bodyPart.isMimeType("text/html")
-			|| bodyPart.getContentType().toUpperCase().startsWith("TEXT/HTML");
+		return bodyPart.isMimeType("text/html") || bodyPart.getContentType().toUpperCase().startsWith("TEXT/HTML");
 	}
 
 	public static boolean isPdfPart(BodyPart bodyPart) throws MessagingException {
@@ -114,8 +111,7 @@ public final class EmailMessageParts {
 		return Optional.ofNullable(lastAttachment);
 	}
 
-	private static List<BodyPart> flattenMultipart(MimeMultipart mimeMultipart)
-		throws MessagingException, IOException {
+	private static List<BodyPart> flattenMultipart(MimeMultipart mimeMultipart) throws MessagingException, IOException {
 		List<BodyPart> parts = new ArrayList<>();
 		for (int i = 0; i < mimeMultipart.getCount(); i++) {
 			BodyPart bodyPart = mimeMultipart.getBodyPart(i);
@@ -129,8 +125,7 @@ public final class EmailMessageParts {
 	}
 
 	private static boolean isMultipartPart(BodyPart bodyPart) throws MessagingException {
-		return bodyPart.isMimeType("multipart/*")
-			|| bodyPart.getContentType().toUpperCase().startsWith("MULTIPART/");
+		return bodyPart.isMimeType("multipart/*") || bodyPart.getContentType().toUpperCase().startsWith("MULTIPART/");
 	}
 
 }

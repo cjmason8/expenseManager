@@ -16,8 +16,7 @@ public class WodongaRatesFirstNoticeHtmlParser {
 		HtmlExtractor extractor = HtmlExtractor.fromText(html.substring(dueIndex));
 		String firstInstalmentAmount = extractor.amountAfterFirstDollarSign()
 			.orElseThrow(() -> missingField("first instalment amount"));
-		int year = extractor.yearAfterSpaceBefore20()
-			.orElseThrow(() -> missingField("year"));
+		int year = extractor.yearAfterSpaceBefore20().orElseThrow(() -> missingField("year"));
 
 		return new RatesFirstNoticeHtmlData(firstInstalmentAmount, year);
 	}

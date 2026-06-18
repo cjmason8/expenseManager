@@ -52,7 +52,7 @@ public final class HtmlExtractor {
 	}
 
 	public Optional<String> textAfterAnchorFollowingLabel(String label, int offsetAfterLabel, String anchor,
-			int offsetFromAnchorStart) {
+		int offsetFromAnchorStart) {
 		int labelIndex = html.indexOf(label);
 		if (labelIndex == -1) {
 			return Optional.empty();
@@ -175,13 +175,12 @@ public final class HtmlExtractor {
 	}
 
 	public Optional<LocalDate> dateAfterAnchorUntilTag(String anchor, int offsetFromAnchorStart,
-			DateTimeFormatter formatter) {
-		return textAfterAnchorUntilTag(anchor, offsetFromAnchorStart)
-			.map(value -> LocalDate.parse(value, formatter));
+		DateTimeFormatter formatter) {
+		return textAfterAnchorUntilTag(anchor, offsetFromAnchorStart).map(value -> LocalDate.parse(value, formatter));
 	}
 
 	public Optional<LocalDate> dateAfterAnchorFollowingLabel(String label, String anchor, int offsetFromAnchorStart,
-			DateTimeFormatter formatter) {
+		DateTimeFormatter formatter) {
 		return textAfterAnchorFollowingLabel(label, anchor, offsetFromAnchorStart)
 			.map(value -> LocalDate.parse(value, formatter));
 	}
