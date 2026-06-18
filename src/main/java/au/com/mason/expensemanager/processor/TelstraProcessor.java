@@ -11,17 +11,18 @@ import org.springframework.stereotype.Component;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.html.BillNoticeData;
-import au.com.mason.expensemanager.html.vicroads.VicRoadsBillHtmlParser;
+import au.com.mason.expensemanager.html.telstra.TelstraBillHtmlParser;
 import au.com.mason.expensemanager.mail.EmailMessageParts;
 
 @Component
-public abstract class VicRoadsProcessor extends Processor {
+public class TelstraProcessor extends Processor {
 
 	@Autowired
-	private VicRoadsBillHtmlParser vicRoadsBillHtmlParser;
+	private TelstraBillHtmlParser telstraBillHtmlParser;
 
-	public void execute(Message message, RefData refData, String filePrefix) throws Exception {
-		if (EmailMessageParts.isPlainText(message) || !EmailMessageParts.isMultipart(message)) {
+	@Override
+	public void execute(Message message, RefData refData) throws Exception {
+		if (!EmailMessageParts.isMultipart(message)) {
 			return;
 		}
 
@@ -29,22 +30,18 @@ public abstract class VicRoadsProcessor extends Processor {
 		Document document = null;
 		for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
 			if (EmailMessageParts.isHtmlPart(bodyPart)) {
-				bill = vicRoadsBillHtmlParser.parse(EmailMessageParts.readHtml(bodyPart));
-			} else if (EmailMessageParts.isOctetStreamPart(bodyPart) && bill != null) {
+				bill = telstraBillHtmlParser.parse(EmailMessageParts.readHtml(bodyPart));
+			} else if (EmailMessageParts.isPdfPart(bodyPart) && bill != null) {
 				byte[] pdfBytes = EmailMessageParts.readBytes(bodyPart);
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-				String fileName = filePrefix + "-" + formatter.format(bill.dueDate()) + ".pdf";
+				String fileName = "Telstra-" + formatter.format(bill.dueDate()) + ".pdf";
 				document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
 			}
 		}
 
-		updateExpense(refData, bill.dueDate(), bill.amount(), document);
+		if (bill != null) {
+			updateExpense(refData, bill.dueDate(), bill.amount(), document);
+		}
 	}
 
-	@Override
-	public void execute(Message message, RefData refData) throws Exception {
-		execute(message, refData, getFilePrefix());
-	}
-
-	abstract String getFilePrefix();
 }

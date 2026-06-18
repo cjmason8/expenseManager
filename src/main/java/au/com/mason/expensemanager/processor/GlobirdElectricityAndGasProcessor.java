@@ -3,80 +3,65 @@ package au.com.mason.expensemanager.processor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
-import jakarta.mail.internet.MimeMultipart;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.angus.mail.util.BASE64DecoderStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.RefData;
-import au.com.mason.expensemanager.pdf.PdfReader;
-import au.com.mason.expensemanager.util.CollectionUtil;
+import au.com.mason.expensemanager.mail.EmailMessageParts;
+import au.com.mason.expensemanager.pdf.invoice.GlobirdInvoiceData;
+import au.com.mason.expensemanager.pdf.invoice.GlobirdInvoicePdfParser;
 
 @Component
 public class GlobirdElectricityAndGasProcessor extends Processor {
 
-	private static Logger LOGGER = LogManager.getLogger(GlobirdElectricityAndGasProcessor.class);
+	private static final Logger LOGGER = LogManager.getLogger(GlobirdElectricityAndGasProcessor.class);
+
+	@Autowired
+	private GlobirdInvoicePdfParser globirdInvoicePdfParser;
 
 	@Override
 	public void execute(Message message, RefData refData) throws Exception {
-		if (message.isMimeType("multipart/*")) {
-			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
-			int count = mimeMultipart.getCount();
-			LocalDate dueDate = null;
-			LocalDate issueDate = null;
-			String amount = null;
-			Document document = null;
-			String notes = null;
-			boolean foundAmountDue = false;
-			for (int i = 0; i < count; i++) {
-				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-				if (bodyPart.getContentType().startsWith("APPLICATION/PDF")
-					&& bodyPart.getFileName().startsWith("Invoice")) {
-					BASE64DecoderStream base64DecoderStream = (BASE64DecoderStream) bodyPart.getContent();
-					byte[] byteArray = IOUtils.toByteArray(base64DecoderStream);
+		if (!EmailMessageParts.isMultipart(message)) {
+			return;
+		}
 
-					String content = PdfReader.extract(byteArray);
-					List<String> lines = CollectionUtil.splitAndConvert(content, "\n");
-					for (String line : lines) {
-						if (line.startsWith("Issue Date")) {
-							issueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1),
-								DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-						} else if (line.startsWith("Due Date")) {
-							dueDate = LocalDate.parse(line.substring(line.lastIndexOf(" ") + 1),
-								DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
-						} else if (line.startsWith("Amount Due")) {
-							foundAmountDue = true;
-						} else if (foundAmountDue) {
-							amount = line.substring(1);
-							break;
-						}
-					}
+		LocalDate dueDate = null;
+		String amount = null;
+		Document document = null;
+		String notes = null;
 
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-					String fileName;
-					if (dueDate == null) {
-						fileName = "Globird - " + formatter.format(issueDate) + ".pdf";
-						dueDate = issueDate.plusMonths(1).withDayOfMonth(10);
-						notes = "Amount due is zero due to credit, therefore due date is fake.";
-						amount = BigDecimal.ZERO.toString();
-					} else {
-						fileName = "Globird - " + formatter.format(dueDate) + ".pdf";
-					}
-					document = documentService.createDocumentFromEmailForExpense(byteArray, fileName);
-				}
+		for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
+			if (!EmailMessageParts.isPdfPart(bodyPart) || !bodyPart.getFileName().startsWith("Invoice")) {
+				continue;
 			}
 
-			LOGGER.info("Adding a Globird expense - dueDate - " + dueDate + ", amount - " + amount);
-			updateExpense(refData, dueDate, amount, document, notes);
+			byte[] pdfBytes = EmailMessageParts.readBytes(bodyPart);
+			GlobirdInvoiceData invoice = globirdInvoicePdfParser.parse(pdfBytes);
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+
+			if (invoice.zeroCredit()) {
+				dueDate = invoice.issueDate().plusMonths(1).withDayOfMonth(10);
+				amount = BigDecimal.ZERO.toString();
+				notes = "Amount due is zero due to credit, therefore due date is fake.";
+				document = documentService.createDocumentFromEmailForExpense(pdfBytes,
+					"Globird - " + formatter.format(invoice.issueDate()) + ".pdf");
+			} else {
+				dueDate = invoice.dueDate();
+				amount = invoice.amount();
+				document = documentService.createDocumentFromEmailForExpense(pdfBytes,
+					"Globird - " + formatter.format(invoice.dueDate()) + ".pdf");
+			}
 		}
+
+		LOGGER.info("Adding a Globird expense - dueDate - {}, amount - {}", dueDate, amount);
+		updateExpense(refData, dueDate, amount, document, notes);
 	}
 
 }

@@ -4,24 +4,24 @@ import au.com.mason.expensemanager.config.SpringContext;
 
 public enum EmailProcessor {
 	DINGLEY_ELECTRICITY(DingleyElectricityProcessor.class), DINGLEY_GAS(DingleyGasProcessor.class), DINGLEY_WATER(
-		DingleyWaterProccesor.class), WODONGA_WATER(WodongaWaterProccesor.class), WODONGA_RATES(
-			WodongaRatesProccesor.class), WODONGA_INSURANCE(WodongaInsuranceProccesor.class), DINGLEY_INSURANCE(
-				DingleyInsuranceProccesor.class), SOUTH_KINGSVILLE_RATES(
-					SouthKingsvilleRatesProccesor.class), SOUTH_KINGSVILLE_WATER(
-						SouthKingsvilleWaterProccesor.class), SOUTH_KINGSVILLE_INSURANCE(
-							SouthKingsvilleInsuranceProccesor.class), RACV_MEMBERSHIP(
-								RACVMembershipProccesor.class), CAMRY_INSURANCE(
-									CamryInsuranceProccesor.class), MAZDA_INSURANCE(
-										MazdaInsuranceProccesor.class), FORD_INSURANCE(
-											FordInsuranceProccesor.class), TELSTRA(TelstraProccesor.class), CAMRY_REGO(
+		DingleyWaterProcessor.class), WODONGA_WATER(WodongaWaterProcessor.class), WODONGA_RATES(
+			WodongaRatesProcessor.class), WODONGA_INSURANCE(WodongaInsuranceProcessor.class), DINGLEY_INSURANCE(
+				DingleyInsuranceProcessor.class), SOUTH_KINGSVILLE_RATES(
+					SouthKingsvilleRatesProcessor.class), SOUTH_KINGSVILLE_WATER(
+						SouthKingsvilleWaterProcessor.class), SOUTH_KINGSVILLE_INSURANCE(
+							SouthKingsvilleInsuranceProcessor.class), RACV_MEMBERSHIP(
+								RACVMembershipProcessor.class), CAMRY_INSURANCE(
+									CamryInsuranceProcessor.class), MAZDA_INSURANCE(
+										MazdaInsuranceProcessor.class), FORD_INSURANCE(
+											FordInsuranceProcessor.class), TELSTRA(TelstraProcessor.class), CAMRY_REGO(
 												CamryRegoProcessor.class), MAZDA_REGO(
 													MazdaRegoProcessor.class), WODONGA_RENT_STATEMENT(
-														WodongaRentalStatementProccesor.class), DINGLEY_RATES(
+														WodongaRentalStatementProcessor.class), DINGLEY_RATES(
 															DingleyRatesProcessor.class), VERADA_REGO(
 																VeradaRegoProcessor.class), FORESTER_REGO(
 																	ForesterRegoProcessor.class), FORESTER_INSURANCE(
-																		ForesterInsuranceProccesor.class), SOUTH_KINGSVILLE_RENT_STATEMENT(
-																			SouthKingsvilleRentalStatementProccesor.class), GLOBIRD_ELECTRICITY_AND_GAS(
+																		ForesterInsuranceProcessor.class), SOUTH_KINGSVILLE_RENT_STATEMENT(
+																			SouthKingsvilleRentalStatementProcessor.class), GLOBIRD_ELECTRICITY_AND_GAS(
 																				GlobirdElectricityAndGasProcessor.class);
 
 	private Class processor;
