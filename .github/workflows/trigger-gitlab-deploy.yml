@@ -1,0 +1,41 @@
+name: Trigger GitLab Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  trigger-deploy:
+    # Skip CI version-bump commits to avoid a deploy loop
+    if: github.event.head_commit.message != 'bump version'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger GitLab pipeline
+        env:
+          GITLAB_TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
+          GITLAB_PROJECT_ID: ${{ secrets.GITLAB_PROJECT_ID }}
+        run: |
+          if [ -z "${GITLAB_TRIGGER_TOKEN}" ]; then
+            echo "Missing secret: GITLAB_TRIGGER_TOKEN"
+            exit 1
+          fi
+          if [ -z "${GITLAB_PROJECT_ID}" ]; then
+            echo "Missing secret: GITLAB_PROJECT_ID"
+            exit 1
+          fi
+
+          response="$(curl --show-error --silent --write-out '\n%{http_code}' \
+            --request POST \
+            --form "token=${GITLAB_TRIGGER_TOKEN}" \
+            --form "ref=main" \
+            "https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/trigger/pipeline")"
+
+          body="${response%$'\n'*}"
+          status="${response##*$'\n'}"
+
+          echo "GitLab response (${status}):"
+          echo "${body}"
+
+          if [ "${status}" -lt 200 ] || [ "${status}" -ge 300 ]; then
+            exit 1
+          fi
