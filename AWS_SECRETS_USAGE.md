@@ -69,7 +69,7 @@ public void check() {
 }
 ```
 
-### DatabaseConfig Integration.
+### DatabaseConfig Integration..
 
 The `DatabaseConfig` class uses AWS Secrets Manager for database credentials, automatically selecting the correct secret based on environment:
 
