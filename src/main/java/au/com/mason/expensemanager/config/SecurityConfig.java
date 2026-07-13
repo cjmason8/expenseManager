@@ -28,9 +28,8 @@ public class SecurityConfig {
 		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		if (cognitoEnabled) {
-			http.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/health", "/info").permitAll()
-				.anyRequest().authenticated());
+			http.authorizeHttpRequests(
+				auth -> auth.requestMatchers("/health", "/info").permitAll().anyRequest().authenticated());
 			http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 		} else {
 			http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
