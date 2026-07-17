@@ -146,6 +146,9 @@ public class DocumentService {
 		String parentFolderName = uiPath.substring(lastSlash + 1);
 
 		Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
+		if (parent == null) {
+			return;
+		}
 		hydrateDocument(parent);
 		document.setMetaData(parent.getMetaData());
 	}
@@ -183,9 +186,11 @@ public class DocumentService {
 		Map<String, Object> metaData = new HashMap<>();
 		if (!parentFolderName.equals("filofax")) {
 			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
-			hydrateDocument(parent);
-			if (parent.getMetaData() != null) {
-				metaData.putAll(parent.getMetaData());
+			if (parent != null) {
+				hydrateDocument(parent);
+				if (parent.getMetaData() != null) {
+					metaData.putAll(parent.getMetaData());
+				}
 			}
 		}
 		if (directory.getMetaData() != null) {

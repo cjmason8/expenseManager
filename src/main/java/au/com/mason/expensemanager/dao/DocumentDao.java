@@ -52,7 +52,9 @@ public class DocumentDao extends BaseDao<Document> {
 		Query query = entityManager.createNamedQuery(Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME, Document.class);
 		query.setParameter("folderPath", folderPath);
 		query.setParameter("fileName", folderName);
-		return (Document) query.getSingleResult();
+		@SuppressWarnings("unchecked")
+		List<Document> results = query.getResultList();
+		return results.isEmpty() ? null : results.get(0);
 	}
 
 	public void updateDirectoryPaths(String oldPath, String newPath) {
