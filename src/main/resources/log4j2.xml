@@ -16,47 +16,26 @@
             </Policies>
             <DefaultRolloverStrategy max="30"/>
         </RollingFile>
-        <Routing name="ConsoleRouting">
-            <Routes pattern="${env}">
-                <Route key="local">
-                    <Console name="Console" target="SYSTEM_OUT">
-                        <PatternLayout>
-                            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n</pattern>
-                        </PatternLayout>
-                    </Console>
-                </Route>
-                <Route>
-                    <Null name="NullConsole"/>
-                </Route>
-            </Routes>
-        </Routing>
-        <Routing name="CloudWatchRouting">
-            <Routes pattern="${env}">
-                <Route key="local">
-                    <Null name="NullCloudWatch"/>
-                </Route>
-                <Route>
-                    <CloudWatchAppender name="CloudWatch">
-                        <logGroup>${env:AWS_CLOUDWATCH_LOG_GROUP:-/expense-manager/local}</logGroup>
-                        <logStream>{hostname}-{startupTimestamp}</logStream>
-                        <clientRegion>${env:AWS_CLOUDWATCH_REGION:-ap-southeast-2}</clientRegion>
-                        <retentionPeriod>${env:AWS_CLOUDWATCH_RETENTION_DAYS:-30}</retentionPeriod>
-                        <PatternLayout>
-                            <pattern>{"application":"Expense Manager","Env":"${env}","dateTime":"%d{yyyy-MM-dd HH:mm:ss}","level":"%p","logger":"%c{1}","line":"%L","msg":"%m"}%n</pattern>
-                        </PatternLayout>
-                    </CloudWatchAppender>
-                </Route>
-                <Route>
-                    <Null name="NullCloudWatch"/>
-                </Route>
-            </Routes>
-        </Routing>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n</pattern>
+            </PatternLayout>
+        </Console>
+        <CloudWatchAppender name="CloudWatch">
+            <logGroup>${env:AWS_CLOUDWATCH_LOG_GROUP:-/expense-manager/local}</logGroup>
+            <logStream>{hostname}-{startupTimestamp}</logStream>
+            <clientRegion>${env:AWS_CLOUDWATCH_REGION:-ap-southeast-2}</clientRegion>
+            <retentionPeriod>${env:AWS_CLOUDWATCH_RETENTION_DAYS:-30}</retentionPeriod>
+            <PatternLayout>
+                <pattern>{"application":"Expense Manager","Env":"${env}","dateTime":"%d{yyyy-MM-dd HH:mm:ss}","level":"%p","logger":"%c{1}","line":"%L","msg":"%m"}%n</pattern>
+            </PatternLayout>
+        </CloudWatchAppender>
     </Appenders>
     <Loggers>
         <Root level="info" additivity="false">
             <AppenderRef ref="File"/>
-            <AppenderRef ref="ConsoleRouting"/>
-            <AppenderRef ref="CloudWatchRouting"/>
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="CloudWatch"/>
         </Root>
     </Loggers>
 </Configuration>
