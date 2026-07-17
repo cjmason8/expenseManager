@@ -1,11 +1,14 @@
 package au.com.mason.expensemanager.dao;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import jakarta.persistence.EntityManager;
+
+import org.apache.commons.lang3.StringUtils;
 
 import au.com.mason.expensemanager.domain.Metadata;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
@@ -21,57 +24,89 @@ public class MetaDataDao<T extends Metadata> extends BaseDao<T> {
 	}
 
 	protected List<T> filterByMetadata(SearchParamsDto searchParamsDto, List<T> results) {
-		Map<String, Object> metaData = (Map<String, Object>) gson.fromJson(searchParamsDto.getMetaDataChunk(),
-			Map.class);
+		if (StringUtils.isEmpty(searchParamsDto.getMetaDataChunk())) {
+			return results;
+		}
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> metaData = gson.fromJson(searchParamsDto.getMetaDataChunk(), Map.class);
+		if (metaData == null || metaData.isEmpty()) {
+			return results;
+		}
+
 		List<T> validResults = new ArrayList<>();
 		results.stream().filter(result -> result.getMetaData() != null).forEach(result -> {
 			boolean isValid = false;
-			for (String val : metaData.keySet()) {
-				if (result.getMetaData().get(val) == null)
+			for (String key : metaData.keySet()) {
+				Object storedValue = result.getMetaData().get(key);
+				if (storedValue == null) {
 					continue;
+				}
 
-				if (metaData.get(val) instanceof ArrayList) {
-					for (Object item : (ArrayList) metaData.get(val)) {
-						if (result.getMetaData().get(val) instanceof String
-							&& (convertToStringAndLower(result.getMetaData().get(val))
-								.equals(convertToStringAndLower(item)))) {
-							isValid = true;
-							break;
-						} else if (result.getMetaData().get(val) instanceof ArrayList) {
-							List<String> values = (List<String>) result.getMetaData().get(val);
-							if (values.stream().anyMatch(
-								value -> convertToStringAndLower(value).equals(convertToStringAndLower(item)))) {
-								isValid = true;
-								break;
-							}
-						}
-					}
-				} else if (result.getMetaData().get(val) instanceof ArrayList) {
-					List<String> values = (List<String>) result.getMetaData().get(val);
-					if (values.stream().anyMatch(
-						value -> convertToStringAndLower(value).equals(convertToStringAndLower(metaData.get(val))))) {
-						isValid = true;
-					}
-				} else if (Objects.equals(convertToStringAndLower(result.getMetaData().get(val)),
-					convertToStringAndLower(metaData.get(val)))) {
+				Object searchValue = metaData.get(key);
+				if (matchesMetadataValue(storedValue, searchValue)) {
 					isValid = true;
 				}
-				if (searchParamsDto.getKeyWords() != null && result.getMetaData().get(val) != null
-					&& Objects.requireNonNull(convertToStringAndLower(result.getMetaData().get(val)))
-						.contains(convertToStringAndLower(searchParamsDto.getKeyWords()))) {
+
+				String keyWords = searchParamsDto.getKeyWords();
+				if (StringUtils.isNotBlank(keyWords) && metadataContainsKeyword(storedValue, keyWords)) {
 					isValid = true;
 				}
 			}
-			if (isValid)
+			if (isValid) {
 				validResults.add(result);
+			}
 		});
 
 		return validResults;
 	}
 
-	private String convertToStringAndLower(Object val) {
-		String stringVal = (String) val;
+	private boolean matchesMetadataValue(Object storedValue, Object searchValue) {
+		if (searchValue instanceof Collection<?> searchValues) {
+			for (Object item : searchValues) {
+				if (valueEqualsOrContains(storedValue, item)) {
+					return true;
+				}
+			}
+			return false;
+		}
 
-		return stringVal == null ? null : stringVal.toLowerCase();
+		return valueEqualsOrContains(storedValue, searchValue);
+	}
+
+	private boolean valueEqualsOrContains(Object storedValue, Object searchValue) {
+		if (storedValue instanceof Collection<?> storedValues) {
+			return storedValues.stream().anyMatch(value -> valuesEqualIgnoreCase(value, searchValue));
+		}
+
+		return valuesEqualIgnoreCase(storedValue, searchValue);
+	}
+
+	private boolean metadataContainsKeyword(Object storedValue, String keyWords) {
+		String needle = convertToStringAndLower(keyWords);
+		if (needle == null) {
+			return false;
+		}
+
+		if (storedValue instanceof Collection<?> storedValues) {
+			return storedValues.stream().map(this::convertToStringAndLower)
+				.filter(Objects::nonNull)
+				.anyMatch(value -> value.contains(needle));
+		}
+
+		String haystack = convertToStringAndLower(storedValue);
+		return haystack != null && haystack.contains(needle);
+	}
+
+	private boolean valuesEqualIgnoreCase(Object left, Object right) {
+		return Objects.equals(convertToStringAndLower(left), convertToStringAndLower(right));
+	}
+
+	private String convertToStringAndLower(Object val) {
+		if (val == null) {
+			return null;
+		}
+
+		return String.valueOf(val).toLowerCase();
 	}
 }
