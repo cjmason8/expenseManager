@@ -21,6 +21,9 @@ import au.com.mason.expensemanager.service.AwsSecretsService;
 @EnableTransactionManagement
 public class DatabaseConfig {
 
+	private static final String DEFAULT_DIALECT = "org.hibernate.dialect.PostgreSQLDialect";
+	private static final String LEGACY_DIALECT = "au.com.mason.expensemanager.dao.MyPostgreSQL94Dialect";
+
 	@Autowired
 	private AwsSecretsService awsSecretsService;
 
@@ -60,7 +63,7 @@ public class DatabaseConfig {
 
 		// Hibernate properties
 		Properties additionalProperties = new Properties();
-		additionalProperties.put("hibernate.dialect", System.getenv().get("HIBERNATE_DIALECT"));
+		additionalProperties.put("hibernate.dialect", resolveHibernateDialect());
 		additionalProperties.put("hibernate.hbm2ddl.auto", System.getenv().get("HIBERNATE_HBM2DDL_AUTO"));
 		// additionalProperties.put("hibernate.temp.use_jdbc_metadata_defaults", false);
 		entityManagerFactory.setJpaProperties(additionalProperties);
@@ -87,6 +90,14 @@ public class DatabaseConfig {
 	@Bean
 	public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
 		return new PersistenceExceptionTranslationPostProcessor();
+	}
+
+	private String resolveHibernateDialect() {
+		String dialect = System.getenv("HIBERNATE_DIALECT");
+		if (dialect == null || dialect.isBlank() || LEGACY_DIALECT.equals(dialect)) {
+			return DEFAULT_DIALECT;
+		}
+		return dialect;
 	}
 
 	// Private fields
