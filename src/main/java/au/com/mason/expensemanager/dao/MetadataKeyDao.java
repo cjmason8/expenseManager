@@ -26,11 +26,8 @@ public class MetadataKeyDao extends BaseDao<MetadataKey> {
 	}
 
 	public MetadataKey findByName(String name) {
-		List<MetadataKey> results = entityManager
-			.createQuery("FROM MetadataKey WHERE name = :name", MetadataKey.class)
-			.setParameter("name", name)
-			.setMaxResults(1)
-			.getResultList();
+		List<MetadataKey> results = entityManager.createQuery("FROM MetadataKey WHERE name = :name", MetadataKey.class)
+			.setParameter("name", name).setMaxResults(1).getResultList();
 		return results.isEmpty() ? null : results.get(0);
 	}
 

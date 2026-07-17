@@ -43,9 +43,7 @@ public class EntityMetadataDao extends BaseDao<EntityMetadata> {
 
 	public void deleteByEntity(EntityMetadataType type, String entityId) {
 		entityManager.createQuery("DELETE FROM EntityMetadata em WHERE em.type = :type AND em.entityId = :entityId")
-			.setParameter("type", type)
-			.setParameter("entityId", entityId)
-			.executeUpdate();
+			.setParameter("type", type).setParameter("entityId", entityId).executeUpdate();
 	}
 
 }
