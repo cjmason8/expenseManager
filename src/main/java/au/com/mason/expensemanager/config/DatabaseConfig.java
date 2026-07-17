@@ -4,6 +4,8 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +23,7 @@ import au.com.mason.expensemanager.service.AwsSecretsService;
 @EnableTransactionManagement
 public class DatabaseConfig {
 
+	private static final Logger LOGGER = LogManager.getLogger(DatabaseConfig.class);
 	private static final String DEFAULT_DIALECT = "org.hibernate.dialect.PostgreSQLDialect";
 	private static final String LEGACY_DIALECT = "au.com.mason.expensemanager.dao.MyPostgreSQL94Dialect";
 
@@ -36,9 +39,12 @@ public class DatabaseConfig {
 	 */
 	@Bean
 	public DataSource dataSource() {
+		String dbUrl = System.getenv("DB_URL");
+		LOGGER.info("Configuring DataSource with DB_URL host={}", extractJdbcHost(dbUrl));
+
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(System.getenv().get("DB_DRIVER"));
-		dataSource.setUrl(System.getenv().get("DB_URL"));
+		dataSource.setUrl(dbUrl);
 		dataSource.setUsername(awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"));
 		dataSource.setPassword(awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD"));
 
@@ -98,6 +104,21 @@ public class DatabaseConfig {
 			return DEFAULT_DIALECT;
 		}
 		return dialect;
+	}
+
+	private String extractJdbcHost(String dbUrl) {
+		if (dbUrl == null || dbUrl.isBlank()) {
+			return "<unset>";
+		}
+		try {
+			String withoutPrefix = dbUrl.replaceFirst("^jdbc:postgresql://", "");
+			int slash = withoutPrefix.indexOf('/');
+			String hostPort = slash >= 0 ? withoutPrefix.substring(0, slash) : withoutPrefix;
+			int question = hostPort.indexOf('?');
+			return question >= 0 ? hostPort.substring(0, question) : hostPort;
+		} catch (Exception e) {
+			return "<unparseable>";
+		}
 	}
 
 	// Private fields
