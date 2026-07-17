@@ -10,15 +10,21 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import au.com.mason.expensemanager.domain.EntityMetadataType;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RefDataType;
+import au.com.mason.expensemanager.service.EntityMetadataService;
 
 @Repository
 @Transactional
 public class RefDataDao extends BaseDao<RefData> {
+
+	@Autowired
+	private EntityMetadataService entityMetadataService;
 
 	public RefDataDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(RefData.class, entityManager);
@@ -59,11 +65,20 @@ public class RefDataDao extends BaseDao<RefData> {
 			query.setParameter("description", "%" + refData.getDescription().toLowerCase() + "%");
 		}
 		List<RefData> list = query.getResultList();
+		hydrateRefDatas(list);
 		if (refData.getMetaData() != null && !refData.getMetaData().isEmpty()) {
 			list = list.stream().filter(r -> refDataMatchesMetaData(r, refData.getMetaData()))
 				.collect(Collectors.toList());
 		}
 		return list;
+	}
+
+	private void hydrateRefDatas(List<RefData> refDatas) {
+		entityMetadataService.hydrateList(EntityMetadataType.REF_DATA, refDatas, r -> String.valueOf(r.getId()),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(stringMap);
+			});
 	}
 
 	private static boolean refDataMatchesMetaData(RefData r, Map<String, String> criteria) {

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.EntityMetadataType;
+import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.domain.RecurringUnit;
 import au.com.mason.expensemanager.domain.Transaction;
 import au.com.mason.expensemanager.util.DateUtil;
@@ -22,22 +24,32 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	@Autowired
 	protected DocumentService documentService;
 
+	@Autowired
+	protected EntityMetadataService entityMetadataService;
+
 	public List<V> getAllRecurring(boolean includeAll) throws Exception {
-		return transactionDao.getAllRecurring(includeAll);
+		List<V> results = transactionDao.getAllRecurring(includeAll);
+		hydrateTransactions(results);
+		return results;
 	}
 
 	public List<V> getForWeek(LocalDate startOfWeek) throws Exception {
-		return transactionDao.getForWeek(startOfWeek);
+		List<V> results = transactionDao.getForWeek(startOfWeek);
+		hydrateTransactions(results);
+		return results;
 	}
 
 	public V getById(Long id) throws Exception {
-		return transactionDao.getById(id);
+		V transaction = transactionDao.getById(id);
+		hydrateTransaction(transaction);
+		return transaction;
 	}
 
 	public V addTransaction(V expense) throws Exception {
 		attachDocumentForCreate(expense);
 		createTransaction(expense);
 		handleRecurring(expense);
+		hydrateTransaction(expense);
 		return expense;
 	}
 
@@ -103,6 +115,7 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 		}
 
 		transactionDao.create(expense);
+		persistMetadata(expense);
 	}
 
 	private void createSubsequentWeeks(V newExpense) throws Exception {
@@ -121,6 +134,7 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 				newExpenseForSubsequent.setRecurringTransaction(newExpense);
 
 				transactionDao.create(newExpenseForSubsequent);
+				persistMetadata(newExpenseForSubsequent);
 			}
 
 			dueDate = dueDate.plus(recurringUnit.getUnits(), recurringUnit.getUnitType());
@@ -132,17 +146,23 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	}
 
 	public V update(V transaction) {
-		return transactionDao.update(transaction);
+		V updated = transactionDao.update(transaction);
+		persistMetadata(updated);
+		return updated;
 	}
 
 	public V create(V transaction) {
-		return transactionDao.create(transaction);
+		V created = transactionDao.create(transaction);
+		persistMetadata(created);
+		return created;
 	}
 
 	public V updateTransaction(V expense) throws Exception {
 		attachDocumentForUpdate(expense);
 		transactionDao.update(expense);
+		persistMetadata(expense);
 		handleRecurringForUpdate(expense);
+		hydrateTransaction(expense);
 		return expense;
 	}
 
@@ -158,21 +178,25 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 
 	public void deleteTransaction(Long id) {
 		V expense = transactionDao.getById(id);
+		EntityMetadataType type = metadataType(expense);
 		if (expense.getRecurringType() != null) {
 			transactionDao.deleteTransactions(id);
 			if (transactionDao.getForRecurring(expense).size() > 0) {
 				expense.setDeleted(true);
 				transactionDao.update(expense);
 			} else {
+				entityMetadataService.deleteForEntity(type, String.valueOf(expense.getId()));
 				transactionDao.delete(expense);
 			}
 		} else {
+			entityMetadataService.deleteForEntity(type, String.valueOf(expense.getId()));
 			transactionDao.delete(expense);
 		}
 	}
 
 	public void createRecurringTransactions(LocalDate startOfWeek, Transaction currentRecurringExpense) {
 		List<V> recurringExpenses = transactionDao.getAllRecurring(true);
+		hydrateTransactions(recurringExpenses);
 
 		for (V recurringExpense : recurringExpenses) {
 			if (currentRecurringExpense != null && recurringExpense.getId() == currentRecurringExpense.getId()) {
@@ -196,6 +220,7 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 				newExpense.setNotes(recurringExpense.getNotes());
 
 				transactionDao.create(newExpense);
+				persistMetadata(newExpense);
 			}
 		}
 	}
@@ -209,7 +234,45 @@ public abstract class TransactionService<V extends Transaction, D extends Transa
 	}
 
 	public List<V> getPastDateList(LocalDate date) {
-		return transactionDao.getPastDate(date);
+		List<V> results = transactionDao.getPastDate(date);
+		hydrateTransactions(results);
+		return results;
+	}
+
+	protected void hydrateTransaction(V transaction) {
+		if (transaction == null) {
+			return;
+		}
+		hydrateTransactions(List.of(transaction));
+	}
+
+	protected void hydrateTransactions(List<V> transactions) {
+		if (transactions == null || transactions.isEmpty()) {
+			return;
+		}
+		EntityMetadataType type = metadataType(transactions.get(0));
+		entityMetadataService.hydrateList(type, transactions, t -> String.valueOf(t.getId()),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(objectMap);
+			});
+		for (V transaction : transactions) {
+			if (transaction.getDocument() != null) {
+				documentService.hydrateDocument(transaction.getDocument());
+			}
+		}
+	}
+
+	protected void persistMetadata(V transaction) {
+		if (transaction == null || transaction.getId() == 0) {
+			return;
+		}
+		entityMetadataService.replace(metadataType(transaction), String.valueOf(transaction.getId()),
+			transaction.getMetaData());
+	}
+
+	protected EntityMetadataType metadataType(V transaction) {
+		return transaction instanceof Income ? EntityMetadataType.INCOME : EntityMetadataType.EXPENSE;
 	}
 
 	abstract int countForWeekForAll(LocalDate startOfWeek) throws Exception;

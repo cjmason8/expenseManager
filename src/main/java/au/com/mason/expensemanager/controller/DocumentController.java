@@ -103,11 +103,19 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 
 		LOGGER.info("entering DocumentController createFile - " + document.getFileName());
 
-		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
-
 		documentService.updateDocument(convertToEntity(document));
 
+		LOGGER.info("leaving DocumentController createFile - " + document.getFileName());
+
 		return "{\"filePath\":\"" + document.getFolderPath() + "\"}";
+	}
+
+	@GetMapping(value = "/documents/{id}", produces = "application/json")
+	DocumentDto getDocument(@PathVariable UUID id) throws Exception {
+		LOGGER.info("entering DocumentController getDocument - " + id);
+		DocumentDto document = convertToDto(documentService.getById(id));
+		LOGGER.info("leaving DocumentController getDocument - " + id);
+		return document;
 	}
 
 	@RequestMapping(value = "/documents/{id}", method = RequestMethod.PUT, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")

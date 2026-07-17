@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.domain;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,9 +16,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import jakarta.persistence.Transient;
 
 import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
 
@@ -56,8 +55,10 @@ public class Donation {
 	@JoinColumn(name = "documentId")
 	private Document document;
 
-	@Column
-	@JdbcTypeCode(SqlTypes.JSON)
+	@Transient
+	private List<EntityMetadata> entityMetadata = new ArrayList<>();
+
+	@Transient
 	private Map<String, String> metaData;
 
 }

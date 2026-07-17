@@ -10,12 +10,15 @@ import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import au.com.mason.expensemanager.domain.Donation;
+import au.com.mason.expensemanager.domain.EntityMetadataType;
 import au.com.mason.expensemanager.dto.DonationSearchDto;
 import au.com.mason.expensemanager.dto.RefDataDto;
+import au.com.mason.expensemanager.service.EntityMetadataService;
 import au.com.mason.expensemanager.util.DateUtil;
 
 import com.google.gson.Gson;
@@ -26,6 +29,9 @@ import com.google.gson.GsonBuilder;
 public class DonationDao extends BaseDao<Donation> {
 
 	private Gson gson = new GsonBuilder().serializeNulls().create();
+
+	@Autowired
+	private EntityMetadataService entityMetadataService;
 
 	public DonationDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(Donation.class, entityManager);
@@ -70,11 +76,20 @@ public class DonationDao extends BaseDao<Donation> {
 		}
 
 		List<Donation> results = query.getResultList();
+		hydrateDonations(results);
 		if (donationSearchDto.getMetaDataChunk() != null) {
 			Map<String, String> metaData = gson.fromJson(donationSearchDto.getMetaDataChunk(), Map.class);
 			results = results.stream().filter(d -> donationMatchesMetaData(d, metaData)).collect(Collectors.toList());
 		}
 		return results;
+	}
+
+	private void hydrateDonations(List<Donation> donations) {
+		entityMetadataService.hydrateList(EntityMetadataType.DONATION, donations, d -> String.valueOf(d.getId()),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(stringMap);
+			});
 	}
 
 	private static boolean donationMatchesMetaData(Donation d, Map<String, String> metaData) {

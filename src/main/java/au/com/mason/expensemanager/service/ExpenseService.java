@@ -40,7 +40,9 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 	}
 
 	public List<Expense> getUnpaidBeforeWeek(LocalDate startOfWeek) throws Exception {
-		return expenseDao.getUnpaidBeforeWeek(startOfWeek);
+		List<Expense> results = expenseDao.getUnpaidBeforeWeek(startOfWeek);
+		hydrateTransactions(results);
+		return results;
 	}
 
 	@Override
@@ -53,7 +55,7 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 		expense.setPaid(true);
 
 		expenseDao.update(expense);
-
+		hydrateTransaction(expense);
 		return expense;
 	}
 
@@ -62,16 +64,20 @@ public class ExpenseService extends TransactionService<Expense, ExpenseDao> {
 		expense.setPaid(false);
 
 		expenseDao.update(expense);
-
+		hydrateTransaction(expense);
 		return expense;
 	}
 
 	public List<Expense> getAll() throws Exception {
-		return expenseDao.getAll();
+		List<Expense> results = expenseDao.getAll();
+		hydrateTransactions(results);
+		return results;
 	}
 
 	public List<Expense> findExpense(RefData entryType) {
-		return expenseDao.findExpenses(entryType);
+		List<Expense> results = expenseDao.findExpenses(entryType);
+		hydrateTransactions(results);
+		return results;
 	}
 
 }

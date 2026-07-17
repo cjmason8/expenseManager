@@ -305,4 +305,13 @@ DELETE FROM metadatavalues
 WHERE value = 'Ford 2001'
 	AND metadatakeyid = (SELECT id FROM metadatakeys WHERE name = 'car');
 
+-- ---------------------------------------------------------------------------
+-- person: Pork Chops -> Spike (revert test rename in metadatavalues)
+-- ---------------------------------------------------------------------------
+UPDATE metadatavalues
+SET value = 'Spike'
+WHERE value = 'Pork Chops'
+	AND metadatakeyid = (SELECT id FROM metadatakeys WHERE name = 'person');
+
 COMMIT;
+ok

@@ -1,7 +1,11 @@
 package au.com.mason.expensemanager.dao;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
@@ -14,19 +18,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import au.com.mason.expensemanager.domain.EntityMetadataType;
 import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.Statics;
 import au.com.mason.expensemanager.dto.RefDataDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
+import au.com.mason.expensemanager.service.EntityMetadataService;
 import au.com.mason.expensemanager.util.DateUtil;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 @Repository
 @Transactional
-public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<Expense> {
+public class ExpenseDao extends BaseDao<Expense> implements TransactionDao<Expense> {
+
+	private final Gson gson = new GsonBuilder().serializeNulls().create();
 
 	@Autowired
 	private NotificationDao notificationDao;
+
+	@Autowired
+	private EntityMetadataService entityMetadataService;
 
 	public ExpenseDao(@Qualifier("entityManagerFactory") EntityManager entityManager) {
 		super(Expense.class, entityManager);
@@ -99,8 +113,6 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 	}
 
 	public List<Expense> findExpenses(SearchParamsDto searchParamsDto) {
-		// JPQL only: Hibernate 6 still treats native SQL with EXISTS/subqueries on
-		// other tables as duplicate "id" aliases.
 		StringBuilder jpql = new StringBuilder("SELECT e FROM Expense e WHERE e.recurringType IS NULL ");
 		if (searchParamsDto.getTransactionType() != null) {
 			RefDataDto tt = searchParamsDto.getTransactionType();
@@ -141,11 +153,73 @@ public class ExpenseDao extends MetaDataDao<Expense> implements TransactionDao<E
 		}
 
 		List<Expense> results = query.getResultList();
+		hydrateExpenses(results);
 		if (!StringUtils.isEmpty(searchParamsDto.getMetaDataChunk())) {
-			return filterByMetadata(searchParamsDto, results);
+			return filterByMetadata(searchParamsDto.getMetaDataChunk(), results);
 		}
 
 		return results.stream().limit(Statics.MAX_RESULTS.getIntValue()).collect(Collectors.toList());
+	}
+
+	private void hydrateExpenses(List<Expense> expenses) {
+		entityMetadataService.hydrateList(EntityMetadataType.EXPENSE, expenses, e -> String.valueOf(e.getId()),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(objectMap);
+			});
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<Expense> filterByMetadata(String metaDataChunk, List<Expense> results) {
+		Map<String, Object> criteria = gson.fromJson(metaDataChunk, Map.class);
+		if (criteria == null || criteria.isEmpty()) {
+			return results;
+		}
+		List<Expense> filtered = new ArrayList<>();
+		for (Expense expense : results) {
+			Map<String, Object> metaData = expense.getMetaData();
+			if (metaData == null) {
+				continue;
+			}
+			boolean matches = true;
+			for (Map.Entry<String, Object> entry : criteria.entrySet()) {
+				Object stored = metaData.get(entry.getKey());
+				if (!valueMatches(stored, entry.getValue())) {
+					matches = false;
+					break;
+				}
+			}
+			if (matches) {
+				filtered.add(expense);
+			}
+		}
+		return filtered;
+	}
+
+	private boolean valueMatches(Object stored, Object criteria) {
+		if (stored == null) {
+			return false;
+		}
+		if (criteria instanceof Collection<?> criteriaList) {
+			for (Object item : criteriaList) {
+				if (valueEqualsIgnoreCase(stored, item)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return valueEqualsIgnoreCase(stored, criteria);
+	}
+
+	private boolean valueEqualsIgnoreCase(Object stored, Object criteria) {
+		if (stored instanceof Collection<?> storedList) {
+			return storedList.stream().anyMatch(v -> Objects.equals(toLower(v), toLower(criteria)));
+		}
+		return Objects.equals(toLower(stored), toLower(criteria));
+	}
+
+	private String toLower(Object val) {
+		return val == null ? null : String.valueOf(val).toLowerCase();
 	}
 
 	public List<Expense> getForRecurring(Expense recurringExpense) {

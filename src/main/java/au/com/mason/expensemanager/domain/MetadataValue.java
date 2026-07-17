@@ -16,8 +16,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NamedQueries(value = {
-	@NamedQuery(name = MetadataValue.GET_ALL, query = "FROM MetadataValue ORDER BY metadataKey.name, value"),
-	@NamedQuery(name = MetadataValue.GET_ALL_BY_KEY, query = "FROM MetadataValue WHERE metadataKey.id = :metadataKeyId ORDER BY value"),})
+	@NamedQuery(name = MetadataValue.GET_ALL, query = "FROM MetadataValue mv JOIN FETCH mv.metadataKey ORDER BY mv.metadataKey.name, mv.value"),
+	@NamedQuery(name = MetadataValue.GET_ALL_BY_KEY, query = "FROM MetadataValue mv JOIN FETCH mv.metadataKey WHERE mv.metadataKey.id = :metadataKeyId ORDER BY mv.value"),
+	@NamedQuery(name = MetadataValue.GET_ALL_BY_KEY_NAME, query = "FROM MetadataValue mv JOIN FETCH mv.metadataKey WHERE mv.metadataKey.name = :keyName ORDER BY mv.value"),})
 @Entity
 @Table(name = "metadatavalues")
 @Getter
@@ -27,6 +28,7 @@ public class MetadataValue {
 
 	public static final String GET_ALL = "MetadataValue.Repository.GetAll";
 	public static final String GET_ALL_BY_KEY = "MetadataValue.Repository.GetAllByKey";
+	public static final String GET_ALL_BY_KEY_NAME = "MetadataValue.Repository.GetAllByKeyName";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "metadatavalues_seq")

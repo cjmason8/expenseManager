@@ -1,9 +1,10 @@
 package au.com.mason.expensemanager.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,8 +15,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.JdbcType;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import au.com.mason.expensemanager.hibernate.DocumentUuidJdbcType;
 import au.com.mason.expensemanager.util.S3Keys;
@@ -26,7 +25,7 @@ import au.com.mason.expensemanager.util.S3Keys;
 	@NamedQuery(name = Document.GET_ALL_BY_FOLDER_PATH_AND_FILENAME, query = "FROM Document WHERE folderPath = :folderPath AND fileName = :fileName"),})
 @Entity
 @Table(name = "documents")
-public class Document implements Metadata {
+public class Document {
 
 	public static final String GET_ALL_BY_FOLDER_PATH = "Document.Repository.GetAllByFolderPath";
 	public static final String GET_ALL_BY_FOLDER_PATH_INCLUDE_ARCHIVED = "Document.Repository.GetAllByFolderPathIncludeArchived";
@@ -42,8 +41,10 @@ public class Document implements Metadata {
 	private boolean isFolder;
 	private boolean isArchived;
 
-	@Column
-	@JdbcTypeCode(SqlTypes.JSON)
+	@Transient
+	private List<EntityMetadata> entityMetadata = new ArrayList<>();
+
+	@Transient
 	private Map<String, Object> metaData;
 
 	@Transient
@@ -71,6 +72,14 @@ public class Document implements Metadata {
 
 	public void setMetaData(Map<String, Object> metaData) {
 		this.metaData = metaData;
+	}
+
+	public List<EntityMetadata> getEntityMetadata() {
+		return entityMetadata;
+	}
+
+	public void setEntityMetadata(List<EntityMetadata> entityMetadata) {
+		this.entityMetadata = entityMetadata;
 	}
 
 	public boolean isFolder() {

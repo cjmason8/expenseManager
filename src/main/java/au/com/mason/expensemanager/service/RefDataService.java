@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.RefDataDao;
+import au.com.mason.expensemanager.domain.EntityMetadataType;
 import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.domain.RefDataType;
 
@@ -16,8 +17,13 @@ public class RefDataService {
 	@Autowired
 	private RefDataDao refDataDao;
 
+	@Autowired
+	private EntityMetadataService entityMetadataService;
+
 	public List<RefData> getAll() throws Exception {
-		return refDataDao.getAll();
+		List<RefData> results = refDataDao.getAll();
+		hydrateRefDatas(results);
+		return results;
 	}
 
 	public List<RefData> getRefData(String type) throws Exception {
@@ -34,15 +40,23 @@ public class RefDataService {
 			throw new InvalidParameterException("value " + type + " for parameter type not valid.");
 		}
 
-		return refDataDao.getAllByType(typeVal);
+		List<RefData> results = refDataDao.getAllByType(typeVal);
+		hydrateRefDatas(results);
+		return results;
 	}
 
 	public RefData updateRefData(RefData refData) throws Exception {
-		return refDataDao.update(refData);
+		RefData updated = refDataDao.update(refData);
+		persistMetadata(updated);
+		hydrateRefData(updated);
+		return updated;
 	}
 
 	public RefData createRefData(RefData refData) {
-		return refDataDao.create(refData);
+		RefData created = refDataDao.create(refData);
+		persistMetadata(created);
+		hydrateRefData(created);
+		return created;
 	}
 
 	public void deleteRefData(Long id) {
@@ -53,15 +67,44 @@ public class RefDataService {
 	}
 
 	public RefData getById(Long id) {
-		return refDataDao.getById(id);
+		RefData refData = refDataDao.getById(id);
+		hydrateRefData(refData);
+		return refData;
 	}
 
 	public List<RefData> findRefDatas(RefData refData) {
-		return refDataDao.findRefDatas(refData);
+		List<RefData> results = refDataDao.findRefDatas(refData);
+		hydrateRefDatas(results);
+		return results;
 	}
 
 	public List<RefData> getAllWithEmailKey() {
-		return refDataDao.getAllWithEmailKey();
+		List<RefData> results = refDataDao.getAllWithEmailKey();
+		hydrateRefDatas(results);
+		return results;
+	}
+
+	private void hydrateRefData(RefData refData) {
+		if (refData == null) {
+			return;
+		}
+		hydrateRefDatas(List.of(refData));
+	}
+
+	private void hydrateRefDatas(List<RefData> refDatas) {
+		entityMetadataService.hydrateList(EntityMetadataType.REF_DATA, refDatas, r -> String.valueOf(r.getId()),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(stringMap);
+			});
+	}
+
+	private void persistMetadata(RefData refData) {
+		if (refData == null || refData.getId() == 0) {
+			return;
+		}
+		entityMetadataService.replace(EntityMetadataType.REF_DATA, String.valueOf(refData.getId()),
+			refData.getMetaData());
 	}
 
 }

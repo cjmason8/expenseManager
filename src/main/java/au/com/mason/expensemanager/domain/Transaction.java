@@ -2,9 +2,10 @@ package au.com.mason.expensemanager.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
@@ -15,9 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import jakarta.persistence.Transient;
 
 import au.com.mason.expensemanager.domain.converter.TimestampLocalDateConverter;
 
@@ -32,7 +31,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class Transaction implements Metadata {
+public abstract class Transaction {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "transactions_seq")
@@ -61,8 +60,10 @@ public abstract class Transaction implements Metadata {
 
 	private String notes;
 
-	@Column
-	@JdbcTypeCode(SqlTypes.JSON)
+	@Transient
+	private List<EntityMetadata> entityMetadata = new ArrayList<>();
+
+	@Transient
 	private Map<String, Object> metaData;
 
 	@OneToOne

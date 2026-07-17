@@ -1,8 +1,9 @@
 package au.com.mason.expensemanager.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,9 +14,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import jakarta.persistence.Transient;
 
 import au.com.mason.expensemanager.processor.EmailProcessor;
 
@@ -48,8 +47,10 @@ public class RefData {
 	@Enumerated(EnumType.STRING)
 	private RefDataType type;
 
-	@Column
-	@JdbcTypeCode(SqlTypes.JSON)
+	@Transient
+	private List<EntityMetadata> entityMetadata = new ArrayList<>();
+
+	@Transient
 	private Map<String, String> metaData;
 
 	private String emailKey;

@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import au.com.mason.expensemanager.dao.DocumentDao;
 import au.com.mason.expensemanager.domain.Document;
+import au.com.mason.expensemanager.domain.EntityMetadataType;
 import au.com.mason.expensemanager.util.S3Keys;
 
 @Component
@@ -43,6 +44,9 @@ public class DocumentService {
 	@Autowired
 	private S3Service s3Service;
 
+	@Autowired
+	private EntityMetadataService entityMetadataService;
+
 	public Document updateDocument(Document document) {
 		if (document.isFolder() && document.getOriginalFileName() != null
 			&& !document.getOriginalFileName().equals(document.getFileName())) {
@@ -54,6 +58,8 @@ public class DocumentService {
 		}
 
 		documentDao.update(document);
+		persistMetadata(document);
+		hydrateDocument(document);
 		return document;
 	}
 
@@ -72,9 +78,11 @@ public class DocumentService {
 		}
 
 		Document saved = documentDao.create(document);
+		persistMetadata(saved);
 		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), bytes,
 			file.getContentType());
 		saved.setOriginalFileName(originalName);
+		hydrateDocument(saved);
 		return saved;
 	}
 
@@ -110,8 +118,10 @@ public class DocumentService {
 		document.setFolderPath(parentFolderPath);
 
 		Document saved = documentDao.create(document);
+		persistMetadata(saved);
 		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file,
 			"application/octet-stream");
+		hydrateDocument(saved);
 		return saved;
 	}
 
@@ -136,6 +146,7 @@ public class DocumentService {
 		String parentFolderName = uiPath.substring(lastSlash + 1);
 
 		Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
+		hydrateDocument(parent);
 		document.setMetaData(parent.getMetaData());
 	}
 
@@ -162,14 +173,20 @@ public class DocumentService {
 		setMetaData(directory, parentFolderPath, parentFolderName, document);
 		document.setFolder(true);
 
-		return documentDao.create(document);
+		Document saved = documentDao.create(document);
+		persistMetadata(saved);
+		hydrateDocument(saved);
+		return saved;
 	}
 
 	private void setMetaData(Document directory, String parentFolderPath, String parentFolderName, Document document) {
 		Map<String, Object> metaData = new HashMap<>();
 		if (!parentFolderName.equals("filofax")) {
 			Document parent = documentDao.getFolder(parentFolderPath, parentFolderName);
-			metaData.putAll(parent.getMetaData());
+			hydrateDocument(parent);
+			if (parent.getMetaData() != null) {
+				metaData.putAll(parent.getMetaData());
+			}
 		}
 		if (directory.getMetaData() != null) {
 			metaData.putAll(directory.getMetaData());
@@ -185,11 +202,16 @@ public class DocumentService {
 		} else {
 			s3Service.deleteObject(document.getFilePath());
 		}
+		if (document.getId() != null) {
+			entityMetadataService.deleteForEntity(EntityMetadataType.DOCUMENT, document.getId().toString());
+		}
 		documentDao.deleteById(document.getId());
 	}
 
 	public Document getById(UUID id) throws Exception {
-		return documentDao.getById(id);
+		Document document = documentDao.getById(id);
+		hydrateDocument(document);
+		return document;
 	}
 
 	public List<Document> getAll(String folder, boolean includeArchived) throws Exception {
@@ -198,7 +220,32 @@ public class DocumentService {
 			List<Document> documents = documentDao.getAll(candidateFolderPath, includeArchived);
 			documents.forEach(doc -> uniqueDocuments.put(doc.getId(), doc));
 		}
-		return new ArrayList<>(uniqueDocuments.values());
+		List<Document> results = new ArrayList<>(uniqueDocuments.values());
+		hydrateDocuments(results);
+		return results;
+	}
+
+	public void hydrateDocument(Document document) {
+		if (document == null || document.getId() == null) {
+			return;
+		}
+		hydrateDocuments(List.of(document));
+	}
+
+	public void hydrateDocuments(List<Document> documents) {
+		entityMetadataService.hydrateList(EntityMetadataType.DOCUMENT, documents,
+			document -> document.getId() == null ? null : document.getId().toString(),
+			(entity, entityMetadata, objectMap, stringMap) -> {
+				entity.setEntityMetadata(entityMetadata);
+				entity.setMetaData(objectMap);
+			});
+	}
+
+	private void persistMetadata(Document document) {
+		if (document == null || document.getId() == null) {
+			return;
+		}
+		entityMetadataService.replace(EntityMetadataType.DOCUMENT, document.getId().toString(), document.getMetaData());
 	}
 
 	private Set<String> getFolderPathCandidates(String folder) {

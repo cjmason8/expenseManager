@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.MetadataKey;
 import au.com.mason.expensemanager.dto.MetadataKeyDto;
+import au.com.mason.expensemanager.dto.MetadataKeyWithValuesDto;
 import au.com.mason.expensemanager.dto.StatusResponseDto;
 import au.com.mason.expensemanager.mapper.MetadataKeyMapper;
 import au.com.mason.expensemanager.service.MetadataKeyService;
@@ -38,11 +39,37 @@ public class MetadataKeyController extends BaseController<MetadataKey, MetadataK
 		return convertList(metadataKeys);
 	}
 
+	@RequestMapping(value = "/metadataKeys/withValues", method = RequestMethod.GET, produces = "application/json")
+	List<MetadataKeyWithValuesDto> getMetadataKeysWithValues() {
+		LOGGER.info("entering MetadataKeyController getMetadataKeysWithValues");
+		List<MetadataKeyWithValuesDto> metadataKeys = metadataKeyService.getAllWithValues();
+		LOGGER.info("leaving MetadataKeyController getMetadataKeysWithValues");
+		return metadataKeys;
+	}
+
+	@RequestMapping(value = "/metadataKeys/{id}", method = RequestMethod.GET, produces = "application/json")
+	MetadataKeyDto getMetadataKey(@PathVariable Long id) {
+		LOGGER.info("entering MetadataKeyController getMetadataKey - " + id);
+		MetadataKey metadataKey = metadataKeyService.getById(id);
+		LOGGER.info("leaving MetadataKeyController getMetadataKey - " + id);
+		return convertToDto(metadataKey);
+	}
+
 	@RequestMapping(value = "/metadataKeys", method = RequestMethod.POST, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
 	MetadataKeyDto addMetadataKey(@RequestBody MetadataKeyDto metadataKeyDto) {
 		LOGGER.info("entering MetadataKeyController addMetadataKey - " + metadataKeyDto.getName());
 		MetadataKey metadataKey = metadataKeyService.create(convertToEntity(metadataKeyDto));
 		LOGGER.info("leaving MetadataKeyController addMetadataKey - " + metadataKey.getName());
+		return convertToDto(metadataKey);
+	}
+
+	@RequestMapping(value = "/metadataKeys/{id}", method = RequestMethod.PUT, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
+	MetadataKeyDto updateMetadataKey(@RequestBody MetadataKeyDto metadataKeyDto, @PathVariable Long id) {
+		LOGGER.info("entering MetadataKeyController updateMetadataKey - " + id);
+		MetadataKey metadataKey = convertToEntity(metadataKeyDto);
+		metadataKey.setId(id);
+		metadataKey = metadataKeyService.update(metadataKey);
+		LOGGER.info("leaving MetadataKeyController updateMetadataKey - " + metadataKey.getName());
 		return convertToDto(metadataKey);
 	}
 

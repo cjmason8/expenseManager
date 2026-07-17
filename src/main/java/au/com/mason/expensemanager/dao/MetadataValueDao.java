@@ -32,4 +32,28 @@ public class MetadataValueDao extends BaseDao<MetadataValue> {
 		return query.getResultList();
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<MetadataValue> getAllByKeyName(String keyName) {
+		Query query = entityManager.createNamedQuery(MetadataValue.GET_ALL_BY_KEY_NAME, MetadataValue.class);
+		query.setParameter("keyName", keyName);
+		return query.getResultList();
+	}
+
+	public void deleteByMetadataKeyId(Long metadataKeyId) {
+		entityManager.createQuery("DELETE FROM MetadataValue mv WHERE mv.metadataKey.id = :metadataKeyId")
+			.setParameter("metadataKeyId", metadataKeyId)
+			.executeUpdate();
+	}
+
+	public MetadataValue findByKeyAndValue(Long metadataKeyId, String value) {
+		List<MetadataValue> results = entityManager
+			.createQuery("FROM MetadataValue WHERE metadataKey.id = :metadataKeyId AND value = :value",
+				MetadataValue.class)
+			.setParameter("metadataKeyId", metadataKeyId)
+			.setParameter("value", value)
+			.setMaxResults(1)
+			.getResultList();
+		return results.isEmpty() ? null : results.get(0);
+	}
+
 }

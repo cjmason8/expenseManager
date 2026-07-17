@@ -46,11 +46,29 @@ public class MetadataValueController extends BaseController<MetadataValue, Metad
 		return convertList(metadataValues);
 	}
 
+	@RequestMapping(value = "/metadataValues/key/name/{keyName}", method = RequestMethod.GET, produces = "application/json")
+	List<MetadataValueDto> getMetadataValuesByKeyName(@PathVariable String keyName) {
+		LOGGER.info("entering MetadataValueController getMetadataValuesByKeyName - " + keyName);
+		List<MetadataValue> metadataValues = metadataValueService.getAllByKeyName(keyName);
+		LOGGER.info("leaving MetadataValueController getMetadataValuesByKeyName - " + keyName);
+		return convertList(metadataValues);
+	}
+
 	@RequestMapping(value = "/metadataValues", method = RequestMethod.POST, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
 	MetadataValueDto addMetadataValue(@RequestBody MetadataValueDto metadataValueDto) {
 		LOGGER.info("entering MetadataValueController addMetadataValue - " + metadataValueDto.getValue());
 		MetadataValue metadataValue = metadataValueService.create(convertToEntity(metadataValueDto));
 		LOGGER.info("leaving MetadataValueController addMetadataValue - " + metadataValue.getValue());
+		return convertToDto(metadataValue);
+	}
+
+	@RequestMapping(value = "/metadataValues/{id}", method = RequestMethod.PUT, produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
+	MetadataValueDto updateMetadataValue(@RequestBody MetadataValueDto metadataValueDto, @PathVariable Long id) {
+		LOGGER.info("entering MetadataValueController updateMetadataValue - " + id);
+		MetadataValue metadataValue = convertToEntity(metadataValueDto);
+		metadataValue.setId(id);
+		metadataValue = metadataValueService.update(metadataValue);
+		LOGGER.info("leaving MetadataValueController updateMetadataValue - " + metadataValue.getValue());
 		return convertToDto(metadataValue);
 	}
 
