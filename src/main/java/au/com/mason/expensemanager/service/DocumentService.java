@@ -292,8 +292,8 @@ public class DocumentService {
 	}
 
 	/**
-	 * Files are normally stored at {@code folderPath/id}, but objects migrated
-	 * from the old filesystem layout can still live at {@code folderPath/fileName}.
+	 * Files are normally stored at {@code folderPath/id}, but objects migrated from
+	 * the old filesystem layout can still live at {@code folderPath/fileName}.
 	 */
 	private String resolveSourceKey(Document file) {
 		String idKey = file.getFilePath();
