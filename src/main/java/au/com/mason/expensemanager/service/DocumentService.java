@@ -281,13 +281,47 @@ public class DocumentService {
 		Arrays.asList(files).forEach(fileId -> {
 			Document file = documentDao.getById(fileId);
 			if (file.isFolder()) {
-				throw new UnsupportedOperationException("moving folders is not supported");
+				moveFolder(file, destParent);
+			} else {
+				String destKey = S3Keys.join(S3Keys.toBucketPrefix(destParent), file.getId().toString());
+				s3Service.moveObject(resolveSourceKey(file), destKey);
+				file.setFolderPath(destParent);
+				documentDao.update(file);
 			}
-			String destKey = S3Keys.join(S3Keys.toBucketPrefix(destParent), file.getId().toString());
-			s3Service.moveObject(file.getFilePath(), destKey);
-			file.setFolderPath(destParent);
-			documentDao.update(file);
 		});
+	}
+
+	/**
+	 * Files are normally stored at {@code folderPath/id}, but objects migrated
+	 * from the old filesystem layout can still live at {@code folderPath/fileName}.
+	 */
+	private String resolveSourceKey(Document file) {
+		String idKey = file.getFilePath();
+		if (s3Service.objectExists(idKey)) {
+			return idKey;
+		}
+		String legacyKey = S3Keys.join(S3Keys.toBucketPrefix(file.getFolderPath()), file.getFileName());
+		if (s3Service.objectExists(legacyKey)) {
+			return legacyKey;
+		}
+		throw new IllegalStateException(
+			"S3 object not found for document " + file.getId() + " (tried " + idKey + " and " + legacyKey + ")");
+	}
+
+	private void moveFolder(Document folder, String destParent) {
+		String oldPrefix = S3Keys.join(S3Keys.toBucketPrefix(folder.getFolderPath()), folder.getFileName());
+		String destParentPrefix = S3Keys.toBucketPrefix(destParent);
+		String newPrefix = S3Keys.join(destParentPrefix, folder.getFileName());
+		if (oldPrefix.equals(newPrefix)) {
+			return;
+		}
+		if (destParentPrefix.equals(oldPrefix) || destParentPrefix.startsWith(oldPrefix + "/")) {
+			throw new IllegalArgumentException("cannot move a folder into itself or one of its subfolders");
+		}
+		s3Service.renamePrefix(oldPrefix, newPrefix);
+		documentDao.updateDirectoryPaths(oldPrefix, newPrefix);
+		folder.setFolderPath(destParent);
+		documentDao.update(folder);
 	}
 
 	/**
@@ -297,7 +331,7 @@ public class DocumentService {
 	public void moveDocumentToParentFolder(Document document, String newParentFolderKey) {
 		String destParent = S3Keys.toUiFolderPath(newParentFolderKey);
 		String destKey = S3Keys.join(S3Keys.toBucketPrefix(destParent), document.getId().toString());
-		s3Service.moveObject(document.getFilePath(), destKey);
+		s3Service.moveObject(resolveSourceKey(document), destKey);
 		document.setFolderPath(destParent);
 		documentDao.update(document);
 	}

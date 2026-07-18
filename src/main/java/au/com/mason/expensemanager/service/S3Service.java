@@ -75,6 +75,19 @@ public class S3Service {
 		s3Client.deleteObject(r -> r.bucket(bucket).key(k));
 	}
 
+	public boolean objectExists(String key) {
+		String k = normalizeKey(key);
+		try {
+			s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(k).build());
+			return true;
+		} catch (S3Exception e) {
+			if (e.statusCode() == 404) {
+				return false;
+			}
+			throw s3Failure("HeadObject", k, e);
+		}
+	}
+
 	public void moveObject(String sourceKey, String destinationKey) {
 		String src = normalizeKey(sourceKey);
 		String dst = normalizeKey(destinationKey);
