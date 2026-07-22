@@ -18,8 +18,8 @@ public class NotificationService {
 		return notificationDao.create(notification);
 	}
 
-	public List<Notification> getAll() throws Exception {
-		return notificationDao.getNotRemoved();
+	public List<Notification> getAll(boolean includeRemoved) throws Exception {
+		return includeRemoved ? notificationDao.getAll() : notificationDao.getNotRemoved();
 	}
 
 	public Notification markRead(Long id) throws Exception {

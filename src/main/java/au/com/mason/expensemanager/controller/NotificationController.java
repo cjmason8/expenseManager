@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import au.com.mason.expensemanager.domain.Notification;
@@ -31,9 +32,10 @@ public class NotificationController extends BaseController<Notification, Notific
 	private static final Logger LOGGER = LogManager.getLogger(NotificationController.class);
 
 	@RequestMapping(value = "/notifications", method = RequestMethod.GET, produces = "application/json")
-	List<NotificationDto> getNotifications() throws Exception {
+	List<NotificationDto> getNotifications(
+		@RequestParam(required = false, defaultValue = "false") boolean includeRemoved) throws Exception {
 		LOGGER.info("entering NotificationController getNotification");
-		List<Notification> results = notificationService.getAll();
+		List<Notification> results = notificationService.getAll(includeRemoved);
 		LOGGER.info("leaving NotificationController getNotifications");
 
 		return convertList(results);

@@ -22,6 +22,7 @@ import lombok.Setter;
 
 @NamedQueries(value = {
 	@NamedQuery(name = Notification.GET_NOT_REMOVED, query = "FROM Notification where removed = false"),
+	@NamedQuery(name = Notification.GET_ALL, query = "FROM Notification"),
 	@NamedQuery(name = Notification.FIND_FOR_EXPENSE, query = "FROM Notification where expense = :expense"),})
 @Entity
 @Table(name = "notifications")
@@ -31,6 +32,7 @@ import lombok.Setter;
 public class Notification {
 
 	public static final String GET_NOT_REMOVED = "Notification.Repository.GetNotRemoved";
+	public static final String GET_ALL = "Notification.Repository.GetAll";
 	public static final String FIND_FOR_EXPENSE = "Notification.Repository.FindForExpense";
 
 	@Id

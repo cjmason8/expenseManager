@@ -26,6 +26,12 @@ public class NotificationDao extends BaseDao<Notification> {
 		return query.getResultList();
 	}
 
+	public List<Notification> getAll() {
+		Query query = entityManager.createNamedQuery(Notification.GET_ALL, Notification.class);
+
+		return query.getResultList();
+	}
+
 	public void deleteForExpense(Expense expense) {
 		Query query = entityManager.createNamedQuery(Notification.FIND_FOR_EXPENSE, Notification.class);
 		query.setParameter("expense", expense);
