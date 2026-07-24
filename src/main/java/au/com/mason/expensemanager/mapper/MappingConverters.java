@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Condition;
 import org.mapstruct.Named;
 
+import au.com.mason.expensemanager.domain.EntityType;
 import au.com.mason.expensemanager.domain.RefDataType;
 import au.com.mason.expensemanager.dto.DocumentDto;
 import au.com.mason.expensemanager.util.DateUtil;
@@ -84,6 +85,16 @@ public final class MappingConverters {
 	@Named("stringToRefDataType")
 	public static RefDataType stringToRefDataType(String type) {
 		return type == null ? null : Enum.valueOf(RefDataType.class, type);
+	}
+
+	@Named("entityTypeToString")
+	public static String entityTypeToString(EntityType type) {
+		return type == null ? null : type.name();
+	}
+
+	@Named("stringToEntityType")
+	public static EntityType stringToEntityType(String type) {
+		return type == null ? null : Enum.valueOf(EntityType.class, type);
 	}
 
 	@Named("refDataTypeDescription")

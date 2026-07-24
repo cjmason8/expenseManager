@@ -1,0 +1,59 @@
+package au.com.mason.expensemanager.domain;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@NamedQueries(value = {@NamedQuery(name = EntityEntry.GET_ALL, query = "FROM EntityEntry ORDER BY name"),
+	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE, query = "FROM EntityEntry WHERE type = :type ORDER BY name"),})
+@Entity
+@Table(name = "entities")
+@Getter
+@Setter
+@NoArgsConstructor
+public class EntityEntry {
+
+	public static final String GET_ALL = "EntityEntry.Repository.GetAll";
+	public static final String GET_ALL_BY_TYPE = "EntityEntry.Repository.GetAllByType";
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "entities_seq")
+	@SequenceGenerator(name = "entities_seq", sequenceName = "entities_seq", allocationSize = 1)
+	private long id;
+
+	private String name;
+
+	private String description;
+
+	@Enumerated(EnumType.STRING)
+	private EntityType type;
+
+	@OneToOne
+	@JoinColumn(name = "documentId")
+	private Document document;
+
+	@Transient
+	private List<EntityMetadata> entityMetadata = new ArrayList<>();
+
+	@Transient
+	private Map<String, String> metaData;
+
+}
