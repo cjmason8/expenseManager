@@ -58,8 +58,13 @@ public class DocumentDao extends BaseDao<Document> {
 	}
 
 	public void updateDirectoryPaths(String oldPath, String newPath) {
-		String sql = "UPDATE documents set folderPath = replace(folderPath, '" + oldPath + "', '" + newPath + "')";
-		entityManager.createNativeQuery(sql).executeUpdate();
+		if (oldPath == null || newPath == null || oldPath.equals(newPath)) {
+			return;
+		}
+		String sql = "UPDATE documents SET folderPath = REPLACE(folderPath, :oldPath, :newPath) "
+			+ "WHERE folderPath LIKE :oldPrefix";
+		entityManager.createNativeQuery(sql).setParameter("oldPath", oldPath).setParameter("newPath", newPath)
+			.setParameter("oldPrefix", oldPath + "%").executeUpdate();
 	}
 
 	public void deleteDirectory(String folderPath) {

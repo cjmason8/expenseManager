@@ -48,13 +48,20 @@ public class DocumentService {
 	private EntityMetadataService entityMetadataService;
 
 	public Document updateDocument(Document document) {
-		if (document.isFolder() && document.getOriginalFileName() != null
-			&& !document.getOriginalFileName().equals(document.getFileName())) {
-			String parentPrefix = S3Keys.toBucketPrefix(document.getFolderPath());
-			String oldKey = S3Keys.join(parentPrefix, document.getOriginalFileName());
-			String newKey = S3Keys.join(parentPrefix, document.getFileName());
-			s3Service.renamePrefix(oldKey, newKey);
-			documentDao.updateDirectoryPaths(oldKey, newKey);
+		if (document.isFolder() && document.getId() != null) {
+			Document existing = documentDao.getById(document.getId());
+			String oldName = document.getOriginalFileName();
+			if (oldName == null || oldName.isBlank()) {
+				oldName = existing.getFileName();
+			}
+			String newName = document.getFileName();
+			if (oldName != null && newName != null && !oldName.equals(newName)) {
+				String parentFolderPath = existing.getFolderPath();
+				String oldBucketKey = S3Keys.join(S3Keys.toBucketPrefix(parentFolderPath), oldName);
+				String newBucketKey = S3Keys.join(S3Keys.toBucketPrefix(parentFolderPath), newName);
+				s3Service.renamePrefix(oldBucketKey, newBucketKey);
+				renameFolderPathsInDatabase(parentFolderPath, oldName, newName);
+			}
 		}
 
 		documentDao.update(document);
@@ -319,9 +326,32 @@ public class DocumentService {
 			throw new IllegalArgumentException("cannot move a folder into itself or one of its subfolders");
 		}
 		s3Service.renamePrefix(oldPrefix, newPrefix);
-		documentDao.updateDirectoryPaths(oldPrefix, newPrefix);
+		renameFolderPathsInDatabase(uiFolderFullPath(folder.getFolderPath(), folder.getFileName()),
+			uiFolderFullPath(destParent, folder.getFileName()));
 		folder.setFolderPath(destParent);
 		documentDao.update(folder);
+	}
+
+	private void renameFolderPathsInDatabase(String parentFolderPath, String oldName, String newName) {
+		renameFolderPathsInDatabase(uiFolderFullPath(parentFolderPath, oldName),
+			uiFolderFullPath(parentFolderPath, newName));
+	}
+
+	private void renameFolderPathsInDatabase(String oldPath, String newPath) {
+		documentDao.updateDirectoryPaths(oldPath, newPath);
+		String oldBucketPath = S3Keys.toBucketPrefix(oldPath);
+		String newBucketPath = S3Keys.toBucketPrefix(newPath);
+		if (!oldBucketPath.equals(oldPath)) {
+			documentDao.updateDirectoryPaths(oldBucketPath, newBucketPath);
+		}
+	}
+
+	private static String uiFolderFullPath(String parentFolderPath, String folderName) {
+		String parent = S3Keys.toUiFolderPath(parentFolderPath);
+		if (parent == null || parent.isBlank()) {
+			return S3Keys.toUiFolderPath("/docs/" + folderName);
+		}
+		return parent + "/" + folderName;
 	}
 
 	/**
