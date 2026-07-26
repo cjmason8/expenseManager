@@ -4,7 +4,7 @@
 -- Safe to re-run: skips names that already exist.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/insert-metadatakeys.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S04-insert-metadatakeys.sql
 
 BEGIN;
 

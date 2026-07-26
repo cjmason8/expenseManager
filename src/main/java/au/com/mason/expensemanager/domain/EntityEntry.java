@@ -18,6 +18,9 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -49,6 +52,9 @@ public class EntityEntry {
 	@OneToOne
 	@JoinColumn(name = "documentId")
 	private Document document;
+
+	@JdbcTypeCode(SqlTypes.JSON)
+	private Map<String, Object> data;
 
 	@Transient
 	private List<EntityMetadata> entityMetadata = new ArrayList<>();

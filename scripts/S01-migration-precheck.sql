@@ -1,4 +1,4 @@
--- Run before migration.sql on prod (psql -d YOUR_DB -f scripts/migration-precheck.sql)
+-- Run before migration.sql on prod (psql -d YOUR_DB -f scripts/S01-S01-migration-precheck.sql)
 -- Read output; fix any FAIL rows before migrating.
 
 \pset pager off

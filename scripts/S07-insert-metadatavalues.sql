@@ -6,7 +6,7 @@
 -- Safe to re-run: skips (metadatakeyid, value) pairs that already exist.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/insert-metadatavalues.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S07-insert-metadatavalues.sql
 
 BEGIN;
 

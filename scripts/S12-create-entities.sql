@@ -1,7 +1,7 @@
 -- Create entities table for recipe/notes entries with optional document attachment.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/create-entities.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S12-create-entities.sql
 
 BEGIN;
 
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS entities (
 	description character varying(2000),
 	type character varying(50) NOT NULL,
 	documentid uuid,
+	data jsonb,
 	CONSTRAINT entities_pkey PRIMARY KEY (id),
 	CONSTRAINT entities_documentid_fkey FOREIGN KEY (documentid) REFERENCES documents (id)
 );

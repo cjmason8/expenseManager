@@ -9,7 +9,7 @@
 -- Safe to re-run: skips existing (type, entityid, metadatavalueid) triples.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/migrate-entitymetadata.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S10-migrate-entitymetadata.sql
 
 BEGIN;
 

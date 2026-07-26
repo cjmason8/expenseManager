@@ -4,10 +4,10 @@
 --   psql -d expensemanager -v ON_ERROR_STOP=1 -f migration.sql
 --
 -- Do NOT run step-by-step in GUI clients that skip DO blocks or stop on first error without rollback.
--- Run scripts/migration-precheck.sql on prod first.
+-- Run scripts/S01-S01-migration-precheck.sql on prod first.
 --
 -- If prod stopped after ADD COLUMN id with NULL uuids, run:
---   scripts/migration-repair-documents-id.sql
+--   scripts/S02-migration-repair-documents-id.sql
 -- then continue from step 4 below (or re-run this file only if transaction was fully rolled back).
 --
 -- PostgreSQL 13+ recommended. On PG 12 and earlier, pgcrypto is enabled automatically below.
@@ -68,7 +68,7 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'documents' AND column_name = 'old_id'
   ) THEN
-    RAISE EXCEPTION 'Unexpected documents.id type. Expected bigint (or old_id from a partial run). Run migration-precheck.sql.';
+    RAISE EXCEPTION 'Unexpected documents.id type. Expected bigint (or old_id from a partial run). Run S01-migration-precheck.sql.';
   END IF;
 END $$;
 

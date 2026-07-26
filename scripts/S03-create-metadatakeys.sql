@@ -1,11 +1,11 @@
 -- Create metadatakeys lookup table for uniform metadata key selection in the UI.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/create-metadatakeys.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S03-create-metadatakeys.sql
 --
 -- Or via Docker:
 --   docker run --rm -e PGPASSWORD=... -v "$PWD":/work -w /work postgres:15 \
---     psql -h host.docker.internal -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/create-metadatakeys.sql
+--     psql -h host.docker.internal -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S03-create-metadatakeys.sql
 
 BEGIN;
 

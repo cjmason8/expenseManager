@@ -6,8 +6,10 @@ public class EntityEntryDto {
 	private String name;
 	private String description;
 	private String type;
+	private String link;
 	private DocumentDto documentDto;
 	private String metaDataChunk;
+	private String dataChunk;
 
 	public Long getId() {
 		return id;
@@ -41,6 +43,14 @@ public class EntityEntryDto {
 		this.type = type;
 	}
 
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
+	}
+
 	public DocumentDto getDocumentDto() {
 		return documentDto;
 	}
@@ -55,6 +65,14 @@ public class EntityEntryDto {
 
 	public void setMetaDataChunk(String metaDataChunk) {
 		this.metaDataChunk = metaDataChunk;
+	}
+
+	public String getDataChunk() {
+		return dataChunk;
+	}
+
+	public void setDataChunk(String dataChunk) {
+		this.dataChunk = dataChunk;
 	}
 
 }

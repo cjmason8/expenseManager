@@ -2,12 +2,12 @@
 -- and the application has been deployed to read/write entitymetadata instead.
 --
 -- Run order:
---   1. scripts/migrate-entitymetadata.sql
+--   1. scripts/S10-migrate-entitymetadata.sql
 --   2. Deploy application that uses entitymetadata
 --   3. This script
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/drop-metadata-jsonb-columns.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S11-drop-metadata-jsonb-columns.sql
 
 BEGIN;
 

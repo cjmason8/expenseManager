@@ -1,9 +1,9 @@
 -- Repair: populate documents.id (uuid) from old_id when migration stopped mid-way.
 -- Safe when: public.documents has BOTH old_id (bigint) and id (uuid), and id is still NULL.
 --
--- Usage: psql -d YOUR_DB -f scripts/migration-repair-documents-id.sql
+-- Usage: psql -d YOUR_DB -f scripts/S02-migration-repair-documents-id.sql
 --
--- After repair, re-run migration-precheck.sql — id NULL count must be 0.
+-- After repair, re-run S01-migration-precheck.sql — id NULL count must be 0.
 -- Then continue with the remainder of migration.sql from step 4 (child FK columns) if needed.
 
 BEGIN;

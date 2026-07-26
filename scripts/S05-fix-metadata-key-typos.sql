@@ -5,7 +5,7 @@
 -- Also removes the bad keys from metadatakeys.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/fix-metadata-key-typos.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S05-fix-metadata-key-typos.sql
 
 BEGIN;
 

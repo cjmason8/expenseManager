@@ -2,7 +2,7 @@
 -- Values are scoped to a metadatakey so the frontend can filter options by key.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/create-metadatavalues.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S06-create-metadatavalues.sql
 
 BEGIN;
 

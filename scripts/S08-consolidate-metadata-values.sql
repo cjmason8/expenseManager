@@ -2,7 +2,7 @@
 -- Add new renames below as they are identified.
 --
 -- RUN WITH psql:
---   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/consolidate-metadata-values.sql
+--   PGPASSWORD=... psql -h localhost -p 5430 -U postgres -d expensemanager -v ON_ERROR_STOP=1 -f scripts/S08-consolidate-metadata-values.sql
 
 BEGIN;
 
