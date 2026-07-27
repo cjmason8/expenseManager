@@ -13,6 +13,7 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 	private boolean isFolder;
 	private String metaDataChunk;
 	private String folderPath;
+	private boolean isArchived;
 
 	public UUID getId() {
 		return id;
@@ -60,6 +61,14 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 
 	public void setOriginalFileName(String originalFileName) {
 		this.originalFileName = originalFileName;
+	}
+
+	public boolean getIsArchived() {
+		return isArchived;
+	}
+
+	public void setIsArchived(boolean isArchived) {
+		this.isArchived = isArchived;
 	}
 
 	public String getFilePath() {
