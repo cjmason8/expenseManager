@@ -17,6 +17,7 @@ public abstract class EntityEntryMapper implements BaseMapper<EntityEntry, Entit
 	@Mapping(source = "metaData", target = "metaDataChunk", qualifiedByName = "stringMapToJson")
 	@Mapping(source = "data", target = "dataChunk", qualifiedByName = "objectMapToJson")
 	@Mapping(source = "document", target = "documentDto")
+	@Mapping(source = "archived", target = "isArchived")
 	@Mapping(target = "link", ignore = true)
 	public abstract EntityEntryDto entityToDto(EntityEntry entityEntry);
 
@@ -25,6 +26,7 @@ public abstract class EntityEntryMapper implements BaseMapper<EntityEntry, Entit
 	@Mapping(source = "metaDataChunk", target = "metaData", qualifiedByName = "jsonToStringMap")
 	@Mapping(source = "dataChunk", target = "data", qualifiedByName = "jsonToObjectMap")
 	@Mapping(source = "documentDto", target = "document", conditionQualifiedByName = "hasDocumentFileName")
+	@Mapping(source = "isArchived", target = "archived")
 	public abstract EntityEntry dtoToEntity(EntityEntryDto entityEntryDto);
 
 	@AfterMapping

@@ -35,10 +35,13 @@ public class EntityEntryController extends BaseController<EntityEntry, EntityEnt
 	}
 
 	@GetMapping(value = "/entities", produces = "application/json")
-	List<EntityEntryDto> getEntities(@RequestParam(required = false) EntityType type) throws Exception {
-		LOGGER.info("entering EntityEntryController getEntities - {}", type);
-		List<EntityEntry> results = type == null ? entityEntryService.getAll() : entityEntryService.getAllByType(type);
-		LOGGER.info("leaving EntityEntryController getEntities - {}", type);
+	List<EntityEntryDto> getEntities(@RequestParam(required = false) EntityType type,
+		@RequestParam(required = false, defaultValue = "false") boolean includeArchived) throws Exception {
+		LOGGER.info("entering EntityEntryController getEntities - type={}, includeArchived={}", type, includeArchived);
+		List<EntityEntry> results = type == null
+			? entityEntryService.getAll(includeArchived)
+			: entityEntryService.getAllByType(type, includeArchived);
+		LOGGER.info("leaving EntityEntryController getEntities - type={}, includeArchived={}", type, includeArchived);
 		return convertList(results);
 	}
 

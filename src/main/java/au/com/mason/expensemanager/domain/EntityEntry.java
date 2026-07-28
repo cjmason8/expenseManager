@@ -25,8 +25,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NamedQueries(value = {@NamedQuery(name = EntityEntry.GET_ALL, query = "FROM EntityEntry ORDER BY name"),
-	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE, query = "FROM EntityEntry WHERE type = :type ORDER BY name"),})
+@NamedQueries(value = {
+	@NamedQuery(name = EntityEntry.GET_ALL, query = "FROM EntityEntry WHERE isArchived = false ORDER BY name"),
+	@NamedQuery(name = EntityEntry.GET_ALL_INCLUDE_ARCHIVED, query = "FROM EntityEntry ORDER BY name"),
+	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE, query = "FROM EntityEntry WHERE type = :type AND isArchived = false ORDER BY name"),
+	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE_INCLUDE_ARCHIVED, query = "FROM EntityEntry WHERE type = :type ORDER BY name"),})
 @Entity
 @Table(name = "entities")
 @Getter
@@ -35,7 +38,9 @@ import lombok.Setter;
 public class EntityEntry {
 
 	public static final String GET_ALL = "EntityEntry.Repository.GetAll";
+	public static final String GET_ALL_INCLUDE_ARCHIVED = "EntityEntry.Repository.GetAllIncludeArchived";
 	public static final String GET_ALL_BY_TYPE = "EntityEntry.Repository.GetAllByType";
+	public static final String GET_ALL_BY_TYPE_INCLUDE_ARCHIVED = "EntityEntry.Repository.GetAllByTypeIncludeArchived";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "entities_seq")
@@ -55,6 +60,8 @@ public class EntityEntry {
 
 	@JdbcTypeCode(SqlTypes.JSON)
 	private Map<String, Object> data;
+
+	private boolean isArchived;
 
 	@Transient
 	private List<EntityMetadata> entityMetadata = new ArrayList<>();

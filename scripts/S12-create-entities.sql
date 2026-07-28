@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS entities (
 	type character varying(50) NOT NULL,
 	documentid uuid,
 	data jsonb,
+	isarchived boolean NOT NULL DEFAULT false,
 	CONSTRAINT entities_pkey PRIMARY KEY (id),
 	CONSTRAINT entities_documentid_fkey FOREIGN KEY (documentid) REFERENCES documents (id)
 );

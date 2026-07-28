@@ -19,13 +19,14 @@ public class EntityEntryDao extends BaseDao<EntityEntry> {
 		super(EntityEntry.class, entityManager);
 	}
 
-	public List<EntityEntry> getAll() {
-		return entityManager.createNamedQuery(EntityEntry.GET_ALL, EntityEntry.class).getResultList();
+	public List<EntityEntry> getAll(boolean includeArchived) {
+		String queryName = includeArchived ? EntityEntry.GET_ALL_INCLUDE_ARCHIVED : EntityEntry.GET_ALL;
+		return entityManager.createNamedQuery(queryName, EntityEntry.class).getResultList();
 	}
 
-	public List<EntityEntry> getAllByType(EntityType type) {
-		return entityManager.createNamedQuery(EntityEntry.GET_ALL_BY_TYPE, EntityEntry.class).setParameter("type", type)
-			.getResultList();
+	public List<EntityEntry> getAllByType(EntityType type, boolean includeArchived) {
+		String queryName = includeArchived ? EntityEntry.GET_ALL_BY_TYPE_INCLUDE_ARCHIVED : EntityEntry.GET_ALL_BY_TYPE;
+		return entityManager.createNamedQuery(queryName, EntityEntry.class).setParameter("type", type).getResultList();
 	}
 
 }

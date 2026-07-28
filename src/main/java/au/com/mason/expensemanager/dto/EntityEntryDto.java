@@ -10,6 +10,7 @@ public class EntityEntryDto {
 	private DocumentDto documentDto;
 	private String metaDataChunk;
 	private String dataChunk;
+	private boolean isArchived;
 
 	public Long getId() {
 		return id;
@@ -73,6 +74,14 @@ public class EntityEntryDto {
 
 	public void setDataChunk(String dataChunk) {
 		this.dataChunk = dataChunk;
+	}
+
+	public boolean getIsArchived() {
+		return isArchived;
+	}
+
+	public void setIsArchived(boolean isArchived) {
+		this.isArchived = isArchived;
 	}
 
 }

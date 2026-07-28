@@ -51,14 +51,14 @@ public class EntityEntryService {
 		return entityEntry;
 	}
 
-	public List<EntityEntry> getAll() throws Exception {
-		List<EntityEntry> results = entityEntryDao.getAll();
+	public List<EntityEntry> getAll(boolean includeArchived) throws Exception {
+		List<EntityEntry> results = entityEntryDao.getAll(includeArchived);
 		hydrateEntityEntries(results);
 		return results;
 	}
 
-	public List<EntityEntry> getAllByType(EntityType type) throws Exception {
-		List<EntityEntry> results = entityEntryDao.getAllByType(type);
+	public List<EntityEntry> getAllByType(EntityType type, boolean includeArchived) throws Exception {
+		List<EntityEntry> results = entityEntryDao.getAllByType(type, includeArchived);
 		hydrateEntityEntries(results);
 		return results;
 	}
