@@ -27,7 +27,8 @@ public class EmailTrawlerController {
 
 		LOGGER.info("EmailTrawler request completed: success={}, summary={}", result.isSuccess(), result.summary());
 
-		return new EmailTrawlerResponseDto(result.isSuccess(), result.summary(), result.getDetails(), result.getError());
+		return new EmailTrawlerResponseDto(result.isSuccess(), result.summary(), result.getDetails(),
+			result.getError());
 	}
 
 }

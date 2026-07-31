@@ -71,12 +71,9 @@ public class EmailTrawler {
 		List<RefData> refDatas = refDataService.getAllWithEmailKey();
 		result.addDetail("Loaded " + refDatas.size() + " email processor(s) from refdata");
 
-		List<RefData> inboxRefDatas = refDatas.stream()
-			.filter(refData -> !isPayslipProcessor(refData))
+		List<RefData> inboxRefDatas = refDatas.stream().filter(refData -> !isPayslipProcessor(refData))
 			.collect(Collectors.toList());
-		List<RefData> payslipRefDatas = refDatas.stream()
-			.filter(this::isPayslipProcessor)
-			.collect(Collectors.toList());
+		List<RefData> payslipRefDatas = refDatas.stream().filter(this::isPayslipProcessor).collect(Collectors.toList());
 
 		processMailbox(emailSecretName, "bills", store -> processFolder(store, INBOX_FOLDER, inboxRefDatas, result),
 			result);
@@ -161,8 +158,8 @@ public class EmailTrawler {
 
 				LOGGER.info("Processing {} unread labelled messages for {} from All Mail", labelledUnread.length,
 					labelName);
-				result.addDetail("Processing " + labelledUnread.length + " unread labelled message(s) for "
-					+ labelName + " from All Mail");
+				result.addDetail("Processing " + labelledUnread.length + " unread labelled message(s) for " + labelName
+					+ " from All Mail");
 				processMessages(labelledUnread, refDatas, labelName, result);
 			} finally {
 				closeFolder(allMail);
@@ -251,8 +248,7 @@ public class EmailTrawler {
 
 				if (payslipLabelFolder && !isPayslipSubject(subject)) {
 					LOGGER.debug("Skipping non-payslip email in {}: {}", folderName, subject);
-					result.addDetail(
-						"Skipped non-payslip email in " + folderName + " (left unread): " + subject);
+					result.addDetail("Skipped non-payslip email in " + folderName + " (left unread): " + subject);
 					continue;
 				}
 

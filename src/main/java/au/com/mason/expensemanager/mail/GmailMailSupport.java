@@ -76,8 +76,8 @@ public final class GmailMailSupport {
 			return false;
 		}
 		String normalizedTarget = normalizeLabel(labelName);
-		return Arrays.stream(labels).flatMap(value -> Arrays.stream(value.split(","))).map(GmailMailSupport::normalizeLabel)
-			.anyMatch(label -> label.equals(normalizedTarget));
+		return Arrays.stream(labels).flatMap(value -> Arrays.stream(value.split(",")))
+			.map(GmailMailSupport::normalizeLabel).anyMatch(label -> label.equals(normalizedTarget));
 	}
 
 	private static void collectLabelMatches(Folder folder, String normalizedTarget, List<String> matches)

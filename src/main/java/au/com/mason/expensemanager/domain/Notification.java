@@ -2,8 +2,8 @@ package au.com.mason.expensemanager.domain;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Convert;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

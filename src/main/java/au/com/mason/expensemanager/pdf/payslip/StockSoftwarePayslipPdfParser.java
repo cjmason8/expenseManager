@@ -18,13 +18,11 @@ import au.com.mason.expensemanager.pdf.PdfTextExtractor;
 @Component
 public class StockSoftwarePayslipPdfParser {
 
-	private static final Pattern PAY_TO_DATE = Pattern.compile(
-		"Pay\\s*(?:To\\s*)?Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})",
-		Pattern.CASE_INSENSITIVE);
+	private static final Pattern PAY_TO_DATE = Pattern
+		.compile("Pay\\s*(?:To\\s*)?Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern PAYMENT_DATE = Pattern.compile(
-		"Payment\\s*Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})",
-		Pattern.CASE_INSENSITIVE);
+	private static final Pattern PAYMENT_DATE = Pattern
+		.compile("Payment\\s*Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})", Pattern.CASE_INSENSITIVE);
 
 	private static final DateTimeFormatter SLASH_DATE = DateTimeFormatter.ofPattern("d/M/yyyy");
 
@@ -73,7 +71,7 @@ public class StockSoftwarePayslipPdfParser {
 	}
 
 	private Optional<LocalDate> parseDateToken(String token) {
-		for (DateTimeFormatter formatter : new DateTimeFormatter[] { SLASH_DATE, DASH_DATE, TEXT_DATE }) {
+		for (DateTimeFormatter formatter : new DateTimeFormatter[]{SLASH_DATE, DASH_DATE, TEXT_DATE}) {
 			try {
 				return Optional.of(LocalDate.parse(token.trim(), formatter));
 			} catch (DateTimeParseException ignored) {
