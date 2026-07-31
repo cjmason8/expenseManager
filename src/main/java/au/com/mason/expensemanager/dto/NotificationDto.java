@@ -9,6 +9,7 @@ public class NotificationDto {
 	private Long id;
 	private ExpenseDto expense;
 	private String message;
+	private String documentFolderPath;
 	private String createdDateString;
 	private boolean read;
 	private boolean removed;

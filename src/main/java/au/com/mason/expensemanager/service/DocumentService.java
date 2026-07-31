@@ -114,6 +114,23 @@ public class DocumentService {
 		return saved;
 	}
 
+	public Document createDocumentFromEmailInFolder(byte[] file, String fileName, String folderPath,
+		Map<String, Object> metaData) throws Exception {
+		String parentFolderPath = S3Keys.toUiFolderPath(folderPath);
+		ensureFolderPathExists(parentFolderPath);
+
+		Document document = new Document();
+		document.setMetaData(metaData);
+		document.setFileName(fileName);
+		document.setFolderPath(parentFolderPath);
+
+		Document saved = documentDao.create(document);
+		persistMetadata(saved);
+		s3Service.putObjectWithFolders(S3Keys.toBucketPrefix(parentFolderPath), saved.getId(), file, "application/pdf");
+		hydrateDocument(saved);
+		return saved;
+	}
+
 	public Document createDocumentForRentalStatement(byte[] file, String fileName, String folderPath,
 		Map<String, Object> metaData) throws Exception {
 		String parentFolderPath = S3Keys
@@ -130,6 +147,37 @@ public class DocumentService {
 			"application/octet-stream");
 		hydrateDocument(saved);
 		return saved;
+	}
+
+	private void ensureFolderPathExists(String folderPath) {
+		String uiPath = S3Keys.toUiFolderPath(folderPath);
+		if (uiPath == null || uiPath.isBlank()) {
+			return;
+		}
+
+		String relative = uiPath.startsWith("/") ? uiPath.substring(1) : uiPath;
+		if (relative.isBlank()) {
+			return;
+		}
+
+		String currentParent = "";
+		for (String segment : relative.split("/")) {
+			if (segment.isBlank()) {
+				continue;
+			}
+			String parentForLookup = currentParent.isEmpty() ? "" : "/" + currentParent;
+			if (documentDao.getFolder(parentForLookup, segment) == null) {
+				String bucketParent = currentParent.isEmpty() ? "" : S3Keys.toBucketPrefix("/" + currentParent);
+				s3Service.ensureFolderPrefix(S3Keys.join(bucketParent, segment));
+
+				Document folder = new Document();
+				folder.setFileName(segment);
+				folder.setFolderPath(parentForLookup);
+				folder.setFolder(true);
+				documentDao.create(folder);
+			}
+			currentParent = currentParent.isEmpty() ? segment : currentParent + "/" + segment;
+		}
 	}
 
 	private String resolveFolderPath(String path, String type) {

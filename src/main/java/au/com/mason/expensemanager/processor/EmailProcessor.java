@@ -22,7 +22,8 @@ public enum EmailProcessor {
 																	ForesterRegoProcessor.class), FORESTER_INSURANCE(
 																		ForesterInsuranceProcessor.class), SOUTH_KINGSVILLE_RENT_STATEMENT(
 																			SouthKingsvilleRentalStatementProcessor.class), GLOBIRD_ELECTRICITY_AND_GAS(
-																				GlobirdElectricityAndGasProcessor.class);
+																				GlobirdElectricityAndGasProcessor.class), STOCK_SOFTWARE_PAYSLIP(
+																					StockSoftwarePayslipProcessor.class);
 
 	private Class processor;
 

@@ -69,6 +69,29 @@ public void check() {
 }
 ```
 
+### Payslip mailbox (Stock Software)
+
+Payslip emails are read from a **separate** Gmail account via `email.payslip.secret.name` (default: `email-payslip-credentials`):
+
+```json
+{
+  "USER_NAME": "cjmason8@gmail.com",
+  "PASSWORD": "your-app-password-here"
+}
+```
+
+**Gmail setup for `cjmason8@gmail.com`:**
+
+1. Enable **2-Step Verification** on the Google account.
+2. Create an **App Password** (Google Account → Security → App passwords) for Mail.
+3. In Gmail → Settings → **Forwarding and POP/IMAP** → enable **IMAP**.
+4. In Gmail → Settings → **Labels** → open `StockSoftware` → tick **Show in IMAP**.
+5. Create the secret in AWS Secrets Manager (same region as the app, e.g. `ap-southeast-2`).
+
+Optional env override: `EMAIL_PAYSLIP_SECRET_NAME=email-payslip-credentials`
+
+The bills mailbox (`email-credentials`) still handles INBOX for utilities/bills. Only the payslip mailbox is scanned for the `StockSoftware` label.
+
 ### DatabaseConfig Integration..
 
 The `DatabaseConfig` class uses AWS Secrets Manager for database credentials, automatically selecting the correct secret based on environment:

@@ -3,6 +3,7 @@ package au.com.mason.expensemanager.domain;
 import java.time.LocalDate;
 
 import jakarta.persistence.Convert;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -45,6 +46,9 @@ public class Notification {
 	private Expense expense;
 
 	private String message;
+
+	@Column(name = "documentfolderpath")
+	private String documentFolderPath;
 
 	private boolean read = false;
 

@@ -28,6 +28,11 @@ public final class RentalPaymentFinancialYear {
 		return today.getMonthValue() <= 6 ? today.getYear() : today.getYear() + 1;
 	}
 
+	public static String financialYearLabel(LocalDate referenceDate) {
+		int financialYearEnd = financialYearEnd(referenceDate);
+		return financialYearEnd - 1 + "-" + financialYearEnd;
+	}
+
 	private static LocalDate referenceDate(RentalPayment payment) {
 		if ("STH_KINGSVILLE".equals(payment.getProperty())) {
 			return payment.getStatementTo();
