@@ -27,19 +27,32 @@ class StockSoftwarePayslipProcessorTest {
 
 	@Test
 	void buildFileName_usesPayslipPrefixForStandardSubject() {
-		assertEquals("Payslip - 15-01-2026.pdf", StockSoftwarePayslipProcessor.buildFileName("Payslip", PAY_DATE));
+		assertEquals("Payslip - 15-01-2026.pdf",
+			StockSoftwarePayslipProcessor.buildFileName("Payslip", null, PAY_DATE));
 	}
 
 	@Test
 	void buildFileName_includesBonusSuffixFromSubject() {
 		assertEquals("Payslip - Bonus - 15-01-2026.pdf",
-			StockSoftwarePayslipProcessor.buildFileName("Payslip - Bonus", PAY_DATE));
+			StockSoftwarePayslipProcessor.buildFileName("Payslip - Bonus", null, PAY_DATE));
 	}
 
 	@Test
 	void buildFileName_includesMultiWordSuffixFromSubject() {
 		assertEquals("Payslip - Xmas Bonus - 15-01-2026.pdf",
-			StockSoftwarePayslipProcessor.buildFileName("Payslip - Xmas Bonus", PAY_DATE));
+			StockSoftwarePayslipProcessor.buildFileName("Payslip - Xmas Bonus", null, PAY_DATE));
+	}
+
+	@Test
+	void buildFileName_usesBonusFromAttachmentWhenSubjectIsPlainPayslip() {
+		assertEquals("Payslip - Bonus - 15-01-2026.pdf",
+			StockSoftwarePayslipProcessor.buildFileName("Payslip", "Payslip - Bonus.pdf", PAY_DATE));
+	}
+
+	@Test
+	void buildFileName_stripsForwardedPrefixFromSubject() {
+		assertEquals("Payslip - Bonus - 15-01-2026.pdf",
+			StockSoftwarePayslipProcessor.buildFileName("Fwd: Payslip - Bonus", null, PAY_DATE));
 	}
 
 }

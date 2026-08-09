@@ -19,6 +19,7 @@ public abstract class EntityEntryMapper implements BaseMapper<EntityEntry, Entit
 	@Mapping(source = "document", target = "documentDto")
 	@Mapping(source = "archived", target = "isArchived")
 	@Mapping(target = "link", ignore = true)
+	@Mapping(target = "notes", ignore = true)
 	public abstract EntityEntryDto entityToDto(EntityEntry entityEntry);
 
 	@Override

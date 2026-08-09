@@ -1,5 +1,7 @@
 package au.com.mason.expensemanager.dto;
 
+import java.util.List;
+
 public class EntityEntryDto {
 
 	private Long id;
@@ -7,6 +9,7 @@ public class EntityEntryDto {
 	private String description;
 	private String type;
 	private String link;
+	private List<String> notes;
 	private DocumentDto documentDto;
 	private String metaDataChunk;
 	private String dataChunk;
@@ -50,6 +53,14 @@ public class EntityEntryDto {
 
 	public void setLink(String link) {
 		this.link = link;
+	}
+
+	public List<String> getNotes() {
+		return notes;
+	}
+
+	public void setNotes(List<String> notes) {
+		this.notes = notes;
 	}
 
 	public DocumentDto getDocumentDto() {

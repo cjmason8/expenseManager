@@ -1,7 +1,10 @@
 package au.com.mason.expensemanager.util;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,6 +20,7 @@ import au.com.mason.expensemanager.mapper.MappingConverters;
 public final class EntityEntryDataFields {
 
 	private static final String LINK = "link";
+	private static final String NOTES = "notes";
 
 	private EntityEntryDataFields() {
 	}
@@ -24,12 +28,16 @@ public final class EntityEntryDataFields {
 	public static void flattenToDto(EntityType type, Map<String, Object> data, EntityEntryDto dto) {
 		if (data == null || data.isEmpty()) {
 			dto.setDataChunk(null);
+			if (type == EntityType.RECIPE) {
+				dto.setNotes(List.of());
+			}
 			return;
 		}
 		Map<String, Object> remaining = new LinkedHashMap<>(data);
 		if (type == EntityType.RECIPE) {
 			Object link = remaining.remove(LINK);
 			dto.setLink(link == null ? null : String.valueOf(link));
+			dto.setNotes(extractNotes(remaining.remove(NOTES)));
 		}
 		dto.setDataChunk(MappingConverters.objectMapToJson(remaining.isEmpty() ? null : remaining));
 	}
@@ -48,8 +56,41 @@ public final class EntityEntryDataFields {
 			} else {
 				data.remove(LINK);
 			}
+			List<String> notes = normalizeNotes(dto.getNotes());
+			if (notes.isEmpty()) {
+				data.remove(NOTES);
+			} else {
+				data.put(NOTES, notes);
+			}
 		}
 		entity.setData(data.isEmpty() ? null : data);
+	}
+
+	private static List<String> extractNotes(Object notesObj) {
+		if (notesObj == null) {
+			return List.of();
+		}
+		if (notesObj instanceof List<?> list) {
+			return list.stream()
+				.filter(Objects::nonNull)
+				.map(String::valueOf)
+				.filter(StringUtils::isNotBlank)
+				.toList();
+		}
+		return List.of();
+	}
+
+	private static List<String> normalizeNotes(List<String> notes) {
+		if (notes == null || notes.isEmpty()) {
+			return List.of();
+		}
+		List<String> normalized = new ArrayList<>();
+		for (String note : notes) {
+			if (StringUtils.isNotBlank(note)) {
+				normalized.add(note.trim());
+			}
+		}
+		return normalized;
 	}
 
 }
