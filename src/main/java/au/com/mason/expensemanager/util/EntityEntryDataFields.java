@@ -71,11 +71,7 @@ public final class EntityEntryDataFields {
 			return List.of();
 		}
 		if (notesObj instanceof List<?> list) {
-			return list.stream()
-				.filter(Objects::nonNull)
-				.map(String::valueOf)
-				.filter(StringUtils::isNotBlank)
-				.toList();
+			return list.stream().filter(Objects::nonNull).map(String::valueOf).filter(StringUtils::isNotBlank).toList();
 		}
 		return List.of();
 	}

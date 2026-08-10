@@ -51,8 +51,8 @@ public class StockSoftwarePayslipProcessor extends Processor {
 		String financialYear = RentalPaymentFinancialYear.financialYearLabel(payslip.payToDate());
 		String subject = decodeMailText(message.getSubject());
 		String fileName = buildFileName(subject, attachmentFileName, payslip.payToDate());
-		LOGGER.info("Building payslip filename from subject='{}' attachment='{}' -> '{}'", subject,
-			attachmentFileName, fileName);
+		LOGGER.info("Building payslip filename from subject='{}' attachment='{}' -> '{}'", subject, attachmentFileName,
+			fileName);
 		String folderPath = "/docs/expenseManager/filofax/Payslips/" + financialYear;
 
 		Map<String, Object> metaData = buildDocumentMetadata(refData, financialYear);
