@@ -41,6 +41,20 @@ class EmailMessagePartsTest {
 	}
 
 	@Test
+	void isPdfAttachment_matchesOctetStreamPart() throws Exception {
+		byte[] pdfBytes = new byte[]{1, 2, 3};
+		var message = EmailMessagePartsTestSupport.multipartMessage("<html/>", pdfBytes, "APPLICATION/OCTET-STREAM");
+
+		assertArrayEquals(pdfBytes, EmailMessageParts.firstMatchingAttachment(message, part -> {
+			try {
+				return EmailMessageParts.isPdfAttachment(part);
+			} catch (jakarta.mail.MessagingException e) {
+				throw new RuntimeException(e);
+			}
+		}).orElseThrow());
+	}
+
+	@Test
 	void lastNonHtmlAttachment_returnsFinalAttachment() throws Exception {
 		byte[] firstPdf = new byte[]{1};
 		byte[] lastPdf = new byte[]{2, 3};

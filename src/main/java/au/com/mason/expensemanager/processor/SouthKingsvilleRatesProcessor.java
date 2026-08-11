@@ -41,17 +41,24 @@ public class SouthKingsvilleRatesProcessor extends Processor {
 		}
 
 		BillNoticeData notice = null;
+		byte[] pdfBytes = null;
 		for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
 			if (EmailMessageParts.isHtmlPart(bodyPart)) {
 				notice = ratesInstalmentNoticeHtmlParser.parse(EmailMessageParts.readHtml(bodyPart));
-			} else if (EmailMessageParts.isPdfPart(bodyPart) && notice != null) {
-				byte[] pdfBytes = EmailMessageParts.readBytes(bodyPart);
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-				String fileName = "SouthKingsvilleRates-" + formatter.format(notice.dueDate()) + ".pdf";
-				Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
-				updateExpense(refData, notice.dueDate(), notice.amount(), document, null);
+			} else if (EmailMessageParts.isPdfAttachment(bodyPart)) {
+				pdfBytes = EmailMessageParts.readBytes(bodyPart);
 			}
 		}
+
+		if (notice == null || pdfBytes == null) {
+			throw new IllegalStateException(
+				"South Kingsville rates instalment email missing HTML notice or PDF attachment");
+		}
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+		String fileName = "SouthKingsvilleRates-" + formatter.format(notice.dueDate()) + ".pdf";
+		Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
+		updateExpense(refData, notice.dueDate(), notice.amount(), document, null);
 	}
 
 	private void handleFirst(Message message, RefData refData) throws Exception {
@@ -59,22 +66,28 @@ public class SouthKingsvilleRatesProcessor extends Processor {
 			return;
 		}
 
+		byte[] pdfBytes = null;
 		for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
-			if (EmailMessageParts.isHtmlPart(bodyPart) || !EmailMessageParts.isPdfPart(bodyPart)) {
+			if (!EmailMessageParts.isPdfAttachment(bodyPart)) {
 				continue;
 			}
 
-			byte[] pdfBytes = EmailMessageParts.readBytes(bodyPart);
-			List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(pdfBytes);
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
-			String fileName = "SouthKingsvilleRates-" + formatter.format(instalments.get(0).dueDate()) + ".pdf";
-			Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
+			pdfBytes = EmailMessageParts.readBytes(bodyPart);
+		}
 
-			updateExpense(refData, instalments.get(0).dueDate(), instalments.get(0).amount(), document);
-			for (int j = 1; j < instalments.size(); j++) {
-				RatesInstalmentData instalment = instalments.get(j);
-				updateExpense(refData, instalment.dueDate(), instalment.amount(), null);
-			}
+		if (pdfBytes == null) {
+			throw new IllegalStateException("South Kingsville rates first notice email missing PDF attachment");
+		}
+
+		List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(pdfBytes);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
+		String fileName = "SouthKingsvilleRates-" + formatter.format(instalments.get(0).dueDate()) + ".pdf";
+		Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);
+
+		updateExpense(refData, instalments.get(0).dueDate(), instalments.get(0).amount(), document);
+		for (int j = 1; j < instalments.size(); j++) {
+			RatesInstalmentData instalment = instalments.get(j);
+			updateExpense(refData, instalment.dueDate(), instalment.amount(), null);
 		}
 	}
 

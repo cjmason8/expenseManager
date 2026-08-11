@@ -60,6 +60,10 @@ public final class EmailMessageParts {
 			|| bodyPart.getContentType().toUpperCase().startsWith("APPLICATION/OCTET-STREAM");
 	}
 
+	public static boolean isPdfAttachment(BodyPart bodyPart) throws MessagingException {
+		return isPdfPart(bodyPart) || isOctetStreamPart(bodyPart);
+	}
+
 	public static boolean isNonHtmlPart(BodyPart bodyPart) throws MessagingException {
 		return !isHtmlPart(bodyPart);
 	}
