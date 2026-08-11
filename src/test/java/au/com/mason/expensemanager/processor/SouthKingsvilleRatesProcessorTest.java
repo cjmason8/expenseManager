@@ -31,7 +31,7 @@ import au.com.mason.expensemanager.service.NotificationService;
 @ExtendWith(MockitoExtension.class)
 class SouthKingsvilleRatesProcessorTest {
 
-	private static final byte[] PDF_BYTES = new byte[] { 1, 2, 3 };
+	private static final byte[] PDF_BYTES = new byte[]{1, 2, 3};
 
 	private static final String INSTALMENT_HTML = """
 		<html><body>
@@ -60,7 +60,8 @@ class SouthKingsvilleRatesProcessorTest {
 	void setUp() {
 		processor = new SouthKingsvilleRatesProcessor();
 		ReflectionTestUtils.setField(processor, "ratesFirstNoticePdfParser", ratesFirstNoticePdfParser);
-		ReflectionTestUtils.setField(processor, "ratesInstalmentNoticeHtmlParser", new RatesInstalmentNoticeHtmlParser());
+		ReflectionTestUtils.setField(processor, "ratesInstalmentNoticeHtmlParser",
+			new RatesInstalmentNoticeHtmlParser());
 		ReflectionTestUtils.setField(processor, "documentService", documentService);
 		ReflectionTestUtils.setField(processor, "expenseService", expenseService);
 		ReflectionTestUtils.setField(processor, "notificationService", notificationService);
@@ -103,8 +104,7 @@ class SouthKingsvilleRatesProcessorTest {
 
 		RefData refData = new RefData();
 		Document document = new Document();
-		List<RatesInstalmentData> instalments = List.of(
-			new RatesInstalmentData(LocalDate.of(2025, 9, 1), "$150.00", 1),
+		List<RatesInstalmentData> instalments = List.of(new RatesInstalmentData(LocalDate.of(2025, 9, 1), "$150.00", 1),
 			new RatesInstalmentData(LocalDate.of(2025, 11, 1), "$200.00", 2));
 
 		when(ratesFirstNoticePdfParser.parse(PDF_BYTES)).thenReturn(instalments);
