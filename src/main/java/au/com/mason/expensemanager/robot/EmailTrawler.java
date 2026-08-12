@@ -15,7 +15,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.Store;
 import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.search.FlagTerm;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.domain.Notification;
 import au.com.mason.expensemanager.domain.RefData;
+import au.com.mason.expensemanager.mail.EmailMessageParts;
 import au.com.mason.expensemanager.mail.GmailMailSupport;
 import au.com.mason.expensemanager.processor.EmailProcessor;
 import au.com.mason.expensemanager.service.AwsSecretsService;
@@ -374,8 +374,24 @@ public class EmailTrawler {
 			return matchRACVEmail(message, subject, emailKey, processor);
 		}
 
-		// Default: simple subject match
-		return subject.contains(emailKey);
+		// Match emailKey against subject, From header, or body (council rates use council
+		// name as emailKey, which appears in From/body rather than subject)
+		return matchesEmailKey(message, subject, emailKey);
+	}
+
+	boolean matchesEmailKey(Message message, String subject, String emailKey)
+		throws MessagingException, IOException {
+		if (emailKey == null || emailKey.isBlank()) {
+			return false;
+		}
+		if (subject != null && subject.contains(emailKey)) {
+			return true;
+		}
+		String from = getFromAddress(message);
+		if (from != null && from.contains(emailKey)) {
+			return true;
+		}
+		return bodyContains(message, emailKey);
 	}
 
 	private boolean matchStockSoftwarePayslip(String subject, String folderName) {
@@ -436,23 +452,17 @@ public class EmailTrawler {
 	}
 
 	private boolean bodyContains(Message message, String phrase) throws MessagingException, IOException {
-		if (!message.isMimeType("multipart/*")) {
-			return false;
-		}
-
 		try {
-			MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
-			int count = mimeMultipart.getCount();
+			if (message.isMimeType("text/html") || message.isMimeType("text/plain")) {
+				Object content = message.getContent();
+				return content instanceof String string && string.contains(phrase);
+			}
 
-			for (int i = 0; i < count; i++) {
-				BodyPart bodyPart = mimeMultipart.getBodyPart(i);
+			for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
 				if (bodyPart.isMimeType("text/html") || bodyPart.isMimeType("text/plain")) {
 					Object content = bodyPart.getContent();
-					if (content instanceof String) {
-						String bodyContent = (String) content;
-						if (bodyContent.contains(phrase)) {
-							return true;
-						}
+					if (content instanceof String bodyContent && bodyContent.contains(phrase)) {
+						return true;
 					}
 				}
 			}
