@@ -374,13 +374,13 @@ public class EmailTrawler {
 			return matchRACVEmail(message, subject, emailKey, processor);
 		}
 
-		// Match emailKey against subject, From header, or body (council rates use council
+		// Match emailKey against subject, From header, or body (council rates use
+		// council
 		// name as emailKey, which appears in From/body rather than subject)
 		return matchesEmailKey(message, subject, emailKey);
 	}
 
-	boolean matchesEmailKey(Message message, String subject, String emailKey)
-		throws MessagingException, IOException {
+	boolean matchesEmailKey(Message message, String subject, String emailKey) throws MessagingException, IOException {
 		if (emailKey == null || emailKey.isBlank()) {
 			return false;
 		}
