@@ -1,6 +1,7 @@
 package au.com.mason.expensemanager.processor;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.mail.BodyPart;
@@ -66,20 +67,34 @@ public class SouthKingsvilleRatesProcessor extends Processor {
 			return;
 		}
 
-		byte[] pdfBytes = null;
+		List<byte[]> pdfAttachments = new ArrayList<>();
 		for (BodyPart bodyPart : EmailMessageParts.allParts(message)) {
-			if (!EmailMessageParts.isPdfAttachment(bodyPart)) {
-				continue;
+			if (EmailMessageParts.isPdfAttachment(bodyPart)) {
+				pdfAttachments.add(EmailMessageParts.readBytes(bodyPart));
 			}
-
-			pdfBytes = EmailMessageParts.readBytes(bodyPart);
 		}
 
-		if (pdfBytes == null) {
+		if (pdfAttachments.isEmpty()) {
 			throw new IllegalStateException("South Kingsville rates first notice email missing PDF attachment");
 		}
 
-		List<RatesInstalmentData> instalments = ratesFirstNoticePdfParser.parse(pdfBytes);
+		List<RatesInstalmentData> instalments = null;
+		byte[] pdfBytes = null;
+		Exception lastFailure = null;
+		for (byte[] candidate : pdfAttachments) {
+			try {
+				instalments = ratesFirstNoticePdfParser.parse(candidate);
+				pdfBytes = candidate;
+				break;
+			} catch (Exception e) {
+				lastFailure = e;
+			}
+		}
+
+		if (instalments == null || pdfBytes == null) {
+			throw new IllegalStateException("South Kingsville rates first notice PDF could not be parsed", lastFailure);
+		}
+
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyy");
 		String fileName = "SouthKingsvilleRates-" + formatter.format(instalments.get(0).dueDate()) + ".pdf";
 		Document document = documentService.createDocumentFromEmailForExpense(pdfBytes, fileName);

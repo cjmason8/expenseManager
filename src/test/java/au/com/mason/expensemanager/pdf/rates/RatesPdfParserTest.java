@@ -49,6 +49,23 @@ class RatesPdfParserTest {
 	}
 
 	@Test
+	void southKingsvilleParser_extractsFourInstalmentsFrom2026Layout() throws Exception {
+		when(pdfTextExtractor.extractText(any())).thenReturn(RatesNoticeFixtures.SOUTH_KINGSVILLE_FIRST_NOTICE_2026);
+
+		List<RatesInstalmentData> instalments = southKingsvilleParser.parse(new byte[] { 1 });
+
+		assertEquals(4, instalments.size());
+		assertEquals(LocalDate.of(2026, 9, 30), instalments.get(0).dueDate());
+		assertEquals("$550.90", instalments.get(0).amount());
+		assertEquals(LocalDate.of(2026, 11, 30), instalments.get(1).dueDate());
+		assertEquals("$548.00", instalments.get(1).amount());
+		assertEquals(LocalDate.of(2027, 2, 28), instalments.get(2).dueDate());
+		assertEquals("$548.00", instalments.get(2).amount());
+		assertEquals(LocalDate.of(2027, 5, 31), instalments.get(3).dueDate());
+		assertEquals("$548.00", instalments.get(3).amount());
+	}
+
+	@Test
 	void wodongaParser_extractsFourInstalmentsFromAmountLine() throws Exception {
 		when(pdfTextExtractor.extractText(any())).thenReturn(RatesNoticeFixtures.WODONGA_FIRST_NOTICE);
 
