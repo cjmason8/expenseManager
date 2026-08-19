@@ -9,16 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.dao.DocumentDao;
+import au.com.mason.expensemanager.dao.IncomeDao;
 import au.com.mason.expensemanager.dao.TransactionDao;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.Expense;
+import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.DocumentDto;
 import au.com.mason.expensemanager.dto.ExpenseGraphDto;
 import au.com.mason.expensemanager.dto.GraphDto;
+import au.com.mason.expensemanager.dto.IncomeSearchResultsDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.dto.SearchResultsDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
 import au.com.mason.expensemanager.mapper.ExpenseMapper;
+import au.com.mason.expensemanager.mapper.IncomeMapper;
 
 @Component
 public class SearchService {
@@ -31,6 +35,12 @@ public class SearchService {
 
 	@Autowired
 	private ExpenseMapper expenseMapper;
+
+	@Autowired
+	private IncomeDao incomeDao;
+
+	@Autowired
+	private IncomeMapper incomeMapper;
 
 	@Autowired
 	private DocumentMapper documentMapper;
@@ -65,6 +75,37 @@ public class SearchService {
 		GraphDto graphDto = new GraphDto(description, data);
 
 		return new SearchResultsDto(expenseMapper.entityListToDto(expenses), documentDtos,
+			new ExpenseGraphDto((String[]) labels, new GraphDto[]{graphDto}));
+	}
+
+	public IncomeSearchResultsDto findIncomeSearchResults(SearchParamsDto searchParamsDto) throws Exception {
+		List<Income> incomes = incomeDao.findIncomes(searchParamsDto);
+		List<Document> documents = documentDao.findDocuments(searchParamsDto);
+		List<DocumentDto> documentDtos = new ArrayList<>();
+		for (Document document : documents) {
+			documentDtos.add(documentMapper.entityToDto(document));
+		}
+
+		String[] labels = new String[incomes.size()];
+		BigDecimal[] data = new BigDecimal[incomes.size()];
+		int count = 0;
+
+		for (Income income : incomes) {
+			if (income.getDueDate() != null) {
+				labels[count] = income.getDueDate().getMonthValue() + "/" + income.getDueDate().getYear();
+				data[count++] = income.getAmount();
+			}
+		}
+
+		String description = null;
+		if (searchParamsDto.getTransactionType() == null) {
+			description = searchParamsDto.getMetaDataChunk();
+		} else {
+			description = searchParamsDto.getTransactionType().getDescription();
+		}
+		GraphDto graphDto = new GraphDto(description, data);
+
+		return new IncomeSearchResultsDto(incomeMapper.entityListToDto(incomes), documentDtos,
 			new ExpenseGraphDto((String[]) labels, new GraphDto[]{graphDto}));
 	}
 

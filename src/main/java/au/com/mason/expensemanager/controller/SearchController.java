@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import au.com.mason.expensemanager.dto.IncomeSearchResultsDto;
 import au.com.mason.expensemanager.dto.SearchParamsDto;
 import au.com.mason.expensemanager.dto.SearchResultsDto;
 import au.com.mason.expensemanager.service.SearchService;
@@ -27,6 +28,18 @@ public class SearchController {
 		SearchResultsDto findSearchResults = searchService.findSearchResults(searchParamsDto);
 
 		LOGGER.info("leaving SearchController findSearchResults");
+
+		return findSearchResults;
+	}
+
+	@PostMapping(value = "/search/incomes", produces = "application/json", consumes = "application/json", headers = "Accept=application/json")
+	IncomeSearchResultsDto findIncomeSearchResults(@RequestBody SearchParamsDto searchParamsDto) throws Exception {
+
+		LOGGER.info("entering SearchController findIncomeSearchResults");
+
+		IncomeSearchResultsDto findSearchResults = searchService.findIncomeSearchResults(searchParamsDto);
+
+		LOGGER.info("leaving SearchController findIncomeSearchResults");
 
 		return findSearchResults;
 	}
