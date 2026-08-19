@@ -27,8 +27,8 @@ public class StockSoftwarePayslipPdfParser {
 	private static final Pattern PAYMENT_DATE = Pattern
 		.compile("Payment\\s*Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern ANNUAL_LEAVE_FULL_TIME_ROW = Pattern
-		.compile("Annual\\s+Leave\\s*-\\s*Full\\s*Time", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ANNUAL_LEAVE_FULL_TIME_ROW = Pattern.compile("Annual\\s+Leave\\s*-\\s*Full\\s*Time",
+		Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern DECIMAL = Pattern.compile("\\d+(?:\\.\\d+)?");
 

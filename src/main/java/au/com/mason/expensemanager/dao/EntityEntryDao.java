@@ -31,11 +31,7 @@ public class EntityEntryDao extends BaseDao<EntityEntry> {
 
 	public EntityEntry findByTypeAndName(EntityType type, String name) {
 		return entityManager.createNamedQuery(EntityEntry.FIND_BY_TYPE_AND_NAME, EntityEntry.class)
-			.setParameter("type", type)
-			.setParameter("name", name)
-			.getResultStream()
-			.findFirst()
-			.orElse(null);
+			.setParameter("type", type).setParameter("name", name).getResultStream().findFirst().orElse(null);
 	}
 
 }

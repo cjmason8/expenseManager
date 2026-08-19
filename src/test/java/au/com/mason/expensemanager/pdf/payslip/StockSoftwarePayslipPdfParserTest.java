@@ -78,9 +78,7 @@ class StockSoftwarePayslipPdfParserTest {
 
 	@Test
 	void extractAnnualLeaveFullTimeYtd_usesLastNumberWhenHeaderMissing() {
-		List<String> lines = List.of(
-			"Annual Leave - FullTime 1.54 0.00 120.00 128.00",
-			"Pay To Date: 15/01/2026");
+		List<String> lines = List.of("Annual Leave - FullTime 1.54 0.00 120.00 128.00", "Pay To Date: 15/01/2026");
 
 		assertEquals(new BigDecimal("128.00"),
 			StockSoftwarePayslipPdfParser.extractAnnualLeaveFullTimeYtd(lines).orElseThrow());
