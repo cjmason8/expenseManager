@@ -8,7 +8,8 @@ public class IncomeSearchResultsDto {
 	private List<DocumentDto> documents;
 	private ExpenseGraphDto incomeGraphDto;
 
-	public IncomeSearchResultsDto(List<IncomeDto> incomes, List<DocumentDto> documents, ExpenseGraphDto incomeGraphDto) {
+	public IncomeSearchResultsDto(List<IncomeDto> incomes, List<DocumentDto> documents,
+		ExpenseGraphDto incomeGraphDto) {
 		this.incomes = incomes;
 		this.documents = documents;
 		this.incomeGraphDto = incomeGraphDto;
