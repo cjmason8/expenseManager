@@ -29,4 +29,13 @@ public class EntityEntryDao extends BaseDao<EntityEntry> {
 		return entityManager.createNamedQuery(queryName, EntityEntry.class).setParameter("type", type).getResultList();
 	}
 
+	public EntityEntry findByTypeAndName(EntityType type, String name) {
+		return entityManager.createNamedQuery(EntityEntry.FIND_BY_TYPE_AND_NAME, EntityEntry.class)
+			.setParameter("type", type)
+			.setParameter("name", name)
+			.getResultStream()
+			.findFirst()
+			.orElse(null);
+	}
+
 }

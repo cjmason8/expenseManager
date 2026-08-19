@@ -1,8 +1,12 @@
 package au.com.mason.expensemanager.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +18,12 @@ import au.com.mason.expensemanager.domain.EntityType;
 
 @Component
 public class EntityEntryService {
+
+	private static final Logger LOGGER = LogManager.getLogger(EntityEntryService.class);
+
+	public static final String ANNUAL_LEAVE_NOTE_NAME = "Annual Leave";
+
+	private static final BigDecimal HOURS_PER_LEAVE_DAY = BigDecimal.valueOf(8);
 
 	@Autowired
 	private EntityEntryDao entityEntryDao;
@@ -61,6 +71,32 @@ public class EntityEntryService {
 		List<EntityEntry> results = entityEntryDao.getAllByType(type, includeArchived);
 		hydrateEntityEntries(results);
 		return results;
+	}
+
+	public void updateAnnualLeaveNoteFromPayslip(BigDecimal annualLeaveFullTimeYtdHours) throws Exception {
+		if (annualLeaveFullTimeYtdHours == null) {
+			return;
+		}
+		String description = formatLeaveDays(annualLeaveFullTimeYtdHours);
+		EntityEntry note = entityEntryDao.findByTypeAndName(EntityType.NOTES, ANNUAL_LEAVE_NOTE_NAME);
+		if (note == null) {
+			note = new EntityEntry();
+			note.setName(ANNUAL_LEAVE_NOTE_NAME);
+			note.setType(EntityType.NOTES);
+			note.setDescription(description);
+			createEntityEntry(note);
+			LOGGER.info("Created Annual Leave note with {}", description);
+			return;
+		}
+		note.setDescription(description);
+		updateEntityEntry(note);
+		LOGGER.info("Updated Annual Leave note to {}", description);
+	}
+
+	static String formatLeaveDays(BigDecimal annualLeaveFullTimeYtdHours) {
+		BigDecimal days = annualLeaveFullTimeYtdHours.divide(HOURS_PER_LEAVE_DAY, 4, RoundingMode.HALF_UP)
+			.stripTrailingZeros();
+		return days.toPlainString() + " days";
 	}
 
 	private void resolveDocument(EntityEntry entityEntry) throws Exception {

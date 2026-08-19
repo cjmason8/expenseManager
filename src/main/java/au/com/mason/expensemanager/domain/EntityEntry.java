@@ -29,7 +29,8 @@ import lombok.Setter;
 	@NamedQuery(name = EntityEntry.GET_ALL, query = "FROM EntityEntry WHERE isArchived = false ORDER BY name"),
 	@NamedQuery(name = EntityEntry.GET_ALL_INCLUDE_ARCHIVED, query = "FROM EntityEntry ORDER BY name"),
 	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE, query = "FROM EntityEntry WHERE type = :type AND isArchived = false ORDER BY name"),
-	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE_INCLUDE_ARCHIVED, query = "FROM EntityEntry WHERE type = :type ORDER BY name"),})
+	@NamedQuery(name = EntityEntry.GET_ALL_BY_TYPE_INCLUDE_ARCHIVED, query = "FROM EntityEntry WHERE type = :type ORDER BY name"),
+	@NamedQuery(name = EntityEntry.FIND_BY_TYPE_AND_NAME, query = "FROM EntityEntry WHERE type = :type AND name = :name AND isArchived = false"),})
 @Entity
 @Table(name = "entities")
 @Getter
@@ -41,6 +42,7 @@ public class EntityEntry {
 	public static final String GET_ALL_INCLUDE_ARCHIVED = "EntityEntry.Repository.GetAllIncludeArchived";
 	public static final String GET_ALL_BY_TYPE = "EntityEntry.Repository.GetAllByType";
 	public static final String GET_ALL_BY_TYPE_INCLUDE_ARCHIVED = "EntityEntry.Repository.GetAllByTypeIncludeArchived";
+	public static final String FIND_BY_TYPE_AND_NAME = "EntityEntry.Repository.FindByTypeAndName";
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "entities_seq")

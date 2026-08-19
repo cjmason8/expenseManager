@@ -22,6 +22,7 @@ import au.com.mason.expensemanager.domain.RefData;
 import au.com.mason.expensemanager.mail.EmailMessageParts;
 import au.com.mason.expensemanager.pdf.payslip.PayslipData;
 import au.com.mason.expensemanager.pdf.payslip.StockSoftwarePayslipPdfParser;
+import au.com.mason.expensemanager.service.EntityEntryService;
 import au.com.mason.expensemanager.util.DateUtil;
 import au.com.mason.expensemanager.util.RentalPaymentFinancialYear;
 
@@ -37,6 +38,9 @@ public class StockSoftwarePayslipProcessor extends Processor {
 	@Autowired
 	private StockSoftwarePayslipPdfParser payslipPdfParser;
 
+	@Autowired
+	private EntityEntryService entityEntryService;
+
 	@Override
 	public void execute(Message message, RefData refData) throws Exception {
 		if (!EmailMessageParts.isMultipart(message)) {
@@ -48,6 +52,7 @@ public class StockSoftwarePayslipProcessor extends Processor {
 		String attachmentFileName = decodeMailText(pdfPart.getFileName());
 
 		PayslipData payslip = payslipPdfParser.parse(pdfBytes);
+		entityEntryService.updateAnnualLeaveNoteFromPayslip(payslip.annualLeaveFullTimeYtdHours());
 		String financialYear = RentalPaymentFinancialYear.financialYearLabel(payslip.payToDate());
 		String subject = decodeMailText(message.getSubject());
 		String fileName = buildFileName(subject, attachmentFileName, payslip.payToDate());
