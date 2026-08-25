@@ -46,7 +46,11 @@ public final class MappingConverters {
 		if (StringUtils.isBlank(value)) {
 			return null;
 		}
-		return new BigDecimal(value);
+		String normalized = value.trim().replace("$", "").replace(",", "");
+		if (normalized.isEmpty()) {
+			return null;
+		}
+		return new BigDecimal(normalized);
 	}
 
 	@Named("objectMapToJson")
