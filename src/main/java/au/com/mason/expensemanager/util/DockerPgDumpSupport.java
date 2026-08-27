@@ -31,8 +31,8 @@ public final class DockerPgDumpSupport {
 	}
 
 	public static String resolveContainerId(String imageMatch) throws IOException, InterruptedException {
-		Process process = new ProcessBuilder("docker", "ps", "--format", "{{.ID}}\t{{.Image}}").redirectErrorStream(true)
-			.start();
+		Process process = new ProcessBuilder("docker", "ps", "--format", "{{.ID}}\t{{.Image}}")
+			.redirectErrorStream(true).start();
 		String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 		int exitCode = process.waitFor();
 		if (exitCode != 0) {

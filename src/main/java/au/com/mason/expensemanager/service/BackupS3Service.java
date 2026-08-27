@@ -40,7 +40,8 @@ public class BackupS3Service {
 		@Value("${aws.s3.path-style-access:false}") boolean pathStyleAccess) {
 
 		if (StringUtils.isBlank(bucket)) {
-			throw new IllegalStateException("Backup S3 bucket must be set via aws.s3.backup-bucket / AWS_S3_BACKUP_BUCKET");
+			throw new IllegalStateException(
+				"Backup S3 bucket must be set via aws.s3.backup-bucket / AWS_S3_BACKUP_BUCKET");
 		}
 		this.bucket = bucket.trim();
 
@@ -59,10 +60,8 @@ public class BackupS3Service {
 	public void putObject(String key, byte[] data, String contentType) {
 		String normalizedKey = normalizeKey(key);
 		try {
-			s3Client.putObject(
-				PutObjectRequest.builder().bucket(bucket).key(normalizedKey).contentType(contentType)
-					.contentLength((long) data.length).build(),
-				RequestBody.fromBytes(data));
+			s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(normalizedKey).contentType(contentType)
+				.contentLength((long) data.length).build(), RequestBody.fromBytes(data));
 		} catch (S3Exception e) {
 			throw new IllegalStateException("S3 PutObject failed for s3://" + bucket + "/" + normalizedKey, e);
 		}
@@ -71,10 +70,8 @@ public class BackupS3Service {
 	public byte[] getObjectAsBytes(String key) {
 		String normalizedKey = normalizeKey(key);
 		try {
-			return s3Client
-				.getObject(GetObjectRequest.builder().bucket(bucket).key(normalizedKey).build(),
-					ResponseTransformer.toBytes())
-				.asByteArray();
+			return s3Client.getObject(GetObjectRequest.builder().bucket(bucket).key(normalizedKey).build(),
+				ResponseTransformer.toBytes()).asByteArray();
 		} catch (S3Exception e) {
 			throw new IllegalStateException("S3 GetObject failed for s3://" + bucket + "/" + normalizedKey, e);
 		}

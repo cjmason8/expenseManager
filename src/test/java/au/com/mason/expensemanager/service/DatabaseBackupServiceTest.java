@@ -12,8 +12,7 @@ class DatabaseBackupServiceTest {
 
 	@Test
 	void dailyKey_usesDateStamp() {
-		assertEquals("daily/expensemanager-2026-08-27.sql",
-			DatabaseBackupService.dailyKey(LocalDate.of(2026, 8, 27)));
+		assertEquals("daily/expensemanager-2026-08-27.sql", DatabaseBackupService.dailyKey(LocalDate.of(2026, 8, 27)));
 	}
 
 	@Test
@@ -24,10 +23,8 @@ class DatabaseBackupServiceTest {
 
 	@Test
 	void selectWeeklyKeysToDelete_keepsNewestTwo() {
-		List<String> keys = List.of(
-			"weekly/expensemanager-week-2026-08-17.zip",
-			"weekly/expensemanager-week-2026-08-24.zip",
-			"weekly/expensemanager-week-2026-08-31.zip");
+		List<String> keys = List.of("weekly/expensemanager-week-2026-08-17.zip",
+			"weekly/expensemanager-week-2026-08-24.zip", "weekly/expensemanager-week-2026-08-31.zip");
 
 		List<String> toDelete = DatabaseBackupService.selectWeeklyKeysToDelete(keys, 2);
 
@@ -37,8 +34,7 @@ class DatabaseBackupServiceTest {
 
 	@Test
 	void selectWeeklyKeysToDelete_returnsEmptyWhenWithinRetention() {
-		List<String> keys = List.of(
-			"weekly/expensemanager-week-2026-08-24.zip",
+		List<String> keys = List.of("weekly/expensemanager-week-2026-08-24.zip",
 			"weekly/expensemanager-week-2026-08-31.zip");
 
 		assertTrue(DatabaseBackupService.selectWeeklyKeysToDelete(keys, 2).isEmpty());

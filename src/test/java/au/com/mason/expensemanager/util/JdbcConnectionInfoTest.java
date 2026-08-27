@@ -28,7 +28,8 @@ class JdbcConnectionInfoTest {
 
 	@Test
 	void fromJdbcUrl_rejectsMissingDatabase() {
-		assertThrows(IllegalStateException.class, () -> JdbcConnectionInfo.fromJdbcUrl("jdbc:postgresql://localhost:5432/"));
+		assertThrows(IllegalStateException.class,
+			() -> JdbcConnectionInfo.fromJdbcUrl("jdbc:postgresql://localhost:5432/"));
 	}
 
 }
