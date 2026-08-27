@@ -33,7 +33,7 @@ public class ScheduledTasks {
 		LOGGER.info("ending runEmailTrawler" + new Date());
 	}
 
-	@Scheduled(cron = "0 30 23 * * *", zone = "${backup.timezone:Australia/Melbourne}")
+	@Scheduled(cron = "${backup.daily.cron:0 30 23 * * *}", zone = "${backup.timezone:Australia/Melbourne}")
 	public void runDailyDatabaseBackup() {
 		LOGGER.info("starting runDailyDatabaseBackup {}", new Date());
 		try {
@@ -44,7 +44,7 @@ public class ScheduledTasks {
 		LOGGER.info("ending runDailyDatabaseBackup {}", new Date());
 	}
 
-	@Scheduled(cron = "0 35 23 * * SUN", zone = "${backup.timezone:Australia/Melbourne}")
+	@Scheduled(cron = "${backup.weekly.cron:0 35 23 * * SUN}", zone = "${backup.timezone:Australia/Melbourne}")
 	public void runWeeklyDatabaseBackup() {
 		LOGGER.info("starting runWeeklyDatabaseBackup {}", new Date());
 		try {
