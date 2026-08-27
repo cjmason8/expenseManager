@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import au.com.mason.expensemanager.robot.EmailTrawler;
+import au.com.mason.expensemanager.service.DatabaseBackupService;
 
 @Profile("production")
 @Component
@@ -20,6 +21,9 @@ public class ScheduledTasks {
 	@Autowired
 	private EmailTrawler emailTrawler;
 
+	@Autowired
+	private DatabaseBackupService databaseBackupService;
+
 	@Scheduled(cron = "0 0 */4 * * *")
 	public void runEmailTrawler() {
 		LOGGER.info("starting runEmailTrawler" + new Date());
@@ -27,5 +31,27 @@ public class ScheduledTasks {
 		emailTrawler.check();
 
 		LOGGER.info("ending runEmailTrawler" + new Date());
+	}
+
+	@Scheduled(cron = "0 30 23 * * *", zone = "${backup.timezone:Australia/Melbourne}")
+	public void runDailyDatabaseBackup() {
+		LOGGER.info("starting runDailyDatabaseBackup {}", new Date());
+		try {
+			databaseBackupService.runDailyBackup();
+		} catch (Exception e) {
+			LOGGER.error("Daily database backup failed", e);
+		}
+		LOGGER.info("ending runDailyDatabaseBackup {}", new Date());
+	}
+
+	@Scheduled(cron = "0 35 23 * * SUN", zone = "${backup.timezone:Australia/Melbourne}")
+	public void runWeeklyDatabaseBackup() {
+		LOGGER.info("starting runWeeklyDatabaseBackup {}", new Date());
+		try {
+			databaseBackupService.runWeeklyBackup();
+		} catch (Exception e) {
+			LOGGER.error("Weekly database backup failed", e);
+		}
+		LOGGER.info("ending runWeeklyDatabaseBackup {}", new Date());
 	}
 }
