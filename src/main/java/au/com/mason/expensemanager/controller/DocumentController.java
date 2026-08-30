@@ -248,6 +248,8 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		}
 		if (path.endsWith("jpg") || path.endsWith("jpeg")) {
 			mediaType = "image/jpeg";
+		} else if (path.endsWith("png")) {
+			mediaType = "image/png";
 		} else if (path.endsWith("xls") || path.endsWith("xlsx")) {
 			mediaType = "application/vnd.ms-excel";
 		}

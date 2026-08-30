@@ -112,6 +112,7 @@ public class DatabaseBackupService {
 		LOGGER.info("Uploaded weekly database backup to s3://{}/{} ({} daily dumps)", backupS3Service.bucket(),
 			weeklyKey, includedKeys.size());
 
+		deleteDailyBackups(includedKeys);
 		trimWeeklyBackups();
 	}
 
@@ -137,6 +138,13 @@ public class DatabaseBackupService {
 		for (String key : selectWeeklyKeysToDelete(weeklyKeys, WEEKLY_RETENTION)) {
 			backupS3Service.deleteObject(key);
 			LOGGER.info("Deleted old weekly backup s3://{}/{}", backupS3Service.bucket(), key);
+		}
+	}
+
+	private void deleteDailyBackups(List<String> dailyKeys) {
+		for (String key : dailyKeys) {
+			backupS3Service.deleteObject(key);
+			LOGGER.info("Deleted daily backup archived in weekly zip s3://{}/{}", backupS3Service.bucket(), key);
 		}
 	}
 
