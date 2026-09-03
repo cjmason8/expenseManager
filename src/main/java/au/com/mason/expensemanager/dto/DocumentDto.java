@@ -1,8 +1,11 @@
 package au.com.mason.expensemanager.dto;
 
+import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.UUID;
 
+import au.com.mason.expensemanager.util.DocumentFileNameDates;
 import au.com.mason.expensemanager.util.S3Keys;
 
 public class DocumentDto implements Comparator<DocumentDto>, Comparable<DocumentDto> {
@@ -87,24 +90,33 @@ public class DocumentDto implements Comparator<DocumentDto>, Comparable<Document
 
 	@Override
 	public int compareTo(DocumentDto o) {
-		if (o.getIsFolder() == isFolder) {
-			return fileName.toLowerCase().compareTo(o.getFileName().toLowerCase());
-		} else if (o.getIsFolder()) {
-			return 1;
-		} else {
-			return -1;
-		}
+		return compareDocuments(this, o);
 	}
 
 	@Override
 	public int compare(DocumentDto o1, DocumentDto o2) {
-		if (o1.getIsFolder() == o2.getIsFolder()) {
-			return o2.getFileName().toLowerCase().compareTo(o1.getFileName().toLowerCase());
-		} else if (o1.getIsFolder()) {
-			return 1;
-		} else {
-			return -1;
+		return compareDocuments(o1, o2);
+	}
+
+	static int compareDocuments(DocumentDto left, DocumentDto right) {
+		if (left.getIsFolder() != right.getIsFolder()) {
+			return left.getIsFolder() ? -1 : 1;
 		}
+		if (left.getIsFolder()) {
+			return left.getFileName().compareToIgnoreCase(right.getFileName());
+		}
+
+		Optional<LocalDate> leftDate = DocumentFileNameDates.extractDate(left.getFileName());
+		Optional<LocalDate> rightDate = DocumentFileNameDates.extractDate(right.getFileName());
+
+		if (leftDate.isPresent() && rightDate.isPresent()) {
+			int byDate = rightDate.get().compareTo(leftDate.get());
+			if (byDate != 0) {
+				return byDate;
+			}
+		}
+
+		return left.getFileName().compareToIgnoreCase(right.getFileName());
 	}
 
 }
