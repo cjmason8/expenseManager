@@ -14,7 +14,8 @@ public final class DocumentFileNameDates {
 
 	private static final Pattern COMPACT_DATE = Pattern.compile("(?<!\\d)(\\d{2})(\\d{2})(\\d{4})(?!\\d)");
 
-	private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("d-M-uuuu").withResolverStyle(ResolverStyle.STRICT);
+	private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("d-M-uuuu")
+		.withResolverStyle(ResolverStyle.STRICT);
 
 	private static final DateTimeFormatter COMPACT_DMY = DateTimeFormatter.ofPattern("ddMMuuuu")
 		.withResolverStyle(ResolverStyle.STRICT);
