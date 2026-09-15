@@ -18,4 +18,9 @@ class EntityEntryServiceTest {
 		assertEquals("16.25 days", EntityEntryService.formatLeaveDays(new BigDecimal("130")));
 	}
 
+	@Test
+	void formatLeaveDays_convertsSummedArrangementHours() {
+		assertEquals("21.5625 days", EntityEntryService.formatLeaveDays(new BigDecimal("172.50")));
+	}
+
 }

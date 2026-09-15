@@ -73,11 +73,11 @@ public class EntityEntryService {
 		return results;
 	}
 
-	public void updateAnnualLeaveNoteFromPayslip(BigDecimal annualLeaveFullTimeYtdHours) throws Exception {
-		if (annualLeaveFullTimeYtdHours == null) {
+	public void updateAnnualLeaveNoteFromPayslip(BigDecimal annualLeaveYtdHours) throws Exception {
+		if (annualLeaveYtdHours == null) {
 			return;
 		}
-		String description = formatLeaveDays(annualLeaveFullTimeYtdHours);
+		String description = formatLeaveDays(annualLeaveYtdHours);
 		EntityEntry note = entityEntryDao.findByTypeAndName(EntityType.NOTES, ANNUAL_LEAVE_NOTE_NAME);
 		if (note == null) {
 			note = new EntityEntry();
@@ -93,8 +93,8 @@ public class EntityEntryService {
 		LOGGER.info("Updated Annual Leave note to {}", description);
 	}
 
-	static String formatLeaveDays(BigDecimal annualLeaveFullTimeYtdHours) {
-		BigDecimal days = annualLeaveFullTimeYtdHours.divide(HOURS_PER_LEAVE_DAY, 4, RoundingMode.HALF_UP)
+	static String formatLeaveDays(BigDecimal annualLeaveYtdHours) {
+		BigDecimal days = annualLeaveYtdHours.divide(HOURS_PER_LEAVE_DAY, 4, RoundingMode.HALF_UP)
 			.stripTrailingZeros();
 		return days.toPlainString() + " days";
 	}

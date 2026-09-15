@@ -27,7 +27,11 @@ public class StockSoftwarePayslipPdfParser {
 	private static final Pattern PAYMENT_DATE = Pattern
 		.compile("Payment\\s*Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern ANNUAL_LEAVE_FULL_TIME_ROW = Pattern.compile("Annual\\s+Leave\\s*-\\s*Full\\s*Time",
+	// Matches the row label and any arrangement suffix, e.g. "Annual Leave - FullTime",
+	// "Annual Leave - 9/10 Time". Matching the label lets us strip it before reading
+	// numbers, so digits in a suffix like "9/10" are not mistaken for table values.
+	private static final Pattern ANNUAL_LEAVE_ROW_LABEL = Pattern.compile(
+		"Annual\\s+Leave\\s*-\\s*(?:\\d+(?:\\s*/\\s*\\d+|\\.\\d+)?\\s*)?[A-Za-z][A-Za-z\\s]*",
 		Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern DECIMAL = Pattern.compile("\\d+(?:\\.\\d+)?");
@@ -56,39 +60,57 @@ public class StockSoftwarePayslipPdfParser {
 			.or(() -> pdf.lineContaining("Payment Date").flatMap(this::parseDateFromLine))
 			.orElseThrow(() -> new IllegalStateException("Stock Software payslip PDF missing pay to date"));
 
-		return new PayslipData(payToDate, extractAnnualLeaveFullTimeYtd(lines).orElse(null));
+		return new PayslipData(payToDate, extractAnnualLeaveYtd(lines).orElse(null));
 	}
 
-	static Optional<BigDecimal> extractAnnualLeaveFullTimeYtd(List<String> lines) {
-		Optional<Integer> ytdColumnIndex = findYtdColumnIndex(lines);
+	static Optional<BigDecimal> extractAnnualLeaveYtd(List<String> lines) {
+		int columnsAfterYtd = findColumnsAfterYtd(lines);
+		BigDecimal total = null;
 		for (int i = 0; i < lines.size(); i++) {
-			String line = lines.get(i);
-			if (!ANNUAL_LEAVE_FULL_TIME_ROW.matcher(line).find()) {
+			if (!ANNUAL_LEAVE_ROW_LABEL.matcher(lines.get(i)).find()) {
 				continue;
 			}
 
-			Optional<BigDecimal> fromColumns = valueFromColumns(line, ytdColumnIndex);
-			if (fromColumns.isPresent()) {
-				return fromColumns;
+			Optional<BigDecimal> rowYtd = rowYtdValue(lines, i, columnsAfterYtd);
+			if (rowYtd.isPresent()) {
+				total = total == null ? rowYtd.get() : total.add(rowYtd.get());
 			}
-
-			List<BigDecimal> numbers = extractDecimals(line);
-			if (numbers.isEmpty() && i + 1 < lines.size()) {
-				numbers = extractDecimals(lines.get(i + 1));
-			}
-			if (numbers.isEmpty()) {
-				return Optional.empty();
-			}
-
-			final List<BigDecimal> rowNumbers = numbers;
-			Optional<Integer> columnIndex = ytdColumnIndex;
-			int index = columnIndex.filter(idx -> idx < rowNumbers.size()).orElse(rowNumbers.size() - 1);
-			return Optional.of(rowNumbers.get(index));
 		}
-		return Optional.empty();
+		return Optional.ofNullable(total);
 	}
 
-	private static Optional<Integer> findYtdColumnIndex(List<String> lines) {
+	private static Optional<BigDecimal> rowYtdValue(List<String> lines, int lineIndex, int columnsAfterYtd) {
+		List<BigDecimal> numbers = extractDecimals(stripLeaveTypeLabel(lines.get(lineIndex)));
+		if (numbers.isEmpty() && lineIndex + 1 < lines.size()) {
+			String nextLine = lines.get(lineIndex + 1);
+			// Only borrow the next line when it is not itself a leave row, otherwise a
+			// label-only row would consume the following row's values and double count.
+			if (!ANNUAL_LEAVE_ROW_LABEL.matcher(nextLine).find()) {
+				numbers = extractDecimals(nextLine);
+			}
+		}
+
+		int index = numbers.size() - 1 - columnsAfterYtd;
+		if (index < 0 || index >= numbers.size()) {
+			return Optional.empty();
+		}
+		return Optional.of(numbers.get(index));
+	}
+
+	private static String stripLeaveTypeLabel(String line) {
+		Matcher matcher = ANNUAL_LEAVE_ROW_LABEL.matcher(line);
+		if (matcher.find()) {
+			return line.substring(matcher.end());
+		}
+		return line;
+	}
+
+	/**
+	 * Counts the header columns that sit to the right of YTD. Locating the value by its
+	 * distance from the end of the row keeps it correct regardless of how many tokens the
+	 * leave type label occupies. Defaults to 0 (YTD last) when no header is found.
+	 */
+	private static int findColumnsAfterYtd(List<String> lines) {
 		for (String line : lines) {
 			if (!line.toUpperCase(Locale.ENGLISH).contains("YTD")) {
 				continue;
@@ -96,20 +118,11 @@ public class StockSoftwarePayslipPdfParser {
 			String[] parts = splitTableColumns(line);
 			for (int i = 0; i < parts.length; i++) {
 				if ("YTD".equalsIgnoreCase(parts[i].trim())) {
-					return Optional.of(i);
+					return parts.length - 1 - i;
 				}
 			}
 		}
-		return Optional.empty();
-	}
-
-	private static Optional<BigDecimal> valueFromColumns(String line, Optional<Integer> ytdColumnIndex) {
-		String[] parts = splitTableColumns(line);
-		if (parts.length < 2) {
-			return Optional.empty();
-		}
-		int index = ytdColumnIndex.filter(idx -> idx > 0 && idx < parts.length).orElse(parts.length - 1);
-		return parseDecimal(parts[index].trim());
+		return 0;
 	}
 
 	private static String[] splitTableColumns(String line) {

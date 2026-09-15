@@ -42,7 +42,7 @@ class StockSoftwarePayslipPdfParserTest {
 		PayslipData data = parser.parse(new byte[] { 1 });
 
 		assertEquals(LocalDate.of(2026, 1, 15), data.payToDate());
-		assertNull(data.annualLeaveFullTimeYtdHours());
+		assertNull(data.annualLeaveYtdHours());
 	}
 
 	@Test
@@ -57,11 +57,11 @@ class StockSoftwarePayslipPdfParserTest {
 		PayslipData data = parser.parse(new byte[] { 1 });
 
 		assertEquals(LocalDate.of(2025, 7, 31), data.payToDate());
-		assertNull(data.annualLeaveFullTimeYtdHours());
+		assertNull(data.annualLeaveYtdHours());
 	}
 
 	@Test
-	void parse_extractsAnnualLeaveFullTimeYtdFromLeaveTable() throws Exception {
+	void parse_extractsAnnualLeaveYtdFromLeaveTable() throws Exception {
 		when(pdfTextExtractor.extractText(any())).thenReturn("""
 			Stock Software Pty Ltd
 			Payslip
@@ -73,15 +73,59 @@ class StockSoftwarePayslipPdfParserTest {
 
 		PayslipData data = parser.parse(new byte[] { 1 });
 
-		assertEquals(new BigDecimal("128.00"), data.annualLeaveFullTimeYtdHours());
+		assertEquals(new BigDecimal("128.00"), data.annualLeaveYtdHours());
 	}
 
 	@Test
-	void extractAnnualLeaveFullTimeYtd_usesLastNumberWhenHeaderMissing() {
+	void parse_sumsBothAnnualLeaveArrangementRows() throws Exception {
+		when(pdfTextExtractor.extractText(any())).thenReturn("""
+			Stock Software Pty Ltd
+			Payslip
+			Pay To Date: 15/01/2026
+			Leave Type    Accrual    Taken    Current    YTD
+			Annual Leave - 9/10 Time    1.39    0.00    40.00    44.50
+			Annual Leave - FullTime    1.54    0.00    120.00    128.00
+			Net Pay $4,500.00
+			""");
+
+		PayslipData data = parser.parse(new byte[] { 1 });
+
+		assertEquals(new BigDecimal("172.50"), data.annualLeaveYtdHours());
+	}
+
+	@Test
+	void extractAnnualLeaveYtd_sumsArrangementRowsWhenHeaderMissing() {
+		List<String> lines = List.of("Annual Leave - 9/10 Time 1.39 0.00 40.00 44.50",
+			"Annual Leave - FullTime 1.54 0.00 120.00 128.00", "Pay To Date: 15/01/2026");
+
+		assertEquals(new BigDecimal("172.50"),
+			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+	}
+
+	@Test
+	void extractAnnualLeaveYtd_ignoresDigitsInArrangementLabel() {
+		List<String> lines = List.of("Leave Type Accrual Taken Current YTD",
+			"Annual Leave - 9/10 Time 1.39 0.00 40.00 44.50");
+
+		assertEquals(new BigDecimal("44.50"),
+			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+	}
+
+	@Test
+	void extractAnnualLeaveYtd_readsValuesFromLineBelowLabelWithoutDoubleCounting() {
+		List<String> lines = List.of("Annual Leave - 9/10 Time", "1.39 0.00 40.00 44.50",
+			"Annual Leave - FullTime", "1.54 0.00 120.00 128.00");
+
+		assertEquals(new BigDecimal("172.50"),
+			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+	}
+
+	@Test
+	void extractAnnualLeaveYtd_usesLastNumberWhenHeaderMissing() {
 		List<String> lines = List.of("Annual Leave - FullTime 1.54 0.00 120.00 128.00", "Pay To Date: 15/01/2026");
 
 		assertEquals(new BigDecimal("128.00"),
-			StockSoftwarePayslipPdfParser.extractAnnualLeaveFullTimeYtd(lines).orElseThrow());
+			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
 	}
 
 }

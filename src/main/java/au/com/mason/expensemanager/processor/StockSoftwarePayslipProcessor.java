@@ -52,7 +52,7 @@ public class StockSoftwarePayslipProcessor extends Processor {
 		String attachmentFileName = decodeMailText(pdfPart.getFileName());
 
 		PayslipData payslip = payslipPdfParser.parse(pdfBytes);
-		entityEntryService.updateAnnualLeaveNoteFromPayslip(payslip.annualLeaveFullTimeYtdHours());
+		entityEntryService.updateAnnualLeaveNoteFromPayslip(payslip.annualLeaveYtdHours());
 		String financialYear = RentalPaymentFinancialYear.financialYearLabel(payslip.payToDate());
 		String subject = decodeMailText(message.getSubject());
 		String fileName = buildFileName(subject, attachmentFileName, payslip.payToDate());
