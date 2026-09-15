@@ -66,14 +66,13 @@ public class StockSoftwarePayslipPdfParser {
 	}
 
 	static Optional<BigDecimal> extractAnnualLeaveYtd(List<String> lines) {
-		int columnsAfterYtd = findColumnsAfterYtd(lines);
 		BigDecimal total = null;
 		for (int i = 0; i < lines.size(); i++) {
 			if (!ANNUAL_LEAVE_ROW_LABEL.matcher(lines.get(i)).find()) {
 				continue;
 			}
 
-			Optional<BigDecimal> rowYtd = rowYtdValue(lines, i, columnsAfterYtd);
+			Optional<BigDecimal> rowYtd = rowYtdValue(lines, i);
 			if (rowYtd.isPresent()) {
 				total = total == null ? rowYtd.get() : total.add(rowYtd.get());
 			}
@@ -81,7 +80,13 @@ public class StockSoftwarePayslipPdfParser {
 		return Optional.ofNullable(total);
 	}
 
-	private static Optional<BigDecimal> rowYtdValue(List<String> lines, int lineIndex, int columnsAfterYtd) {
+	/**
+	 * Reads the YTD figure for a single leave row. Leave rows populate a varying number of
+	 * columns (an arrangement no longer accruing shows YTD only), so the value is taken as
+	 * the last number on the row rather than by column position. The trailing TYPE column
+	 * is always a word, so YTD is the final numeric value.
+	 */
+	private static Optional<BigDecimal> rowYtdValue(List<String> lines, int lineIndex) {
 		List<BigDecimal> numbers = extractDecimals(stripLeaveTypeLabel(lines.get(lineIndex)));
 		if (numbers.isEmpty() && lineIndex + 1 < lines.size()) {
 			String nextLine = lines.get(lineIndex + 1);
@@ -91,12 +96,10 @@ public class StockSoftwarePayslipPdfParser {
 				numbers = extractDecimals(nextLine);
 			}
 		}
-
-		int index = numbers.size() - 1 - columnsAfterYtd;
-		if (index < 0 || index >= numbers.size()) {
+		if (numbers.isEmpty()) {
 			return Optional.empty();
 		}
-		return Optional.of(numbers.get(index));
+		return Optional.of(numbers.get(numbers.size() - 1));
 	}
 
 	private static String stripLeaveTypeLabel(String line) {
@@ -105,34 +108,6 @@ public class StockSoftwarePayslipPdfParser {
 			return line.substring(matcher.end());
 		}
 		return line;
-	}
-
-	/**
-	 * Counts the header columns that sit to the right of YTD. Locating the value by
-	 * its distance from the end of the row keeps it correct regardless of how many
-	 * tokens the leave type label occupies. Defaults to 0 (YTD last) when no header
-	 * is found.
-	 */
-	private static int findColumnsAfterYtd(List<String> lines) {
-		for (String line : lines) {
-			if (!line.toUpperCase(Locale.ENGLISH).contains("YTD")) {
-				continue;
-			}
-			String[] parts = splitTableColumns(line);
-			for (int i = 0; i < parts.length; i++) {
-				if ("YTD".equalsIgnoreCase(parts[i].trim())) {
-					return parts.length - 1 - i;
-				}
-			}
-		}
-		return 0;
-	}
-
-	private static String[] splitTableColumns(String line) {
-		if (line.contains("  ")) {
-			return line.trim().split("\\s{2,}");
-		}
-		return line.trim().split("\\s+");
 	}
 
 	private static List<BigDecimal> extractDecimals(String line) {

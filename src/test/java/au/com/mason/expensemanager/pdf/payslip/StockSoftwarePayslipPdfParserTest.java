@@ -110,6 +110,22 @@ class StockSoftwarePayslipPdfParserTest {
 		assertEquals(new BigDecimal("44.50"), StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
 	}
 
+	/**
+	 * Real payslip layout: columns are sparse, so an arrangement that is no longer
+	 * accruing shows a YTD figure only, and a trailing non-numeric TYPE column
+	 * follows YTD.
+	 */
+	@Test
+	void extractAnnualLeaveYtd_sumsSparseEntitlementRowsFromRealPayslip() {
+		List<String> lines = List.of("DESCRIPTION HOURS CALC. RATE AMOUNT YTD TYPE",
+			"Base Salary $5,662.94 $36,887.73 Wages", "PAYG Withholding -$1,220.00 -$8,670.00 Tax",
+			"Annual Leave - 9/10 Time 5.77 5.77 Entitlements", "Annual Leave - FullTime 84.32 Entitlements",
+			"SG $679.55 $4,454.85 Superannuation Expenses");
+
+		assertEquals(new BigDecimal("90.09"),
+			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+	}
+
 	@Test
 	void extractAnnualLeaveYtd_readsValuesFromLineBelowLabelWithoutDoubleCounting() {
 		List<String> lines = List.of("Annual Leave - 9/10 Time", "1.39 0.00 40.00 44.50", "Annual Leave - FullTime",
