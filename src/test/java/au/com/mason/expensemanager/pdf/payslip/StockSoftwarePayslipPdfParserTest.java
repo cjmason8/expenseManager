@@ -122,8 +122,7 @@ class StockSoftwarePayslipPdfParserTest {
 			"Annual Leave - 9/10 Time 5.77 5.77 Entitlements", "Annual Leave - FullTime 84.32 Entitlements",
 			"SG $679.55 $4,454.85 Superannuation Expenses");
 
-		assertEquals(new BigDecimal("90.09"),
-			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+		assertEquals(new BigDecimal("90.09"), StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
 	}
 
 	@Test

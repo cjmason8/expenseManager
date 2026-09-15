@@ -81,10 +81,10 @@ public class StockSoftwarePayslipPdfParser {
 	}
 
 	/**
-	 * Reads the YTD figure for a single leave row. Leave rows populate a varying number of
-	 * columns (an arrangement no longer accruing shows YTD only), so the value is taken as
-	 * the last number on the row rather than by column position. The trailing TYPE column
-	 * is always a word, so YTD is the final numeric value.
+	 * Reads the YTD figure for a single leave row. Leave rows populate a varying
+	 * number of columns (an arrangement no longer accruing shows YTD only), so the
+	 * value is taken as the last number on the row rather than by column position.
+	 * The trailing TYPE column is always a word, so YTD is the final numeric value.
 	 */
 	private static Optional<BigDecimal> rowYtdValue(List<String> lines, int lineIndex) {
 		List<BigDecimal> numbers = extractDecimals(stripLeaveTypeLabel(lines.get(lineIndex)));
