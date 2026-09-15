@@ -82,7 +82,7 @@ Payslip emails are read from a **separate** Gmail account via `email.payslip.sec
 
 **Gmail setup for `cjmason8@gmail.com`:**
 
-1. Enable **2-Step Verification** on the Google account.
+1. Enable **2-Step Verification** on the Google account..
 2. Create an **App Password** (Google Account → Security → App passwords) for Mail.
 3. In Gmail → Settings → **Forwarding and POP/IMAP** → enable **IMAP**.
 4. In Gmail → Settings → **Labels** → open `StockSoftware` → tick **Show in IMAP**.
