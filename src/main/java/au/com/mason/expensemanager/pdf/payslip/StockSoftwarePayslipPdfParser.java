@@ -27,8 +27,10 @@ public class StockSoftwarePayslipPdfParser {
 	private static final Pattern PAYMENT_DATE = Pattern
 		.compile("Payment\\s*Date\\s*[:\\-]?\\s*(\\d{1,2}[\\-/]\\d{1,2}[\\-/]\\d{4})", Pattern.CASE_INSENSITIVE);
 
-	// Matches the row label and any arrangement suffix, e.g. "Annual Leave - FullTime",
-	// "Annual Leave - 9/10 Time". Matching the label lets us strip it before reading
+	// Matches the row label and any arrangement suffix, e.g. "Annual Leave -
+	// FullTime",
+	// "Annual Leave - 9/10 Time". Matching the label lets us strip it before
+	// reading
 	// numbers, so digits in a suffix like "9/10" are not mistaken for table values.
 	private static final Pattern ANNUAL_LEAVE_ROW_LABEL = Pattern.compile(
 		"Annual\\s+Leave\\s*-\\s*(?:\\d+(?:\\s*/\\s*\\d+|\\.\\d+)?\\s*)?[A-Za-z][A-Za-z\\s]*",
@@ -106,9 +108,10 @@ public class StockSoftwarePayslipPdfParser {
 	}
 
 	/**
-	 * Counts the header columns that sit to the right of YTD. Locating the value by its
-	 * distance from the end of the row keeps it correct regardless of how many tokens the
-	 * leave type label occupies. Defaults to 0 (YTD last) when no header is found.
+	 * Counts the header columns that sit to the right of YTD. Locating the value by
+	 * its distance from the end of the row keeps it correct regardless of how many
+	 * tokens the leave type label occupies. Defaults to 0 (YTD last) when no header
+	 * is found.
 	 */
 	private static int findColumnsAfterYtd(List<String> lines) {
 		for (String line : lines) {

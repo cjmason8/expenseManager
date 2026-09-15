@@ -107,14 +107,13 @@ class StockSoftwarePayslipPdfParserTest {
 		List<String> lines = List.of("Leave Type Accrual Taken Current YTD",
 			"Annual Leave - 9/10 Time 1.39 0.00 40.00 44.50");
 
-		assertEquals(new BigDecimal("44.50"),
-			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
+		assertEquals(new BigDecimal("44.50"), StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());
 	}
 
 	@Test
 	void extractAnnualLeaveYtd_readsValuesFromLineBelowLabelWithoutDoubleCounting() {
-		List<String> lines = List.of("Annual Leave - 9/10 Time", "1.39 0.00 40.00 44.50",
-			"Annual Leave - FullTime", "1.54 0.00 120.00 128.00");
+		List<String> lines = List.of("Annual Leave - 9/10 Time", "1.39 0.00 40.00 44.50", "Annual Leave - FullTime",
+			"1.54 0.00 120.00 128.00");
 
 		assertEquals(new BigDecimal("172.50"),
 			StockSoftwarePayslipPdfParser.extractAnnualLeaveYtd(lines).orElseThrow());

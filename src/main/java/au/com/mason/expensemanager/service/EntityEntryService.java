@@ -94,8 +94,7 @@ public class EntityEntryService {
 	}
 
 	static String formatLeaveDays(BigDecimal annualLeaveYtdHours) {
-		BigDecimal days = annualLeaveYtdHours.divide(HOURS_PER_LEAVE_DAY, 4, RoundingMode.HALF_UP)
-			.stripTrailingZeros();
+		BigDecimal days = annualLeaveYtdHours.divide(HOURS_PER_LEAVE_DAY, 4, RoundingMode.HALF_UP).stripTrailingZeros();
 		return days.toPlainString() + " days";
 	}
 
