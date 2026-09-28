@@ -196,14 +196,12 @@ public class DatabaseBackupService {
 		String password = System.getenv("DB_PASS");
 		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
 			LOGGER.info("Using DB_USER/DB_PASS from environment for pg_dump");
-			return new String[] { username, password };
+			return new String[]{username, password};
 		}
 
 		LOGGER.info("Using AWS Secrets Manager secret '{}' for pg_dump credentials", databaseSecretName);
-		return new String[] {
-			awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"),
-			awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD")
-		};
+		return new String[]{awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"),
+			awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD")};
 	}
 
 	private ZoneId zone() {
