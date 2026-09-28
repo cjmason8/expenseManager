@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,8 +166,9 @@ public class DatabaseBackupService {
 	private void runDirectPgDump(Path outputFile) throws Exception {
 		String jdbcUrl = System.getenv("DB_URL");
 		JdbcConnectionInfo connection = JdbcConnectionInfo.fromJdbcUrl(jdbcUrl);
-		String username = awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME");
-		String password = awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD");
+		String[] credentials = resolveCredentials();
+		String username = credentials[0];
+		String password = credentials[1];
 
 		ProcessBuilder processBuilder = new ProcessBuilder("pg_dump", "-h", connection.host(), "-p", connection.port(),
 			"-U", username, "-d", connection.database(), "-f", outputFile.toString());
@@ -187,6 +189,21 @@ public class DatabaseBackupService {
 		if (!Files.isRegularFile(outputFile) || Files.size(outputFile) == 0) {
 			throw new IllegalStateException("pg_dump produced no output at " + outputFile);
 		}
+	}
+
+	private String[] resolveCredentials() {
+		String username = System.getenv("DB_USER");
+		String password = System.getenv("DB_PASS");
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+			LOGGER.info("Using DB_USER/DB_PASS from environment for pg_dump");
+			return new String[] { username, password };
+		}
+
+		LOGGER.info("Using AWS Secrets Manager secret '{}' for pg_dump credentials", databaseSecretName);
+		return new String[] {
+			awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"),
+			awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD")
+		};
 	}
 
 	private ZoneId zone() {

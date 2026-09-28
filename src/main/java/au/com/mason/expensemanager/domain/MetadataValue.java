@@ -1,5 +1,6 @@
 package au.com.mason.expensemanager.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,6 +36,7 @@ public class MetadataValue {
 	@SequenceGenerator(name = "metadatavalues_seq", sequenceName = "metadatavalues_seq", allocationSize = 1)
 	private long id;
 
+	@Column(length = 1000)
 	private String value;
 
 	@ManyToOne

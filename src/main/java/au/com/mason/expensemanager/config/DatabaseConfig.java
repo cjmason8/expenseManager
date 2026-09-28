@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +46,10 @@ public class DatabaseConfig {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(System.getenv().get("DB_DRIVER"));
 		dataSource.setUrl(dbUrl);
-		dataSource.setUsername(awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"));
-		dataSource.setPassword(awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD"));
+
+		String[] credentials = resolveCredentials();
+		dataSource.setUsername(credentials[0]);
+		dataSource.setPassword(credentials[1]);
 
 		return dataSource;
 	}
@@ -55,7 +58,7 @@ public class DatabaseConfig {
 	 * Declare the JPA entity manager factory.
 	 */
 	@Bean
-	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+	public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
 		LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
 
 		entityManagerFactory.setDataSource(dataSource);
@@ -81,7 +84,7 @@ public class DatabaseConfig {
 	 * Declare the transaction manager.
 	 */
 	@Bean
-	public JpaTransactionManager transactionManager() {
+	public JpaTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactory) {
 		JpaTransactionManager transactionManager = new JpaTransactionManager();
 		transactionManager.setEntityManagerFactory(entityManagerFactory.getObject());
 		return transactionManager;
@@ -96,6 +99,25 @@ public class DatabaseConfig {
 	@Bean
 	public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
 		return new PersistenceExceptionTranslationPostProcessor();
+	}
+
+	/**
+	 * Prefer DB_USER/DB_PASS from the environment (local runs). Fall back to AWS
+	 * Secrets Manager when either is unset.
+	 */
+	private String[] resolveCredentials() {
+		String username = System.getenv("DB_USER");
+		String password = System.getenv("DB_PASS");
+		if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+			LOGGER.info("Using DB_USER/DB_PASS from environment for DataSource");
+			return new String[] { username, password };
+		}
+
+		LOGGER.info("Using AWS Secrets Manager secret '{}' for DataSource credentials", databaseSecretName);
+		return new String[] {
+			awsSecretsService.getSecretValue(databaseSecretName, "USER_NAME"),
+			awsSecretsService.getSecretValue(databaseSecretName, "PASSWORD")
+		};
 	}
 
 	private String resolveHibernateDialect() {
@@ -120,13 +142,5 @@ public class DatabaseConfig {
 			return "<unparseable>";
 		}
 	}
-
-	// Private fields
-
-	@Autowired
-	private DataSource dataSource;
-
-	@Autowired
-	private LocalContainerEntityManagerFactoryBean entityManagerFactory;
 
 }
