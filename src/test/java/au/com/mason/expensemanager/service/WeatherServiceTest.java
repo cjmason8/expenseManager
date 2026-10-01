@@ -55,8 +55,8 @@ class WeatherServiceTest {
 		""".strip();
 
 	private static WeatherForecastDto parse(String location) throws Exception {
-		return WeatherService.parseForecast(
-			new ByteArrayInputStream(XML.getBytes(StandardCharsets.UTF_8)), location, 3);
+		return WeatherService.parseForecast(new ByteArrayInputStream(XML.getBytes(StandardCharsets.UTF_8)), location,
+			3);
 	}
 
 	@Test

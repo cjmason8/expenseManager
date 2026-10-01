@@ -1,0 +1,17 @@
+---
+description: Run the Spotless formatter after any code or config change
+alwaysApply: true
+---
+
+# Format After Changes
+
+After making any changes in this repo, run the formatter before finishing:
+
+```bash
+mvn -q spotless:apply
+```
+
+- Run it once after your final edit, not after every individual edit.
+- Spotless covers Java under `src/main/java` and `src/test/java`, plus `pom.xml`, `config/**`, resource `.properties`/`.xml`, `scripts/**/*.sh`, and root `*.md`.
+- Formatter settings live in `config/formatter/`; don't hand-format against them.
+- If `spotless:apply` fails, report the error rather than skipping it.

@@ -27,7 +27,8 @@ import au.com.mason.expensemanager.dto.WeatherForecastDayDto;
 import au.com.mason.expensemanager.dto.WeatherForecastDto;
 
 /**
- * Reads the Bureau of Meteorology's public Victorian town forecast product (IDV10753).
+ * Reads the Bureau of Meteorology's public Victorian town forecast product
+ * (IDV10753).
  */
 @Component
 public class WeatherService {
@@ -68,13 +69,9 @@ public class WeatherService {
 	}
 
 	private WeatherForecastDto fetchForecast() throws Exception {
-		HttpRequest request = HttpRequest.newBuilder(URI.create(forecastUrl))
-			.timeout(Duration.ofSeconds(15))
+		HttpRequest request = HttpRequest.newBuilder(URI.create(forecastUrl)).timeout(Duration.ofSeconds(15))
 			// BOM rejects requests without a descriptive User-Agent.
-			.header("User-Agent", "expensemanager/1.0")
-			.header("Accept", "application/xml")
-			.GET()
-			.build();
+			.header("User-Agent", "expensemanager/1.0").header("Accept", "application/xml").GET().build();
 
 		HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 		if (response.statusCode() != 200) {
