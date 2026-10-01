@@ -13,6 +13,7 @@ import lombok.Setter;
 @Getter
 public class WeatherForecastDto {
 	private String location;
+	private String detailArea;
 	private String issuedAt;
 	private List<WeatherForecastDayDto> days;
 }

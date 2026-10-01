@@ -89,4 +89,48 @@ class WeatherServiceTest {
 		assertThrows(IllegalStateException.class, () -> parse("Dingley"));
 	}
 
+	private static final String DETAIL_XML = """
+		<?xml version="1.0" encoding="UTF-8"?>
+		<product version="1.7">
+		  <forecast>
+		    <area aac="VIC_FA001" description="Victoria" type="region">
+		      <forecast-period start-time-local="2026-10-01T06:06:41+10:00">
+		        <text type="product_footer">Footer</text>
+		      </forecast-period>
+		    </area>
+		    <area aac="VIC_ME001" description="Melbourne metropolitan" type="metropolitan">
+		      <forecast-period index="0" start-time-local="2026-10-01T00:00:00+10:00">
+		        <text type="forecast">Rain. Winds southerly 15 to 25 km/h.</text>
+		        <text type="fire_danger">No Rating</text>
+		        <text type="uv_alert">Sun protection 9:10am to 3:00pm, UV Index predicted to reach 6 [High]</text>
+		      </forecast-period>
+		      <forecast-period index="1" start-time-local="2026-10-02T00:00:00+10:00">
+		        <text type="forecast">Cloudy. Very high chance of showers.</text>
+		      </forecast-period>
+		    </area>
+		  </forecast>
+		</product>
+		""".strip();
+
+	@Test
+	void testMergeDetail_AddsMetropolitanTextByDate() throws Exception {
+		WeatherForecastDto forecast = parse("Moorabbin");
+
+		WeatherService.mergeDetail(forecast, new ByteArrayInputStream(DETAIL_XML.getBytes(StandardCharsets.UTF_8)),
+			"VIC_ME001");
+
+		assertEquals("Melbourne metropolitan", forecast.getDetailArea());
+
+		WeatherForecastDayDto today = forecast.getDays().get(0);
+		assertEquals("Rain. Winds southerly 15 to 25 km/h.", today.getForecastText());
+		assertEquals("No Rating", today.getFireDanger());
+		assertEquals("Sun protection 9:10am to 3:00pm, UV Index predicted to reach 6 [High]", today.getUvAlert());
+
+		WeatherForecastDayDto tomorrow = forecast.getDays().get(1);
+		assertEquals("Cloudy. Very high chance of showers.", tomorrow.getForecastText());
+		assertNull(tomorrow.getUvAlert());
+
+		assertNull(forecast.getDays().get(2).getForecastText());
+	}
+
 }

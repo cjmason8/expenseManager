@@ -8,7 +8,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -27,8 +29,9 @@ import au.com.mason.expensemanager.dto.WeatherForecastDayDto;
 import au.com.mason.expensemanager.dto.WeatherForecastDto;
 
 /**
- * Reads the Bureau of Meteorology's public Victorian town forecast product
- * (IDV10753).
+ * Combines two public Bureau of Meteorology products: the Victorian town forecast (IDV10753) for the location's
+ * temperatures and rain, and the Melbourne forecast (IDV10450) for the metropolitan area's detailed text, UV and fire
+ * danger.
  */
 @Component
 public class WeatherService {
@@ -37,7 +40,7 @@ public class WeatherService {
 
 	private static final Duration CACHE_DURATION = Duration.ofMinutes(30);
 
-	private static final int FORECAST_DAYS = 3;
+	private static final int FORECAST_DAYS = 7;
 
 	private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
@@ -46,6 +49,12 @@ public class WeatherService {
 
 	@Value("${weather.forecast.location:Moorabbin}")
 	private String forecastLocation;
+
+	@Value("${weather.forecast.detail-url:https://www.bom.gov.au/fwo/IDV10450.xml}")
+	private String detailUrl;
+
+	@Value("${weather.forecast.detail-area:VIC_ME001}")
+	private String detailArea;
 
 	private WeatherForecastDto cachedForecast;
 
@@ -69,24 +78,40 @@ public class WeatherService {
 	}
 
 	private WeatherForecastDto fetchForecast() throws Exception {
-		HttpRequest request = HttpRequest.newBuilder(URI.create(forecastUrl)).timeout(Duration.ofSeconds(15))
+		WeatherForecastDto forecast;
+		try (InputStream body = openXml(forecastUrl)) {
+			forecast = parseForecast(body, forecastLocation, FORECAST_DAYS);
+		}
+
+		try (InputStream body = openXml(detailUrl)) {
+			mergeDetail(forecast, body, detailArea);
+		} catch (Exception e) {
+			LOGGER.warn("Failed to load BOM detailed forecast, returning basic forecast only", e);
+		}
+		return forecast;
+	}
+
+	private InputStream openXml(String url) throws Exception {
+		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+			.timeout(Duration.ofSeconds(15))
 			// BOM rejects requests without a descriptive User-Agent.
-			.header("User-Agent", "expensemanager/1.0").header("Accept", "application/xml").GET().build();
+			.header("User-Agent", "expensemanager/1.0")
+			.header("Accept", "application/xml")
+			.GET()
+			.build();
 
 		HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 		if (response.statusCode() != 200) {
-			throw new IllegalStateException("BOM forecast request failed with status " + response.statusCode());
+			response.body().close();
+			throw new IllegalStateException("BOM request to " + url + " failed with status " + response.statusCode());
 		}
-
-		try (InputStream body = response.body()) {
-			return parseForecast(body, forecastLocation, FORECAST_DAYS);
-		}
+		return response.body();
 	}
 
 	static WeatherForecastDto parseForecast(InputStream xml, String location, int days) throws Exception {
 		Document document = newDocumentBuilder().parse(xml);
 
-		Element area = findArea(document, location);
+		Element area = findArea(document, "description", location);
 		if (area == null) {
 			throw new IllegalStateException("Location " + location + " not found in BOM forecast");
 		}
@@ -97,7 +122,44 @@ public class WeatherService {
 			forecastDays.add(toDay((Element) periods.item(i)));
 		}
 
-		return new WeatherForecastDto(location, firstText(document, "issue-time-local"), forecastDays);
+		WeatherForecastDto forecast = new WeatherForecastDto();
+		forecast.setLocation(location);
+		forecast.setIssuedAt(firstText(document, "issue-time-local"));
+		forecast.setDays(forecastDays);
+		return forecast;
+	}
+
+	static void mergeDetail(WeatherForecastDto forecast, InputStream xml, String areaAac) throws Exception {
+		Document document = newDocumentBuilder().parse(xml);
+
+		Element area = findArea(document, "aac", areaAac);
+		if (area == null) {
+			throw new IllegalStateException("Area " + areaAac + " not found in BOM detailed forecast");
+		}
+
+		Map<String, Element> periodsByDate = new HashMap<>();
+		NodeList periods = area.getElementsByTagName("forecast-period");
+		for (int i = 0; i < periods.getLength(); i++) {
+			Element period = (Element) periods.item(i);
+			periodsByDate.putIfAbsent(dateOf(period), period);
+		}
+
+		forecast.setDetailArea(area.getAttribute("description"));
+		for (WeatherForecastDayDto day : forecast.getDays()) {
+			Element period = periodsByDate.get(day.getDate());
+			if (period == null) {
+				continue;
+			}
+			forEachTypedChild(period, (type, value) -> {
+				switch (type) {
+					case "forecast" -> day.setForecastText(value);
+					case "fire_danger" -> day.setFireDanger(value);
+					case "uv_alert" -> day.setUvAlert(value);
+					default -> {
+					}
+				}
+			});
+		}
 	}
 
 	private static DocumentBuilder newDocumentBuilder() throws Exception {
@@ -108,31 +170,28 @@ public class WeatherService {
 		return factory.newDocumentBuilder();
 	}
 
-	private static Element findArea(Document document, String location) {
+	private static Element findArea(Document document, String attribute, String value) {
 		NodeList areas = document.getElementsByTagName("area");
 		for (int i = 0; i < areas.getLength(); i++) {
 			Element area = (Element) areas.item(i);
-			if (location.equalsIgnoreCase(area.getAttribute("description"))) {
+			if (value.equalsIgnoreCase(area.getAttribute(attribute))) {
 				return area;
 			}
 		}
 		return null;
 	}
 
+	private static String dateOf(Element period) {
+		String start = period.getAttribute("start-time-local");
+		return start.length() >= 10 ? start.substring(0, 10) : start;
+	}
+
 	private static WeatherForecastDayDto toDay(Element period) {
 		WeatherForecastDayDto day = new WeatherForecastDayDto();
-		String start = period.getAttribute("start-time-local");
-		day.setDate(start.length() >= 10 ? start.substring(0, 10) : start);
+		day.setDate(dateOf(period));
 
-		NodeList children = period.getChildNodes();
-		for (int i = 0; i < children.getLength(); i++) {
-			Node node = children.item(i);
-			if (node.getNodeType() != Node.ELEMENT_NODE) {
-				continue;
-			}
-			Element child = (Element) node;
-			String value = child.getTextContent().trim();
-			switch (child.getAttribute("type")) {
+		forEachTypedChild(period, (type, value) -> {
+			switch (type) {
 				case "air_temperature_minimum" -> day.setMinTemp(parseInteger(value));
 				case "air_temperature_maximum" -> day.setMaxTemp(parseInteger(value));
 				case "forecast_icon_code" -> day.setIconCode(parseInteger(value));
@@ -142,8 +201,23 @@ public class WeatherService {
 				default -> {
 				}
 			}
-		}
+		});
 		return day;
+	}
+
+	private interface TypedChildConsumer {
+		void accept(String type, String value);
+	}
+
+	private static void forEachTypedChild(Element period, TypedChildConsumer consumer) {
+		NodeList children = period.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			Node node = children.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Element child = (Element) node;
+				consumer.accept(child.getAttribute("type"), child.getTextContent().trim());
+			}
+		}
 	}
 
 	private static Integer parseInteger(String value) {

@@ -17,4 +17,7 @@ public class WeatherForecastDayDto {
 	private Integer iconCode;
 	private String rainChance;
 	private String rainRange;
+	private String forecastText;
+	private String fireDanger;
+	private String uvAlert;
 }
