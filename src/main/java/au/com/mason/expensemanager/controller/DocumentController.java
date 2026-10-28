@@ -32,6 +32,7 @@ import au.com.mason.expensemanager.domain.Expense;
 import au.com.mason.expensemanager.domain.Income;
 import au.com.mason.expensemanager.dto.DocumentDto;
 import au.com.mason.expensemanager.dto.DocumentListDto;
+import au.com.mason.expensemanager.dto.MaintenanceTotalBackfillDto;
 import au.com.mason.expensemanager.dto.MoveFilesDto;
 import au.com.mason.expensemanager.mapper.DocumentMapper;
 import au.com.mason.expensemanager.service.DocumentService;
@@ -236,6 +237,14 @@ public class DocumentController extends BaseController<Document, DocumentDto> {
 		LOGGER.info("leaving DocumentController getFiles - " + documentListDto.getFolderPath());
 
 		return documents;
+	}
+
+	@PostMapping(value = "/documents/maintenance/totals/backfill", produces = "application/json")
+	List<MaintenanceTotalBackfillDto> backfillMaintenanceTotals(@RequestParam(defaultValue = "true") boolean dryRun) {
+		LOGGER.info("entering DocumentController backfillMaintenanceTotals - dryRun=" + dryRun);
+		List<MaintenanceTotalBackfillDto> results = documentService.backfillMaintenanceTotals(dryRun);
+		LOGGER.info("leaving DocumentController backfillMaintenanceTotals - " + results.size() + " documents");
+		return results;
 	}
 
 	private String getContentType(String path) {

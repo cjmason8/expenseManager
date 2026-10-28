@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,6 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 import au.com.mason.expensemanager.dao.DocumentDao;
 import au.com.mason.expensemanager.domain.Document;
 import au.com.mason.expensemanager.domain.EntityMetadataType;
+import au.com.mason.expensemanager.dto.MaintenanceTotalBackfillDto;
+import au.com.mason.expensemanager.dto.MaintenanceTotalBackfillDto.Status;
+import au.com.mason.expensemanager.pdf.invoice.MaintenanceInvoiceTotalExtractor;
 import au.com.mason.expensemanager.util.S3Keys;
 
 @Component
@@ -32,6 +38,11 @@ public class DocumentService {
 	private String docsRoot;
 
 	public static final String IP_FOLDER_PATH = "expenseManager/filofax/IPs";
+
+	private static final Pattern MAINTENANCE_FOLDER = Pattern
+		.compile("(?:^|/)IPs/[^/]+/\\d{4}-\\d{4}/(?i:Maintenance)$");
+
+	private static final Logger LOGGER = LogManager.getLogger(DocumentService.class);
 
 	@PostConstruct
 	void normalizeDocsRoot() {
@@ -46,6 +57,9 @@ public class DocumentService {
 
 	@Autowired
 	private EntityMetadataService entityMetadataService;
+
+	@Autowired
+	private MaintenanceInvoiceTotalExtractor maintenanceInvoiceTotalExtractor;
 
 	public Document updateDocument(Document document) {
 		if (document.isFolder() && document.getId() != null) {
@@ -82,6 +96,14 @@ public class DocumentService {
 		document.setFolderPath(parentFolderPath);
 		if (uploadType.equals("documents")) {
 			setMetadata(path, document);
+		}
+		if (isMaintenanceFolder(parentFolderPath)) {
+			Map<String, Object> metaData = document.getMetaData() == null
+				? new LinkedHashMap<>()
+				: new LinkedHashMap<>(document.getMetaData());
+			metaData.put(MaintenanceInvoiceTotalExtractor.TOTAL_KEY,
+				maintenanceInvoiceTotalExtractor.extractTotal(bytes));
+			document.setMetaData(metaData);
 		}
 
 		Document saved = documentDao.create(document);
@@ -412,6 +434,53 @@ public class DocumentService {
 		s3Service.moveObject(resolveSourceKey(document), destKey);
 		document.setFolderPath(destParent);
 		documentDao.update(document);
+	}
+
+	public static boolean isMaintenanceFolder(String folderPath) {
+		String uiPath = S3Keys.toUiFolderPath(folderPath);
+		return uiPath != null && MAINTENANCE_FOLDER.matcher(uiPath).find();
+	}
+
+	/**
+	 * Sets the {@code Total} metadata on every file in an
+	 * {@code IPs/{property}/{yyyy-yyyy}/Maintenance} folder that doesn't already
+	 * have one, so manually entered totals are never overwritten.
+	 */
+	public List<MaintenanceTotalBackfillDto> backfillMaintenanceTotals(boolean dryRun) {
+		List<Document> files = documentDao.getFilesInFoldersLike("%IPs/%/Maintenance%").stream()
+			.filter(file -> isMaintenanceFolder(file.getFolderPath())).toList();
+		hydrateDocuments(files);
+
+		List<MaintenanceTotalBackfillDto> results = new ArrayList<>();
+		for (Document file : files) {
+			Map<String, Object> metaData = file.getMetaData() == null
+				? new LinkedHashMap<>()
+				: new LinkedHashMap<>(file.getMetaData());
+			Object existing = metaData.get(MaintenanceInvoiceTotalExtractor.TOTAL_KEY);
+			if (existing != null) {
+				results.add(backfillResult(file, String.valueOf(existing), Status.SKIPPED_EXISTING, null));
+				continue;
+			}
+			try {
+				String total = maintenanceInvoiceTotalExtractor
+					.extractTotal(s3Service.getObjectAsBytes(resolveSourceKey(file)));
+				if (!dryRun) {
+					metaData.put(MaintenanceInvoiceTotalExtractor.TOTAL_KEY, total);
+					entityMetadataService.replace(EntityMetadataType.DOCUMENT, file.getId().toString(), metaData);
+				}
+				results.add(backfillResult(file, total, dryRun ? Status.WOULD_SET : Status.SET, null));
+			} catch (Exception e) {
+				LOGGER.warn("Maintenance total backfill failed for document " + file.getId(), e);
+				results.add(backfillResult(file, null, Status.FAILED, e.getMessage()));
+			}
+		}
+		return results;
+	}
+
+	private static MaintenanceTotalBackfillDto backfillResult(Document file, String total, Status status,
+		String error) {
+		return new MaintenanceTotalBackfillDto(file.getId(), file.getFolderPath(), file.getFileName(), total, status,
+			error);
 	}
 
 	/** Maps UI / DB folder paths to an S3 key prefix within the bucket. */

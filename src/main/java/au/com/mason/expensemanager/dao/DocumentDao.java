@@ -57,6 +57,13 @@ public class DocumentDao extends BaseDao<Document> {
 		return results.isEmpty() ? null : results.get(0);
 	}
 
+	public List<Document> getFilesInFoldersLike(String folderPathPattern) {
+		return entityManager
+			.createQuery("FROM Document WHERE isFolder = false AND lower(folderPath) LIKE lower(:pattern)",
+				Document.class)
+			.setParameter("pattern", folderPathPattern).getResultList();
+	}
+
 	public void updateDirectoryPaths(String oldPath, String newPath) {
 		if (oldPath == null || newPath == null || oldPath.equals(newPath)) {
 			return;

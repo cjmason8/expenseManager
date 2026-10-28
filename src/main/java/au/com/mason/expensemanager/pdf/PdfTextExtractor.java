@@ -19,6 +19,18 @@ public class PdfTextExtractor {
 		return Arrays.asList(extractText(content).split("\n"));
 	}
 
+	/**
+	 * Orders text by its position on the page, which keeps labels and values on the
+	 * same line for PDFs that store them as separate columns.
+	 */
+	public String extractTextSortedByPosition(byte[] content) throws IOException {
+		try (PDDocument document = PDDocument.load(content)) {
+			PDFTextStripper stripper = new PDFTextStripper();
+			stripper.setSortByPosition(true);
+			return stripper.getText(document);
+		}
+	}
+
 	public static String extract(byte[] content) throws IOException {
 		try (PDDocument document = PDDocument.load(content)) {
 			PDFTextStripper stripper = new PDFTextStripper();
